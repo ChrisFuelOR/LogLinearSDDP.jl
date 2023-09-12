@@ -11,7 +11,7 @@ function sample_scenario(
     # Begin by sampling a node from the children of the root node.
     node_index = something(
         sampling_scheme.initial_node,
-        sample_noise(get_root_children(sampling_scheme, graph)),
+        SDDP.sample_noise(SDDP.get_root_children(sampling_scheme, graph)),
     )::T
     while true
         node = graph[node_index]
@@ -19,11 +19,11 @@ function sample_scenario(
         # CHANGES TO SDDP.jl
         ####################################################################################
         # Get the realizations for the stagewise independent term η
-        independent_noise_terms = get_noise_terms(sampling_scheme, node, node_index)
-        children = get_children(sampling_scheme, node, node_index)
+        independent_noise_terms = SDDP.get_noise_terms(sampling_scheme, node, node_index)
+        children = SDDP.get_children(sampling_scheme, node, node_index)
 
         # Sample an independent noise term
-        independent_noise = sample_noise(independent_noise_terms)
+        independent_noise = SDDP.sample_noise(independent_noise_terms)
 
         # Get the current process state matrix
         process_state = node.ext[:process_state]
@@ -42,7 +42,7 @@ function sample_scenario(
             ar_lag_order = autoregressive_data.ar_lag_order
             ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
 
-            noise[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[k][ℓ][m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[t-k])
+            noise[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[k][ℓ][m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
         end
         ####################################################################################
 
@@ -69,7 +69,7 @@ function sample_scenario(
             push!(visited_nodes, node_index)
         end
         # Sample a new node to transition to.
-        node_index = sample_noise(children)::T
+        node_index = SDDP.sample_noise(children)::T
 
         # CHANGES TO SDDP.jl
         ####################################################################################
@@ -89,7 +89,7 @@ function _update_process_state(
     graph::SDDP.PolicyGraph{T},
     node_index::Int,
     process_state::Dict{Int64,Vector{Float64}},
-    noise::SDDP.Noise,
+    noise::Vector{Float64},
 ) where {T}
 
     new_process_state = Dict{Int64,Vector{Float64}}()
@@ -123,43 +123,60 @@ struct CompleteSampler <: SDDP.AbstractBackwardSamplingScheme end
 
 function sample_backward_noise_terms(
     ::CompleteSampler, 
-    node) 
+    node::SDDP.Node,
+    ) 
 
     # CHANGES TO SDDP.jl
     ####################################################################################
 
+    graph = SDDP.get_policy_graph(node.subproblem)
+
     # Get the realizations for the stagewise independent term η
-    independent_noise_terms = SDDP.get_noise_terms(sampling_scheme, node, node_index)
+    independent_noises = SDDP.get_noise_terms(SDDP.InSampleMonteCarlo(), node, node.index) #TODO
 
     # Get the current process state matrix
     process_state = node.ext[:process_state]
 
     # Get autoregressive data
-    graph = SDDP.get_policy_graph(node.subproblem)
     autoregressive_data = graph.ext[:autoregressive_data]
     autoregressive_data_stage = autoregressive_data.ar_data[node.index]
+    
+    dependent_noises = Vector{Any}(undef, length(independent_noises))
 
-    noise_terms = Vector{Any}(undef, length(independent_noise_terms))
+    # Compute the actual noise ξ using the formula for the log-linear AR process
+    # Differentiation between one- and multi-dimensional noise, because noise.term has different type in both cases.
+    for i in eachindex(independent_noises)
+        independent_noise = independent_noises[i]
 
-    for i in eachindex(independent_noise_terms)
-        independent_noise = independent_noise_terms[i]
-
-        # Compute the actual noise ξ using the formula for the log-linear AR process
-        noise = zeros(length(independent_noise))
-        for ℓ in eachindex(noise)
+        if isa(independent_noise.term, Float64)
             t = node.index
-            intercept = autoregressive_data_stage.ar_intercept[ℓ]
-            independent_term = independent_noise[ℓ]
+            intercept = autoregressive_data_stage.ar_intercept[1]
+            independent_value = independent_noise.term
             coefficients = autoregressive_data_stage.ar_coefficients
             ar_lag_order = autoregressive_data.ar_lag_order
             ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
 
-            noise[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[k][ℓ][m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[t-k])
+            noise_values = exp(intercept) * exp(independent_value) * prod(process_state[t-k][m]^coefficients[k][1][m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
+
+        elseif isa(independent_noise.term, Vector{Float64})
+            noise_dimension = length(independent_noise.term)
+            noise_values = zeros(noise_dimension)
+
+            for ℓ in eachindex(noise_values)
+                t = node.index
+                intercept = autoregressive_data_stage.ar_intercept[ℓ]
+                independent_value = independent_noise.term[ℓ]
+                coefficients = autoregressive_data_stage.ar_coefficients
+                ar_lag_order = autoregressive_data.ar_lag_order
+                ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
+
+                noise_values[ℓ] = exp(intercept) * exp(independent_value) * prod(process_state[t-k][m]^coefficients[k][ℓ][m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
+            end
         end
 
-        noise_terms[i] = noise
+        dependent_noises[i] = SDDP.Noise(noise_values, independent_noise.probability)
     end
 
-    return noise_terms = noise_terms
+    return (dependent_noise_terms = dependent_noises, independent_noise_terms = independent_noises)
 end
 

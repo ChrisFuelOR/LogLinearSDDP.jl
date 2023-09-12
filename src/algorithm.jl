@@ -12,14 +12,98 @@ function parameterize(
 )
 
     node.parameterize(noise)
-    set_objective(node)
+    SDDP.set_objective(node)
     
+    model = SDDP.get_policy_graph(node.subproblem)
     TimerOutputs.@timeit model.timer_output "evaluate_cut_intercepts" begin
-        _evaluate_cut_intercepts(node)
+        evaluate_cut_intercepts(node)
     end
     
     return
 end       
+
+
+# Internal struct: storage for SDDP options and cached data. Users shouldn't
+# interact with this directly.
+struct Options{T}
+    # The initial state to start from the root node.
+    initial_state::Dict{Symbol,Float64}
+    # The sampling scheme to use on the forward pass.
+    sampling_scheme::SDDP.AbstractSamplingScheme
+    backward_sampling_scheme::SDDP.AbstractBackwardSamplingScheme
+    # Storage for the set of possible sampling states at each node. We only use
+    # this if there is a cycle in the policy graph.
+    starting_states::Dict{T,Vector{Dict{Symbol,Float64}}}
+    # Risk measure to use at each node.
+    risk_measures::Dict{T,SDDP.AbstractRiskMeasure}
+    # The delta by which to check if a state is close to a previously sampled
+    # state.
+    cycle_discretization_delta::Float64
+    # Flag to add cuts to similar nodes.
+    refine_at_similar_nodes::Bool
+    # The node transition matrix.
+    Φ::Dict{Tuple{T,T},Float64}
+    # A list of nodes that contain a subset of the children of node i.
+    similar_children::Dict{T,Vector{T}}
+    stopping_rules::Vector{SDDP.AbstractStoppingRule}
+    dashboard_callback::Function
+    print_level::Int
+    start_time::Float64
+    log::Vector{Log}
+    log_file_handle::Any
+    log_frequency::Union{Int,Function}
+    forward_pass::SDDP.AbstractForwardPass
+    duality_handler::SDDP.AbstractDualityHandler
+    # A callback called after the forward pass.
+    forward_pass_callback::Any
+    post_iteration_callback::Any
+    last_log_iteration::Ref{Int}
+    # Internal function: users should never construct this themselves.
+    function Options(
+        model::SDDP.PolicyGraph{T},
+        initial_state::Dict{Symbol,Float64};
+        sampling_scheme::SDDP.AbstractSamplingScheme = InSampleMonteCarlo(),
+        backward_sampling_scheme::SDDP.AbstractBackwardSamplingScheme = CompleteSampler(),
+        risk_measures = SDDP.Expectation(),
+        cycle_discretization_delta::Float64 = 0.0,
+        refine_at_similar_nodes::Bool = true,
+        stopping_rules::Vector{SDDP.AbstractStoppingRule} = SDDP.AbstractStoppingRule[],
+        dashboard_callback::Function = (a, b) -> nothing,
+        print_level::Int = 0,
+        start_time::Float64 = 0.0,
+        log::Vector{Log} = Log[],
+        log_file_handle = IOBuffer(),
+        log_frequency::Union{Int,Function} = 1,
+        forward_pass::SDDP.AbstractForwardPass = SDDP.DefaultForwardPass(),
+        duality_handler::SDDP.AbstractDualityHandler = ContinuousConicDuality(),
+        forward_pass_callback = x -> nothing,
+        post_iteration_callback = result -> nothing,
+    ) where {T}
+        return new{T}(
+            initial_state,
+            sampling_scheme,
+            backward_sampling_scheme,
+            SDDP.to_nodal_form(model, x -> Dict{Symbol,Float64}[]),
+            SDDP.to_nodal_form(model, risk_measures),
+            cycle_discretization_delta,
+            refine_at_similar_nodes,
+            SDDP.build_Φ(model),
+            SDDP.get_same_children(model),
+            stopping_rules,
+            dashboard_callback,
+            print_level,
+            start_time,
+            log,
+            log_file_handle,
+            log_frequency,
+            forward_pass,
+            duality_handler,
+            forward_pass_callback,
+            post_iteration_callback,
+            Ref{Int}(0),  # last_log_iteration
+        )
+    end
+end
 
 
 # Internal function: solve the subproblem associated with node given the
@@ -78,7 +162,7 @@ function solve_subproblem(
     # CHANGES TO SDDP.jl
     ####################################################################################
     TimerOutputs.@timeit model.timer_output "get_dual_solution" begin
-        objective, intercept_factors, dual_values = SDDP.get_dual_solution(node, noise_index, duality_handler)
+        objective, dual_values, intercept_factors = get_dual_solution(node, noise_index, duality_handler)
     end
     ####################################################################################
     if node.post_optimize_hook !== nothing
@@ -125,7 +209,7 @@ end
 # with include_last_node = false)
 function backward_pass(
     model::SDDP.PolicyGraph{T},
-    options::SDDP.Options,
+    options::LogLinearSDDP.Options,
     scenario_path::Vector{Tuple{T,NoiseType}},
     sampled_states::Vector{Dict{Symbol,Float64}},
     objective_states::Vector{NTuple{N,Float64}},
@@ -141,7 +225,7 @@ function backward_pass(
         outgoing_state = sampled_states[index]
         objective_state = get(objective_states, index, nothing)
         partition_index, belief_state = get(belief_states, index, (0, nothing))
-        items = BackwardPassItems(T, Noise)
+        items = BackwardPassItems(T, SDDP.Noise)
         if belief_state !== nothing
             # Update the cost-to-go function for partially observable model.
             for (node_index, belief) in belief_state
@@ -272,12 +356,12 @@ function solve_all_children(
         child_node = model[child.term]
 
         TimerOutputs.@timeit model.timer_output "get_backward_noise" begin
-            noise_terms = sample_backward_noise_terms(backward_sampling_scheme, child_node)
+            sampling_output = sample_backward_noise_terms(backward_sampling_scheme, child_node)
         end
 
-        for noise_index in eachindex(noise_terms)
-            noise = noise_terms[noise_index]
-            #child_node.ext[:current_independent_noise_term] = independent_noise_terms[noise_index].term
+        for noise_index in eachindex(sampling_output.dependent_noise_terms)
+            noise = sampling_output.dependent_noise_terms[noise_index]
+            child_node.ext[:current_independent_noise_term] = sampling_output.independent_noise_terms[noise_index].term
             
             if length(scenario_path) == length_scenario_path
                 push!(scenario_path, (child.term, noise.term))
@@ -346,7 +430,7 @@ end
 
 function forward_pass(
     model::SDDP.PolicyGraph{T},
-    options::SDDP.Options,
+    options::LogLinearSDDP.Options,
     pass::SDDP.DefaultForwardPass,
 ) where {T}
     # First up, sample a scenario. Note that if a cycle is detected, this will
@@ -363,14 +447,14 @@ function forward_pass(
     sampled_states = Dict{Symbol,Float64}[]
     # Storage for the belief states: partition index and the belief dictionary.
     belief_states = Tuple{Int,Dict{T,Float64}}[]
-    current_belief = initialize_belief(model)
+    current_belief = SDDP.initialize_belief(model)
     # Our initial incoming state.
     incoming_state_value = copy(options.initial_state)
     # A cumulator for the stage-objectives.
     cumulative_value = 0.0
     # Objective state interpolation.
     objective_state_vector, N =
-        initialize_objective_state(model[scenario_path[1][1]])
+        SDDP.initialize_objective_state(model[scenario_path[1][1]])
     objective_states = NTuple{N,Float64}[]
     # Iterate down the scenario.
     for (depth, (node_index, noise)) in enumerate(scenario_path)
@@ -467,7 +551,7 @@ function forward_pass(
 end
 
 
-function iteration(model::SDDP.PolicyGraph{T}, options::SDDP.Options) where {T}
+function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) where {T}
     model.ext[:numerical_issue] = false
     TimerOutputs.@timeit model.timer_output "forward_pass" begin
         forward_trajectory = forward_pass(model, options, options.forward_pass)
@@ -518,7 +602,7 @@ end
 function master_loop(
     ::SDDP.Serial,
     model::SDDP.PolicyGraph{T},
-    options::SDDP.Options,
+    options::LogLinearSDDP.Options,
 ) where {T}
 SDDP._initialize_solver(model; throw_error = false)
 model.ext[:iteration] = 0
@@ -627,7 +711,7 @@ function train(
     if print_level > 0
         SDDP.print_helper(print_banner, log_file_handle)
         SDDP.print_helper(
-            print_problem_statistics,
+            SDDP.print_problem_statistics,
             log_file_handle,
             model,
             model.most_recent_training_results !== nothing,
@@ -657,7 +741,7 @@ function train(
     # Convert the vector to an AbstractStoppingRule. Otherwise if the user gives
     # something like stopping_rules = [SDDP.IterationLimit(100)], the vector
     # will be concretely typed and we can't add a TimeLimit.
-    stopping_rules = convert(Vector{AbstractStoppingRule}, stopping_rules)
+    stopping_rules = convert(Vector{SDDP.AbstractStoppingRule}, stopping_rules)
     if isempty(stopping_rules)
         push!(stopping_rules, SDDP.SimulationStoppingRule())
     end
@@ -687,7 +771,8 @@ function train(
     else
         (::Any, ::Any) -> nothing
     end
-    options = SDDP.Options(
+
+    options = LogLinearSDDP.Options(
         model,
         model.initial_root_state;
         sampling_scheme,
@@ -705,7 +790,7 @@ function train(
         forward_pass,
         duality_handler,
         forward_pass_callback,
-        post_iteration_callback,
+        # post_iteration_callback,
     )
     status = :not_solved
     try
@@ -720,7 +805,7 @@ function train(
         end
     finally
         # And close the dashboard callback if necessary.
-        SDDP.dashboard_callback(nothing, true)
+        dashboard_callback(nothing, true)
     end
     training_results = SDDP.TrainingResults(status, log)
     model.most_recent_training_results = training_results
@@ -753,6 +838,7 @@ function train_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
+    applied_solver::LogLinearSDDP.AppliedSolver,
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
     user_process_state::Union{Nothing,Dict{Int64,Vector{Float64}}} = nothing,
 )
@@ -761,6 +847,7 @@ function train_loglinear(
     model.ext[:algo_params] = algo_params
     model.ext[:problem_params] = problem_params
     model.ext[:autoregressive_data] = autoregressive_data
+    model.ext[:applied_solver] = applied_solver
 
     # Compute and store cut exponents
     TimerOutputs.@timeit model.timer_output "compute_cut_exponents" begin

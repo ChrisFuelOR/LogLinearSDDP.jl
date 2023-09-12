@@ -221,7 +221,7 @@ mutable struct AlgoParams
         infiltrate_state = :none,
         seed = nothing,
         run_description = "",
-        solver_approach = LogLinearSDDP.GAMS_Solver(), #TODO
+        solver_approach = LogLinearSDDP.Direct_Solver(), #TODO
     )
         return new(
             stopping_rules,

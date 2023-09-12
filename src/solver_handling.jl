@@ -117,7 +117,7 @@ function set_solver_for_model(
     applied_solver::LogLinearSDDP.AppliedSolver,
 )
 
-    for node in model.nodes
+    for (_, node) in model.nodes
         set_solver!(node.subproblem, algo_params, applied_solver, algo_params.solver_approach)
     end
 end

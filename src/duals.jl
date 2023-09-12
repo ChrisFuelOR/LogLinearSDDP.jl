@@ -1,5 +1,29 @@
 struct ContinuousConicDuality <: SDDP.AbstractDualityHandler end
 
+function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::Nothing)
+    return JuMP.objective_value(node.subproblem), Dict{Symbol,Float64}(), nothing
+end
+
+
+function prepare_backward_pass(
+    model::SDDP.PolicyGraph,
+    duality_handler::SDDP.AbstractDualityHandler,
+    options::LogLinearSDDP.Options,
+)
+    undo = Function[]
+    for (_, node) in model.nodes
+        push!(undo, prepare_backward_pass(node, duality_handler, options))
+    end
+    function undo_relax()
+        for f in undo
+            f()
+        end
+        return
+    end
+    return undo_relax
+end
+
+
 function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConicDuality)
     if JuMP.dual_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
         # Attempt to recover by resetting the optimizer and re-solving.
@@ -30,30 +54,34 @@ function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConi
         (name, state) in node.states
     )
 
+    model = SDDP.get_policy_graph(node.subproblem)
     TimerOutputs.@timeit model.timer_output "compute_alphas" begin
         # We also need the dual variables for all coupling constraints.
         # In order to identify the coupling constraints, we should specify them in the problem definition.
         # Moreover, we need the dual variables for all existing cut constraints.
-        model = SDDP.get_policy_graph(node.subproblem)
-        t = node.node_index
+        t = node.index
         T = model.ext[:problem_params].number_of_stages
-        current_independent_noise_term = SDDP.get_noise_terms(sampling_scheme, node, node_index)[noise_index].term
-        cut_exponents_required = model.ext[:cut_exponents][t+1]
-        autoregressive_data_stage = model.ext[:autoregressive_data].ar_data[t]
-        
+        autoregressive_data = model.ext[:autoregressive_data]
+        autoregressive_data_stage = autoregressive_data.ar_data[t]    
+        L = get_max_dimension(autoregressive_data)
         α = Array{Float64,2}(undef, T-t+1, L)
 
+        current_independent_noise_term = node.ext[:current_independent_noise_term]
+        Infiltrator.@infiltrate
+   
         for τ in t:T 
             L_τ = autoregressive_data.ar_data[τ].ar_dimension
             for ℓ in 1:L_τ
                 if τ == t
                     # Get coupling constraint reference
-                    coupling_ref = node.ext[:coupling_constraints][ℓ]
+                    coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
                     π = JuMP.dual(coupling_ref) #TODO: dual_sign  
 
                     # Compute alpha value
-                    α[τ,ℓ] = π * exp(autoregressive_data_stage.ar_intercept[ℓ]) * exp(node.ext[:current_independent_noise_term][ℓ])
+                    α[τ-t+1,ℓ] = π * exp(autoregressive_data_stage.ar_intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
                 else
+                    cut_exponents_required = model.ext[:cut_exponents][t+1]
+
                     # Get cut constraint duals and compute first factor
                     factor_1 = get_existing_cuts_factor(node, t, τ, ℓ)
 
@@ -61,13 +89,13 @@ function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConi
                     factor_2 = prod(exp(autoregressive_data_stage.ar_intercept[ν] * cut_exponents_required[τ,ℓ,ν,t]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,t]) for ν in 1:L_t)
 
                     # Compute alpha value
-                    α[τ,ℓ] = factor_1 * factor_2
+                    α[τ-t+1,ℓ] = factor_1 * factor_2
                 end
             end
         end
     end
 
-    return objective_value(node.subproblem), λ, α
+    return JuMP.objective_value(node.subproblem), λ, α
 end
 
 
@@ -79,7 +107,7 @@ function _relax_integrality(node::SDDP.Node)
 end
 
 
-function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::SDDP.Options)
+function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogLinearSDDP.Options)
     return _relax_integrality(node)
 end
 

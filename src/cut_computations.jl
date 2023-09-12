@@ -16,7 +16,8 @@ function compute_cut_exponents(
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
     
     for t in T:-1:2
-        cut_exponents_stage = Array{Float64,4}(undef, T, L, L, p)
+        cut_exponents_stage = zeros(T, L, L, p)
+        #cut_exponents_stage = Array{Float64,4}(undef, T, L, L, p)
         autoregressive_data_stage = autoregressive_data.ar_data[t]
         L_t = autoregressive_data_stage.ar_dimension
 
@@ -61,7 +62,8 @@ function compute_cut_exponents(
         cut_exponents[t] = cut_exponents_stage
     end
 
-    cut_exponents[1] = Array{Float64,4}(undef, T, L, L, p)
+    #cut_exponents[1] = Array{Float64,4}(undef, T, L, L, p)
+    cut_exponents[1] = zeros(T, L, L, p)
 
     return cut_exponents
 end
@@ -85,7 +87,10 @@ function evaluate_cut_intercepts(
     process_state = node.ext[:process_state]
     autoregressive_data = model.ext[:autoregressive_data]
 
-    t = node.node_index #current stage
+    # Get current process state
+    process_state = node.ext[:process_state]
+
+    t = node.index #current stage
     cut_exponents_stage = cut_exponents[t]
 
     # First compute scenario-specific factors
@@ -109,7 +114,7 @@ once instead of being included in the _evaluat_cut_intercept function call for e
 
 function compute_scenario_factors(
     t::Int64,
-    process_state::Vector{Vector{Float64}},
+    process_state::Dict{Int64, Vector{Float64}},
     problem_params::LogLinearSDDP.ProblemParams,
     cut_exponents_stage::Array{Float64,4},
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
@@ -126,7 +131,12 @@ function compute_scenario_factors(
             scenario_factor = 1.0
             
             for k in t-p:t-1
-                L_k = autoregressive_data.ar_data[k].ar_dimension
+                if k < 1
+                    L_k = get_max_dimension(autoregressive_data)
+                else
+                    L_k = autoregressive_data.ar_data[k].ar_dimension
+                end
+
                 for m in 1:L_k
                     scenario_factor = scenario_factor * process_state[k][m] ^ cut_exponents_stage[τ,ℓ,m,t-k] 
                 end

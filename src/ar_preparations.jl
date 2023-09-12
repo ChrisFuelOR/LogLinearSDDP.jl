@@ -51,7 +51,7 @@ function initialize_process_state(
         process_state[t] = ones(max_dimension)
 
         for ℓ in 1:max_dimension
-            if haskey(user_process_state, t) && length(user_process_state[t]) <= ℓ && isfloat(user_process_state[t][ℓ])
+            if haskey(user_process_state, t) && length(user_process_state[t]) <= ℓ && isa(user_process_state[t][ℓ], AbstractFloat)
                 process_state[t][ℓ] = user_process_state[t][ℓ]
             end
         end
@@ -59,6 +59,7 @@ function initialize_process_state(
 
     # Store the initial process state (also required for re-initialization later on)
     model.ext[:initial_process_state] = process_state
+    model.nodes[1].ext[:process_state] = process_state
 
     return
 end
@@ -87,15 +88,14 @@ end
 
 function get_lag_dimensions(
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
-    stage::Int64,
+    t::Int64,
 )
 
     lag_dimensions = Vector{Int64}(undef, autoregressive_data.ar_lag_order)
 
     for k in eachindex(lag_dimensions)
-
-        if stage - k >= 1
-            lag_dimensions[k] = autoregressive_data.ar_data[stage-k].ar_dimension
+        if t - k >= 1
+            lag_dimensions[k] = autoregressive_data.ar_data[t-k].ar_dimension
         else
             lag_dimensions[k] = get_max_dimension(autoregressive_data)
         end
