@@ -76,7 +76,8 @@ Evaluation of all cut intrcepts for a given problem and the given scenario (proc
 """
 
 function evaluate_cut_intercepts(
-    node::SDDP.Node
+    node::SDDP.Node,
+    noise::Union{Float64,Vector{Float64}},
 )
 
     # Preparation steps
@@ -86,19 +87,22 @@ function evaluate_cut_intercepts(
     cut_exponents = model.ext[:cut_exponents]
     process_state = node.ext[:process_state]
     autoregressive_data = model.ext[:autoregressive_data]
+    t = node.index
 
-    # Get current process state
-    process_state = node.ext[:process_state]
+    if !isempty(node.bellman_function.global_theta.cuts)
+        # Get exponents for the considered cut
+        cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
-    t = node.index #current stage
-    cut_exponents_stage = cut_exponents[t]
+        # Get process state for the considered cut
+        process_state_after_realization = update_process_state(model, t+1, process_state, noise)
 
-    # First compute scenario-specific factors
-    scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, autoregressive_data)
+        # First compute scenario-specific factors
+        scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
 
-    # Iterate over all cuts and adapt intercept
-    for cut in node.bellman_function.global_theta.cuts 
-        evaluate_cut_intercept(t, cut, scenario_factors, problem_params, autoregressive_data)
+        # Iterate over all cuts and adapt intercept
+        for cut in node.bellman_function.global_theta.cuts 
+            evaluate_cut_intercept(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+        end
     end
 
     return
@@ -109,7 +113,7 @@ end
 """ 
 Pre-computation of the scenario-dependent cut intercept factors (scenario factors) for a given problem and a scenario at hand.
 Note that this value is the same for all cuts of a given problem for a given scenario, so it should be just computed
-once instead of being included in the _evaluat_cut_intercept function call for each scenario.
+once instead of being included in the _evaluate_cut_intercept function call for each scenario.
 """
 
 function compute_scenario_factors(

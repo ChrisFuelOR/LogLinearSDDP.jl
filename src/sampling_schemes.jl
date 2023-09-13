@@ -25,6 +25,13 @@ function sample_scenario(
         # Sample an independent noise term
         independent_noise = SDDP.sample_noise(independent_noise_terms)
 
+        # JUST FOR TESTING
+        if node_index == 2
+            independent_noise = 1.0
+        elseif node_index == 3
+            independent_noise = -2.0
+        end
+
         # Get the current process state matrix
         process_state = node.ext[:process_state]
 
@@ -73,8 +80,8 @@ function sample_scenario(
 
         # CHANGES TO SDDP.jl
         ####################################################################################
-        # Set the process state for the new (following) node
-        _update_process_state(graph, node_index, process_state, noise)
+        # Store the updated dict as the process state for the following stage (node)
+        graph[node_index].ext[:process_state] = update_process_state(graph, node_index, process_state, noise)
         ####################################################################################
 
     end
@@ -85,11 +92,11 @@ function sample_scenario(
 end
 
 
-function _update_process_state(
+function update_process_state(
     graph::SDDP.PolicyGraph{T},
     node_index::Int,
     process_state::Dict{Int64,Vector{Float64}},
-    noise::Vector{Float64},
+    noise::Union{Float64,Vector{Float64}},
 ) where {T}
 
     new_process_state = Dict{Int64,Vector{Float64}}()
@@ -100,17 +107,17 @@ function _update_process_state(
     # Determine new process state
     for k in min_time_index:node_index-1
         if k == node_index - 1
-            new_process_state[k] = noise
+            if isa(noise, AbstractFloat)
+                new_process_state[k] = [noise]
+            else
+                new_process_state[k] = noise
+            end
         else
             new_process_state[k] = process_state[k]
         end
     end
 
-    # Store the updated dict as the process state for the following stage (node)
-    node = graph[node_index]
-    node.ext[:process_state] = new_process_state
-   
-    return
+    return new_process_state
 end
 
 

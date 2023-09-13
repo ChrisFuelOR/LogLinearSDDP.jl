@@ -1,6 +1,6 @@
 struct ContinuousConicDuality <: SDDP.AbstractDualityHandler end
 
-function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::Nothing)
+function get_dual_solution(node::SDDP.Node, Nothing)
     return JuMP.objective_value(node.subproblem), Dict{Symbol,Float64}(), nothing
 end
 
@@ -24,7 +24,7 @@ function prepare_backward_pass(
 end
 
 
-function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConicDuality)
+function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
     if JuMP.dual_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
         # Attempt to recover by resetting the optimizer and re-solving.
         if JuMP.mode(node.subproblem) != JuMP.DIRECT
@@ -64,10 +64,10 @@ function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConi
         autoregressive_data = model.ext[:autoregressive_data]
         autoregressive_data_stage = autoregressive_data.ar_data[t]    
         L = get_max_dimension(autoregressive_data)
+        L_t = autoregressive_data_stage.ar_dimension
         α = Array{Float64,2}(undef, T-t+1, L)
 
         current_independent_noise_term = node.ext[:current_independent_noise_term]
-        Infiltrator.@infiltrate
    
         for τ in t:T 
             L_τ = autoregressive_data.ar_data[τ].ar_dimension
@@ -75,18 +75,18 @@ function get_dual_solution(node::SDDP.Node, noise_index::Int64, ::ContinuousConi
                 if τ == t
                     # Get coupling constraint reference
                     coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
-                    π = JuMP.dual(coupling_ref) #TODO: dual_sign  
+                    μ = JuMP.dual(coupling_ref)
 
                     # Compute alpha value
-                    α[τ-t+1,ℓ] = π * exp(autoregressive_data_stage.ar_intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
+                    α[τ-t+1,ℓ] = μ * exp(autoregressive_data_stage.ar_intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
                 else
                     cut_exponents_required = model.ext[:cut_exponents][t+1]
 
                     # Get cut constraint duals and compute first factor
-                    factor_1 = get_existing_cuts_factor(node, t, τ, ℓ)
+                    factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
 
                     # Compute second factor
-                    factor_2 = prod(exp(autoregressive_data_stage.ar_intercept[ν] * cut_exponents_required[τ,ℓ,ν,t]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,t]) for ν in 1:L_t)
+                    factor_2 = prod(exp(autoregressive_data_stage.ar_intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
 
                     # Compute alpha value
                     α[τ-t+1,ℓ] = factor_1 * factor_2
@@ -118,8 +118,10 @@ function get_existing_cuts_factor(node::SDDP.Node, t::Int64, τ::Int64, ℓ::Int
 
     for cut in node.bellman_function.global_theta.cuts
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factor = factor + JuMP.dual(cut.cut_constraint) * cut.intercept_factors[τ-t+1,ℓ]
+        factor = factor + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ-t+1,ℓ]
     end
 
     return factor
 end
+
+duality_log_key(::ContinuousConicDuality) = " "

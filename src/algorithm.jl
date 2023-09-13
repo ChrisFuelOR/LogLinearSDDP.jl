@@ -1,3 +1,61 @@
+# function convergence_test(
+#     graph::SDDP.PolicyGraph, 
+#     log::Vector{LogLinearSDDP.Log}, 
+#     rule::Vector{SDDP.AbstractStoppingRule}
+# )
+#     log_SDDP = Vector{SDDP.Log}(undef, length(log))
+
+#     # Create SDDP.Log from LogLinearSDDP.log, as required for stopping test
+#     for i in eachindex(log)
+
+#         log_SDDP[i] = SDDP.Log(
+#             log[i].iteration,
+#             log[i].bound,
+#             log[i].simulation_value,
+#             log[i].time,
+#             log[i].pid,
+#             log[i].total_solves,
+#             log[i].duality_key,
+#             false
+#         )
+#     end
+
+#     # Check stopping rules
+#     for stopping_rule in stopping_rules
+#         if SDDP.convergence_test(graph, log_SDDP, stopping_rule)
+#             return true, SDDP.stopping_rule_status(stopping_rule)
+#         end
+#     end
+#     return false, :not_solved
+# end
+
+
+# Internal function: set the objective of node to the stage objective, plus the
+# cost/value-to-go term.
+function set_objective(node::SDDP.Node{T}) where {T}
+    objective_state_component = SDDP.get_objective_state_component(node)
+    belief_state_component = SDDP.get_belief_state_component(node)
+    if objective_state_component != JuMP.AffExpr(0.0) ||
+       belief_state_component != JuMP.AffExpr(0.0)
+        node.stage_objective_set = false
+    end
+    if !node.stage_objective_set
+        JuMP.set_objective(
+            node.subproblem,
+            JuMP.objective_sense(node.subproblem),
+            JuMP.@expression(
+                node.subproblem,
+                node.stage_objective +
+                objective_state_component +
+                belief_state_component +
+                bellman_term(node.bellman_function)
+            )
+        )
+    end
+    node.stage_objective_set = true
+    return
+end
+
 """
     parameterize(node::Node, noise)
 
@@ -12,11 +70,11 @@ function parameterize(
 )
 
     node.parameterize(noise)
-    SDDP.set_objective(node)
+    set_objective(node)
     
     model = SDDP.get_policy_graph(node.subproblem)
     TimerOutputs.@timeit model.timer_output "evaluate_cut_intercepts" begin
-        evaluate_cut_intercepts(node)
+        evaluate_cut_intercepts(node, noise)
     end
     
     return
@@ -49,7 +107,7 @@ struct Options{T}
     dashboard_callback::Function
     print_level::Int
     start_time::Float64
-    log::Vector{Log}
+    log::Vector{SDDP.Log}
     log_file_handle::Any
     log_frequency::Union{Int,Function}
     forward_pass::SDDP.AbstractForwardPass
@@ -71,7 +129,7 @@ struct Options{T}
         dashboard_callback::Function = (a, b) -> nothing,
         print_level::Int = 0,
         start_time::Float64 = 0.0,
-        log::Vector{Log} = Log[],
+        log::Vector{SDDP.Log} = SDDP.Log[],
         log_file_handle = IOBuffer(),
         log_frequency::Union{Int,Function} = 1,
         forward_pass::SDDP.AbstractForwardPass = SDDP.DefaultForwardPass(),
@@ -114,7 +172,6 @@ function solve_subproblem(
     node::SDDP.Node{T},
     state::Dict{Symbol,Float64},
     noise,
-    noise_index::Int64,
     scenario_path::Vector{Tuple{T,S}};
     duality_handler::Union{Nothing,SDDP.AbstractDualityHandler},
 ) where {T,S}
@@ -162,7 +219,7 @@ function solve_subproblem(
     # CHANGES TO SDDP.jl
     ####################################################################################
     TimerOutputs.@timeit model.timer_output "get_dual_solution" begin
-        objective, dual_values, intercept_factors = get_dual_solution(node, noise_index, duality_handler)
+        objective, dual_values, intercept_factors = get_dual_solution(node, duality_handler)
     end
     ####################################################################################
     if node.post_optimize_hook !== nothing
@@ -401,7 +458,6 @@ function solve_all_children(
                         child_node,
                         outgoing_state,
                         noise.term,
-                        noise_index,
                         scenario_path,
                         duality_handler = duality_handler,
                     )
@@ -508,7 +564,6 @@ function forward_pass(
                 node,
                 incoming_state_value,
                 noise,
-                0,
                 scenario_path[1:depth],
                 duality_handler = nothing,
             )
@@ -570,18 +625,19 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
     TimerOutputs.@timeit model.timer_output "calculate_bound" begin
         bound = SDDP.calculate_bound(model)
     end
+
     push!(
         options.log,
-        Log(
+        SDDP.Log(
             model.ext[:iteration], #length(options.log) + 1,
             bound,
             forward_trajectory.cumulative_value,
-            forward_trajectory.sampled_states,
+            #forward_trajectory.sampled_states,
             time() - options.start_time,
             Distributed.myid(),
             #TODO: total_cuts
             model.ext[:total_solves],
-            SDDP.duality_log_key(options.duality_handler),
+            duality_log_key(options.duality_handler),
             model.ext[:numerical_issue],
         ),
     )
@@ -636,7 +692,7 @@ function train(
     log_file::String = "SDDP.log",
     log_frequency::Int = 1,
     log_every_seconds::Float64 = log_frequency == 1 ? -1.0 : 0.0,
-    run_numerical_stability_report::Bool = true,
+    run_numerical_stability_report::Bool = false, # TODO: Not implemented yet
     stopping_rules = SDDP.AbstractStoppingRule[],
     risk_measure = SDDP.Expectation(),
     sampling_scheme = SDDP.InSampleMonteCarlo(),
@@ -654,7 +710,7 @@ function train(
     forward_pass_callback::Function = (x) -> nothing,
     post_iteration_callback = result -> nothing,
 )
-    function log_frequency_f(log::Vector{LogLinearSDDP.Log})
+    function log_frequency_f(log::Vector{SDDP.Log})
         if mod(length(log), log_frequency) != 0
             return false
         end
@@ -702,11 +758,8 @@ function train(
         )
     end
 
-    # Reset the TimerOutput.
-    TimerOutputs.reset_timer!(model.timer_output)
-    #TODO: TimerOutputs.reset_timer!(SDDP_TIMER)
     log_file_handle = open(log_file, "a")
-    log = LogLinearSDDP.Log[]
+    log = SDDP.Log[]
 
     if print_level > 0
         SDDP.print_helper(print_banner, log_file_handle)
@@ -794,7 +847,9 @@ function train(
     )
     status = :not_solved
     try
-        status = master_loop(parallel_scheme, model, options)
+        TimerOutputs.@timeit model.timer_output "loop" begin
+            status = master_loop(parallel_scheme, model, options)
+        end
     catch ex
         if isa(ex, InterruptException)
             status = :interrupted
@@ -843,6 +898,10 @@ function train_loglinear(
     user_process_state::Union{Nothing,Dict{Int64,Vector{Float64}}} = nothing,
 )
 
+    # Reset the TimerOutput.
+    TimerOutputs.reset_timer!(model.timer_output)
+    #TODO: TimerOutputs.reset_timer!(SDDP_TIMER)
+    
     # Store autoregressive_data, problem_params and algo_params in model.ext
     model.ext[:algo_params] = algo_params
     model.ext[:problem_params] = problem_params
@@ -859,25 +918,26 @@ function train_loglinear(
         initialize_process_state(model, autoregressive_data, user_process_state)
     end
 
+    # Reset Bellman functions
+    reset_bellman_function(model)
+
     # Set solvers
     set_solver_for_model(model, algo_params, applied_solver)
 
     # Use algo_params to define parameters for train() function that is based on SDDP.train()
-    TimerOutputs.@timeit model.timer_output "train" begin
-        train(
-            model,
-            print_level = algo_params.print_level,
-            log_file = algo_params.log_file,
-            log_frequency = algo_params.log_frequency,
-            run_numerical_stability_report = algo_params.run_numerical_stability_report,
-            stopping_rules = algo_params.stopping_rules,
-            cut_type = SDDP.SINGLE_CUT,
-            refine_at_similar_nodes = false, #TODO
-            cut_deletion_minimum = 0,
-            backward_sampling_scheme = CompleteSampler(),
-            duality_handler = ContinuousConicDuality(),
-        )
-    end
+    train(
+        model,
+        print_level = algo_params.print_level,
+        log_file = algo_params.log_file,
+        log_frequency = algo_params.log_frequency,
+        run_numerical_stability_report = algo_params.run_numerical_stability_report,
+        stopping_rules = algo_params.stopping_rules,
+        cut_type = SDDP.SINGLE_CUT,
+        refine_at_similar_nodes = false, #TODO
+        cut_deletion_minimum = 0,
+        backward_sampling_scheme = CompleteSampler(),
+        duality_handler = ContinuousConicDuality(),
+    )
 
 end
 

@@ -39,11 +39,11 @@ a scenario at hand.
 ################################################################################
 
 mutable struct Cut
-    gradient::Dict{Symbol,Float64}
+    coefficients::Dict{Symbol,Float64} # gradient
     intercept::Float64 # for the construction scenario (only for checks)
     intercept_factors::Array{Float64,2}
     trial_state::Dict{Symbol,Float64}
-    cut_constraint::Union{Nothing,JuMP.ConstraintRef}
+    constraint_ref::Union{Nothing,JuMP.ConstraintRef}
     cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
     obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
     belief_y::Union{Nothing,Dict{T,Float64} where {T}}
@@ -192,6 +192,9 @@ Note that the parameters from risk_measure to refine_at_similar_nodes are
 basic SDDP parameters which are required as we are using some functionality
 from the package SDDP.jl. They should not be changed, though, as for different
 choices the DynamicSDDiP algorithm will not work.
+
+Note that run_numerical_stability_report is not updated to the modified version
+of SDDP yet.
 """
 
 mutable struct AlgoParams
@@ -215,7 +218,7 @@ mutable struct AlgoParams
         print_level = 2,
         log_frequency = 1,
         log_file = "LogLinearSDDP.log",
-        run_numerical_stability_report = true,
+        run_numerical_stability_report = false,
         numerical_focus = false,
         silent = true,
         infiltrate_state = :none,

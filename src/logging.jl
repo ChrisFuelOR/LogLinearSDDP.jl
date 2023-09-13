@@ -33,23 +33,22 @@ At the end, the following things are logged.
 
 """
 
-struct Log
-    iteration::Int
-    bound::Float64
-    simulation_value::Float64
-    current_state::Vector{Dict{Symbol,Float64}}
-    time::Float64
-    pid::Int
-    #total_cuts::Int
-    total_solves::Int
-    duality_key::String
-    serious_numerical_issue::Bool
-end
-
+# struct Log
+#     iteration::Int
+#     bound::Float64
+#     simulation_value::Float64
+#     current_state::Vector{Dict{Symbol,Float64}}
+#     time::Float64
+#     pid::Int
+#     #total_cuts::Int
+#     total_solves::Int
+#     duality_key::String
+#     serious_numerical_issue::Bool
+# end
 
 struct Results
     status::Symbol
-    log::Vector{LogLinearSDDP.Log}
+    log::Vector{SDDP.Log}
 end
 
 
@@ -198,7 +197,7 @@ function print_iteration_header(io)
     flush(io)
 end
 
-function print_iteration(io, log::Log, start_time::Float64)
+function print_iteration(io, log::SDDP.Log, start_time::Float64)
     print(io, rpad(Printf.@sprintf("%-5d", log.iteration), 6))
     print(io, "  ")
     print(io, lpad(Printf.@sprintf("%1.6e", log.bound), 13))
@@ -230,7 +229,7 @@ function print_iteration(io, log::Log, start_time::Float64)
 end
 
 
-function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{LogLinearSDDP.Log})
+function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{SDDP.Log})
     if algo_params.print_level > 0 && mod(length(log), algo_params.log_frequency) == 0
         # Get time() after last iteration to compute iteration specific time
         if lastindex(log) > 1

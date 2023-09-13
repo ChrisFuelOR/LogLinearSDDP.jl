@@ -1,127 +1,3 @@
-mutable struct ConvexApproximation
-    theta::JuMP.VariableRef
-    states::Dict{Symbol,JuMP.VariableRef}
-    objective_states::Union{Nothing,NTuple{N,JuMP.VariableRef} where {N}}
-    belief_states::Union{Nothing,Dict{T,JuMP.VariableRef} where {T}}
-    # Storage for cut selection
-    cuts::Vector{LogLinearSDDP.Cut}
-    sampled_states::Vector{SDDP.SampledState}
-    cuts_to_be_deleted::Vector{LogLinearSDDP.Cut}
-    deletion_minimum::Int
-
-    function ConvexApproximation(
-        theta::JuMP.VariableRef,
-        states::Dict{Symbol,JuMP.VariableRef},
-        objective_states,
-        belief_states,
-        deletion_minimum::Int,
-    )
-        return new(
-            theta,
-            states,
-            objective_states,
-            belief_states,
-            LogLinearSDDP.Cut[],
-            SDDP.SampledState[],
-            LogLinearSDDP.Cut[],
-            deletion_minimum,
-        )
-    end
-end
-
-
-"""
-    BellmanFunction
-
-A representation of the value function. SDDP.jl uses the following unique
-representation of the value function that is undocumented in the literature.
-For more details, see SDDP.jl documentation.
-"""
-mutable struct BellmanFunction
-    cut_type::SDDP.CutType
-    global_theta::LogLinearSDDP.ConvexApproximation
-    local_thetas::Vector{ LogLinearSDDP.ConvexApproximation}
-    # Cuts defining the dual representation of the risk measure.
-    risk_set_cuts::Set{Vector{Float64}}
-end
-
-"""
-    BellmanFunction(;
-        lower_bound = -Inf,
-        upper_bound = Inf,
-        deletion_minimum::Int = 1,
-        cut_type::CutType = SDDP.MULTI_CUT,
-    )
-"""
-function BellmanFunction(;
-    lower_bound = -Inf,
-    upper_bound = Inf,
-    deletion_minimum::Int = 1,
-    cut_type::SDDP.CutType = SDDP.MULTI_CUT,
-)
-    return SDDP.InstanceFactory{LogLinearSDDP.BellmanFunction}(
-        lower_bound = lower_bound,
-        upper_bound = upper_bound,
-        deletion_minimum = deletion_minimum,
-        cut_type = cut_type,
-    )
-end
-
-function bellman_term(bellman_function::LogLinearSDDP.BellmanFunction)
-    return bellman_function.global_theta.theta
-end
-
-function initialize_bellman_function(
-    factory::SDDP.InstanceFactory{LogLinearSDDP.BellmanFunction},
-    model::SDDP.PolicyGraph{T},
-    node::SDDP.Node{T},
-) where {T}
-    lower_bound, upper_bound, deletion_minimum, cut_type =
-        -Inf, Inf, 0, SDDP.SINGLE_CUT
-    if length(factory.args) > 0
-        error(
-            "Positional arguments $(factory.args) ignored in BellmanFunction.",
-        )
-    end
-    for (kw, value) in factory.kwargs
-        if kw == :lower_bound
-            lower_bound = value
-        elseif kw == :upper_bound
-            upper_bound = value
-        elseif kw == :deletion_minimum
-            deletion_minimum = value
-        elseif kw == :cut_type
-            cut_type = value
-        else
-            error(
-                "Keyword $(kw) not recognised as argument to BellmanFunction.",
-            )
-        end
-    end
-    if lower_bound == -Inf && upper_bound == Inf
-        error("You must specify a finite bound on the cost-to-go term.")
-    end
-    if length(node.children) == 0
-        lower_bound = upper_bound = 0.0
-    end
-    Θᴳ = JuMP.@variable(node.subproblem)
-    lower_bound > -Inf && JuMP.set_lower_bound(Θᴳ, lower_bound)
-    upper_bound < Inf && JuMP.set_upper_bound(Θᴳ, upper_bound)
-    # Initialize bounds for the objective states. If objective_state==nothing,
-    # this check will be skipped by dispatch.
-    SDDP._add_initial_bounds(node.objective_state, Θᴳ)
-    x′ = Dict(key => var.out for (key, var) in node.states)
-    obj_μ = node.objective_state !== nothing ? node.objective_state.μ : nothing
-    belief_μ = node.belief_state !== nothing ? node.belief_state.μ : nothing
-    return LogLinearSDDP.BellmanFunction(
-        cut_type,
-        LogLinearSDDP.ConvexApproximation(Θᴳ, x′, obj_μ, belief_μ, deletion_minimum),
-        LogLinearSDDP.ConvexApproximation[],
-        Set{Vector{Float64}}(),
-    )
-end
-
-
 function _add_cut(
     V::LogLinearSDDP.ConvexApproximation,
     θᵏ::Float64, #actually not required
@@ -139,6 +15,8 @@ function _add_cut(
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
     cut = LogLinearSDDP.Cut(πᵏ, θᵏ, αᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
     _add_cut_constraint_to_model(V, cut)
+    push!(V.cuts, cut)
+    #Infiltrator.@infiltrate
     if cut_selection
         @error("Cut selection is not supported yet.")
     end
@@ -185,7 +63,7 @@ end
 function refine_bellman_function(
     model::SDDP.PolicyGraph{T},
     node::SDDP.Node{T},
-    bellman_function::SDDP.BellmanFunction,
+    bellman_function::LogLinearSDDP.BellmanFunction,
     risk_measure::SDDP.AbstractRiskMeasure,
     outgoing_state::Dict{Symbol,Float64},
     dual_variables::Vector{Dict{Symbol,Float64}},
@@ -247,7 +125,7 @@ function _add_average_cut(
     t = node.index+1
     T = model.ext[:problem_params].number_of_stages
     L = model.ext[:autoregressive_data].ar_data[t].ar_dimension
-    αᵏ = Array{Float64,2}(undef, T-t+1, L)    
+    αᵏ = zeros(T-t+1, L)    
     
     # Calculate the expected intercept and dual variables with respect to the
     # risk-adjusted probability distribution.

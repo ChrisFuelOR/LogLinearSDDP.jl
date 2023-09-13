@@ -1,8 +1,8 @@
 module LogLinearSDDP
 
+import SDDP
 import JuMP
 import MathOptInterface
-import SDDP
 import Revise
 import TimerOutputs
 import GAMS
@@ -10,6 +10,7 @@ import Gurobi
 import Printf
 import Infiltrator
 import Dates
+import Distributed
 
 const MOI = MathOptInterface #TODO
 
@@ -30,6 +31,7 @@ include("ar_preparations.jl")
 include("sampling_schemes.jl")
 include("algorithm.jl")
 include("duals.jl")
+include("bellman_redefine.jl")
 include("bellman.jl")
 
 end
