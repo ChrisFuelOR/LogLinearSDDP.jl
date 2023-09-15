@@ -250,29 +250,46 @@ end
 Struct containing the data for the log-linear autoregressive process for a given stage.
 Note that the process is defined componentwise for each component ℓ.
 
+ar_dimension:       Int64 which defines the dimension of the random process at the current stage;
+                    denoted by L in the paper
 ar_intercept:       Vector containing the intercepts of the log-linear AR process;
                     one-dimensional with component ℓ;
                     denoted by γ in the paper
 ar_coefficients:    Array containing the coefficients of the log-linear AR process;
                     three-dimensional with lag k and components ℓ, m;
                     denoted by ϕ in the paper
-ar_eta:             Array containing the stagewise independent realizations of the log-linear AR process;
-                    two-dimensional with component ℓ and possible realizations;
+ar_eta:             Vector containing the stagewise independent realizations of the log-linear AR process;
+                    each element is an object containing different components ℓ (e.g. a vector or a tuple);
                     denoted by η in the paper
-ar_dimension:       Int64 which defines the dimension of the random process at the current stage;
-                    denoted by L in the paper
+ar_probabilities:   Probabilities related to ar_eta (optional).
 
 The size of ar_eta should match number_of_realizations defined in ProblemParams, so ProblemParams
 should be defined in advance.
 """
 
 struct AutoregressiveDataStage
+    ar_dimension::Int64
     ar_intercept::Vector{Float64}
     ar_coefficients::Array{Float64,3}
-    ar_eta::Array{Float64,2}
-    ar_dimension::Int64
-end
+    ar_eta::Vector{Any}
+    ar_probabilities::Vector{Float64}
 
+    function AutoregressiveDataStage(
+        ar_dimension,
+        ar_intercept,
+        ar_coefficients,
+        ar_eta;
+        ar_probabilities = fill(1 / length(ar_eta), length(ar_eta)),
+    )
+        return new(
+            ar_dimension,
+            ar_intercept,
+            ar_coefficients,
+            ar_eta,
+            ar_probabilities,
+        )
+    end
+end
 
 """
 Struct containing the data for the log-linear autoregressive process for all stages.

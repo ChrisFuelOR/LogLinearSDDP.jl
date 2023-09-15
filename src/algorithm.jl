@@ -1,35 +1,3 @@
-# function convergence_test(
-#     graph::SDDP.PolicyGraph, 
-#     log::Vector{LogLinearSDDP.Log}, 
-#     rule::Vector{SDDP.AbstractStoppingRule}
-# )
-#     log_SDDP = Vector{SDDP.Log}(undef, length(log))
-
-#     # Create SDDP.Log from LogLinearSDDP.log, as required for stopping test
-#     for i in eachindex(log)
-
-#         log_SDDP[i] = SDDP.Log(
-#             log[i].iteration,
-#             log[i].bound,
-#             log[i].simulation_value,
-#             log[i].time,
-#             log[i].pid,
-#             log[i].total_solves,
-#             log[i].duality_key,
-#             false
-#         )
-#     end
-
-#     # Check stopping rules
-#     for stopping_rule in stopping_rules
-#         if SDDP.convergence_test(graph, log_SDDP, stopping_rule)
-#             return true, SDDP.stopping_rule_status(stopping_rule)
-#         end
-#     end
-#     return false, :not_solved
-# end
-
-
 # Internal function: set the objective of node to the stage objective, plus the
 # cost/value-to-go term.
 function set_objective(node::SDDP.Node{T}) where {T}
@@ -66,15 +34,14 @@ the existing cuts to the scenario at hand.
 """
 function parameterize(
     node::SDDP.Node, 
-    noise
+    noise_term
 )
-
-    node.parameterize(noise)
+    node.parameterize(noise_term)
     set_objective(node)
     
     model = SDDP.get_policy_graph(node.subproblem)
     TimerOutputs.@timeit model.timer_output "evaluate_cut_intercepts" begin
-        evaluate_cut_intercepts(node, noise)
+        evaluate_cut_intercepts(node, noise_term)
     end
     
     return
@@ -171,7 +138,7 @@ function solve_subproblem(
     model::SDDP.PolicyGraph{T},
     node::SDDP.Node{T},
     state::Dict{Symbol,Float64},
-    noise,
+    noise_term,
     scenario_path::Vector{Tuple{T,S}};
     duality_handler::Union{Nothing,SDDP.AbstractDualityHandler},
 ) where {T,S}
@@ -180,13 +147,13 @@ function solve_subproblem(
     # variables. Then parameterize the model depending on `noise`. Finally,
     # set the objective.
     SDDP.set_incoming_state(node, state)
-    LogLinearSDDP.parameterize(node, noise)
+    LogLinearSDDP.parameterize(node, noise_term)
     pre_optimize_ret = if node.pre_optimize_hook !== nothing
         node.pre_optimize_hook(
             model,
             node,
             state,
-            noise,
+            noise_term,
             scenario_path,
             duality_handler,
         )
@@ -211,6 +178,7 @@ function solve_subproblem(
         throw(InterruptException())
     end
     if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
+        Infiltrator.@infiltrate
         SDDP.attempt_numerical_recovery(model, node)
     end
     state = SDDP.get_outgoing_state(node)
@@ -259,6 +227,75 @@ struct BackwardPassItems{T,U}
     end
 end
 
+
+"""
+Calculate the lower bound (if minimizing, otherwise upper bound) of the problem
+model at the point state, assuming the risk measure at the root node is
+risk_measure.
+"""
+function calculate_bound(
+    model::SDDP.PolicyGraph{T},
+    root_state::Dict{Symbol,Float64} = model.initial_root_state;
+    risk_measure::SDDP.AbstractRiskMeasure = SDDP.Expectation(),
+) where {T}
+    # Initialization.
+    noise_supports = Any[]
+    probabilities = Float64[]
+    objectives = Float64[]
+    current_belief = SDDP.initialize_belief(model)
+    # Solve all problems that are children of the root node.
+    for child in model.root_children
+        if isapprox(child.probability, 0.0, atol = 1e-6)
+            continue
+        end
+        node = model[child.term]
+        for noise in node.noise_terms
+            if node.objective_state !== nothing
+                SDDP.update_objective_state(
+                    node.objective_state,
+                    node.objective_state.initial_value,
+                    noise.term,
+                )
+            end
+            # Update belief state, etc.
+            if node.belief_state !== nothing
+                belief = node.belief_state::SDDP.BeliefState{T}
+                partition_index = belief.partition_index
+                belief.updater(
+                    belief.belief,
+                    current_belief,
+                    partition_index,
+                    noise.term,
+                )
+            end
+            subproblem_results = solve_subproblem(
+                model,
+                node,
+                root_state,
+                noise.term,
+                Tuple{T,Any}[(child.term, noise.term)],
+                duality_handler = nothing,
+            )
+            push!(objectives, subproblem_results.objective)
+            push!(probabilities, child.probability * noise.probability)
+            push!(noise_supports, noise.term)
+        end
+    end
+    # Now compute the risk-adjusted probability measure:
+    risk_adjusted_probability = similar(probabilities)
+    offset = SDDP.adjust_probability(
+        risk_measure,
+        risk_adjusted_probability,
+        probabilities,
+        noise_supports,
+        objectives,
+        model.objective_sense == MOI.MIN_SENSE,
+    )
+    # Finally, calculate the risk-adjusted value.
+    return sum(
+        obj * prob for (obj, prob) in zip(objectives, risk_adjusted_probability)
+    ) + offset
+end
 
 # Internal function: perform a backward pass of the SDDP algorithm along the
 # scenario_path, refining the bellman function at sampled_states. Assumes that
@@ -416,9 +453,9 @@ function solve_all_children(
             sampling_output = sample_backward_noise_terms(backward_sampling_scheme, child_node)
         end
 
-        for noise_index in eachindex(sampling_output.dependent_noise_terms)
-            noise = sampling_output.dependent_noise_terms[noise_index]
-            child_node.ext[:current_independent_noise_term] = sampling_output.independent_noise_terms[noise_index].term
+        for noise_index in eachindex(sampling_output.all_dependent_noises)
+            noise = sampling_output.all_dependent_noises[noise_index]
+            child_node.ext[:current_independent_noise_term] = sampling_output.all_independent_noises[noise_index].term
             
             if length(scenario_path) == length_scenario_path
                 push!(scenario_path, (child.term, noise.term))
@@ -596,6 +633,7 @@ function forward_pass(
         end
     end
     # ===== End: drop off starting state if terminated due to cycle =====
+    println(scenario_path)
     return (
         scenario_path = scenario_path,
         sampled_states = sampled_states,
@@ -623,7 +661,7 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
         )
     end
     TimerOutputs.@timeit model.timer_output "calculate_bound" begin
-        bound = SDDP.calculate_bound(model)
+        bound = calculate_bound(model)
     end
 
     push!(
@@ -895,7 +933,7 @@ function train_loglinear(
     problem_params::LogLinearSDDP.ProblemParams,
     applied_solver::LogLinearSDDP.AppliedSolver,
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
-    user_process_state::Union{Nothing,Dict{Int64,Vector{Float64}}} = nothing,
+    user_process_state::Union{Nothing,Dict{Int64,Any}} = nothing,
 )
 
     # Reset the TimerOutput.

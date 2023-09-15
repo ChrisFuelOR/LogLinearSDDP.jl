@@ -21347,3 +21347,1265 @@ numeric issues : 0
  initialize_process         1   4.70μs    0.0%  4.70μs      592B    0.0%     592B
  ────────────────────────────────────────────────────────────────────────────────
 
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:13:22.024
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:14:09.732
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:16:37.950
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:17:41.120
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:17:53.876
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:18:41.767
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [8, 8]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:19:16.366
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:19:35.533
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:20:48.632
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:21:18.136
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:22:05.802
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:22:13.035
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:25:29.497
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:26:24.999
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:26:32.281
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:27:14.140
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:28:58.441
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:30:41.458
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:31:11.866
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:31:24.239
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 7.29000e+02
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:48:34.052
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-15T15:51:28.631
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        0.000000e+00   1.663519e+02    1.0000   3.200006e-02   3.200006e-02       22      1     
+2        0.000000e+00   6.961491e+02    1.0000   2.610002e-01   2.290001e-01       44      1     
+3        0.000000e+00   3.525902e+02    1.0000   2.790000e-01   1.799989e-02       66      1     
+4        0.000000e+00   2.199666e+02    1.0000   3.010001e-01   2.200007e-02       88      1     
+5        0.000000e+00   3.941615e+02    1.0000   3.120000e-01   1.099992e-02      110      1     
+6        0.000000e+00   6.574378e+02    1.0000   3.300002e-01   1.800013e-02      132      1     
+7        0.000000e+00   3.908416e+02    1.0000   3.300002e-01   0.000000e+00      154      1     
+8        0.000000e+00   6.961491e+02    1.0000   3.460000e-01   1.599979e-02      176      1     
+9        0.000000e+00   3.225752e+02    1.0000   3.630002e-01   1.700020e-02      198      1     
+10       0.000000e+00   3.023068e+02    1.0000   3.800001e-01   1.699996e-02      220      1     
+11       0.000000e+00   2.050632e+02    1.0000   4.520001e-01   7.200003e-02      242      1     
+12       0.000000e+00   7.290241e+02    1.0000   5.790000e-01   1.269999e-01      264      1     
+13       0.000000e+00   2.970286e+02    1.0000   6.010001e-01   2.200007e-02      286      1     
+14       0.000000e+00   2.379382e+02    1.0000   6.130002e-01   1.200008e-02      308      1     
+15       0.000000e+00   4.585408e+02    1.0000   6.300001e-01   1.699996e-02      330      1     
+16       0.000000e+00   3.546258e+02    1.0000   6.460001e-01   1.600003e-02      352      1     
+17       0.000000e+00   2.970286e+02    1.0000   6.800001e-01   3.399992e-02      374      1     
+18       0.000000e+00   3.944522e+02    1.0000   7.010000e-01   2.099991e-02      396      1     
+19       0.000000e+00   7.110525e+02    1.0000   7.130001e-01   1.200008e-02      418      1     
+20       0.000000e+00   3.944522e+02    1.0000   7.290001e-01   1.600003e-02      440      1     
+21       0.000000e+00   3.850648e+02    1.0000   7.630000e-01   3.399992e-02      462      1     
+22       0.000000e+00   3.116942e+02    1.0000   7.800000e-01   1.699996e-02      484      1     
+23       0.000000e+00   7.173645e+02    1.0000   8.010001e-01   2.100015e-02      506      1     
+24       0.000000e+00   5.063938e+02    1.0000   8.130000e-01   1.199985e-02      528      1     
+25       0.000000e+00   3.116942e+02    1.0000   8.300002e-01   1.700020e-02      550      1     
+26       0.000000e+00   2.721585e+02    1.0000   8.460000e-01   1.599979e-02      572      1     
+27       0.000000e+00   3.023068e+02    1.0000   8.630002e-01   1.700020e-02      594      1     
+28       0.000000e+00   4.062048e+02    1.0000   8.800001e-01   1.699996e-02      616      1     
+29       0.000000e+00   2.788192e+02    1.0000   9.010000e-01   2.099991e-02      638      1     
+30       0.000000e+00   2.853690e+02    1.0000   9.130001e-01   1.200008e-02      660      1     
+31       0.000000e+00   4.953715e+02    1.0000   9.460001e-01   3.299999e-02      682      1     
+32       0.000000e+00   3.549165e+02    1.0000   9.630001e-01   1.699996e-02      704      1     
+33       0.000000e+00   5.392688e+02    1.0000   9.800000e-01   1.699996e-02      726      1     
+34       0.000000e+00   2.574929e+02    1.0000   1.013000e+00   3.299999e-02      748      1     
+35       0.000000e+00   4.147890e+02    1.0000   1.030000e+00   1.699996e-02      770      1     
+36       0.000000e+00   4.972521e+02    1.0000   1.046000e+00   1.600003e-02      792      1     
+37       0.000000e+00   5.063938e+02    1.0000   1.080000e+00   3.400016e-02      814      1     
+38       0.000000e+00   4.062048e+02    1.0000   1.146000e+00   6.599998e-02      836      1     
+39       0.000000e+00   5.392688e+02    1.0000   1.163000e+00   1.699996e-02      858      1     
+40       0.000000e+00   7.110525e+02    1.0000   1.180000e+00   1.699996e-02      880      1     
+41       0.000000e+00   3.764806e+02    1.0000   1.213000e+00   3.299999e-02      902      1     
+42       0.000000e+00   3.913014e+02    1.0000   1.230000e+00   1.699996e-02      924      1     
+43       0.000000e+00   6.851268e+02    1.0000   1.246000e+00   1.600003e-02      946      1     
+44       0.000000e+00   2.876412e+02    1.0000   1.280000e+00   3.399992e-02      968      1     
+45       0.000000e+00   2.254423e+02    1.0000   1.301000e+00   2.100015e-02      990      1     
+46       0.000000e+00   2.379382e+02    1.0000   1.330000e+00   2.900004e-02     1012      1     
+47       0.000000e+00   6.961491e+02    1.0000   1.347000e+00   1.699996e-02     1034      1     
+48       0.000000e+00   2.531313e+02    1.0000   1.363000e+00   1.600003e-02     1056      1     
+49       0.000000e+00   5.392688e+02    1.0000   1.401000e+00   3.799987e-02     1078      1     
+50       0.000000e+00   2.790570e+02    1.0000   1.413000e+00   1.200008e-02     1100      1     
+51       0.000000e+00   5.301271e+02    1.0000   1.446000e+00   3.299999e-02     1122      1     
+52       0.000000e+00   4.147890e+02    1.0000   1.463000e+00   1.699996e-02     1144      1     
+53       0.000000e+00   3.850648e+02    1.0000   1.479000e+00   1.600003e-02     1166      1     
+54       0.000000e+00   3.505549e+02    1.0000   1.502000e+00   2.300000e-02     1188      1     
+55       0.000000e+00   2.790570e+02    1.0000   1.530000e+00   2.799988e-02     1210      1     
+56       0.000000e+00   5.298814e+02    1.0000   1.563000e+00   3.299999e-02     1232      1     
+57       0.000000e+00   5.268072e+02    1.0000   1.580000e+00   1.700020e-02     1254      1     
+58       0.000000e+00   2.574929e+02    1.0000   1.601000e+00   2.099991e-02     1276      1     
+59       0.000000e+00   5.184675e+02    1.0000   1.619000e+00   1.799989e-02     1298      1     
+60       0.000000e+00   5.184675e+02    1.0000   1.646000e+00   2.700019e-02     1320      1     
+61       0.000000e+00   3.913014e+02    1.0000   1.679000e+00   3.299999e-02     1342      1     
+62       0.000000e+00   5.276092e+02    1.0000   1.713000e+00   3.399992e-02     1364      1     
+63       0.000000e+00   2.641536e+02    1.0000   1.729000e+00   1.600003e-02     1386      1     
+64       0.000000e+00   3.941615e+02    1.0000   1.763000e+00   3.399992e-02     1408      1     
+65       0.000000e+00   3.615772e+02    1.0000   1.798000e+00   3.500009e-02     1430      1     
+66       0.000000e+00   3.761899e+02    1.0000   1.813000e+00   1.499987e-02     1452      1     
+67       0.000000e+00   4.953715e+02    1.0000   1.839000e+00   2.600002e-02     1474      1     
+68       0.000000e+00   3.225752e+02    1.0000   1.863000e+00   2.400017e-02     1496      1     
+69       0.000000e+00   2.574929e+02    1.0000   1.930000e+00   6.699991e-02     1518      1     
+70       0.000000e+00   5.212972e+02    1.0000   1.963000e+00   3.299999e-02     1540      1     
+71       0.000000e+00   5.276092e+02    1.0000   2.002000e+00   3.900003e-02     1562      1     
+72       0.000000e+00   3.228660e+02    1.0000   2.029000e+00   2.699995e-02     1584      1     
+73       0.000000e+00   5.268072e+02    1.0000   2.063000e+00   3.399992e-02     1606      1     
+74       0.000000e+00   5.392688e+02    1.0000   2.102000e+00   3.900003e-02     1628      1     
+75       0.000000e+00   2.721585e+02    1.0000   2.113000e+00   1.100016e-02     1650      1     
+76       0.000000e+00   3.549165e+02    1.0000   2.146000e+00   3.299999e-02     1672      1     
+77       0.000000e+00   7.290241e+02    1.0000   2.179000e+00   3.299999e-02     1694      1     
+78       0.000000e+00   2.937226e+02    1.0000   2.212000e+00   3.299999e-02     1716      1     
+79       0.000000e+00   2.199666e+02    1.0000   2.247000e+00   3.499985e-02     1738      1     
+80       0.000000e+00   2.970286e+02    1.0000   2.280000e+00   3.299999e-02     1760      1     
+81       0.000000e+00   7.110525e+02    1.0000   2.302000e+00   2.200007e-02     1782      1     
+82       0.000000e+00   6.961491e+02    1.0000   2.329000e+00   2.699995e-02     1804      1     
+83       0.000000e+00   3.761899e+02    1.0000   2.363000e+00   3.400016e-02     1826      1     
+84       0.000000e+00   3.083743e+02    1.0000   2.380000e+00   1.699996e-02     1848      1     
+85       0.000000e+00   3.825019e+02    1.0000   2.413000e+00   3.299999e-02     1870      1     
+86       0.000000e+00   2.050632e+02    1.0000   2.429000e+00   1.600003e-02     1892      1     
+87       0.000000e+00   1.940409e+02    1.0000   2.463000e+00   3.399992e-02     1914      1     
+88       0.000000e+00   4.862298e+02    1.0000   2.502000e+00   3.900003e-02     1936      1     
+89       0.000000e+00   2.401079e+02    1.0000   2.530000e+00   2.799988e-02     1958      1     
+90       0.000000e+00   2.346183e+02    1.0000   2.563000e+00   3.299999e-02     1980      1     
+91       0.000000e+00   2.379382e+02    1.0000   2.602000e+00   3.900003e-02     2002      1     
+92       0.000000e+00   5.301271e+02    1.0000   2.613000e+00   1.100016e-02     2024      1     
+93       0.000000e+00   5.301271e+02    1.0000   2.646000e+00   3.299999e-02     2046      1     
+94       0.000000e+00   2.970286e+02    1.0000   2.679000e+00   3.299999e-02     2068      1     
+95       0.000000e+00   3.083743e+02    1.0000   2.713000e+00   3.399992e-02     2090      1     
+96       0.000000e+00   2.721585e+02    1.0000   2.746000e+00   3.299999e-02     2112      1     
+97       0.000000e+00   4.953715e+02    1.0000   2.780000e+00   3.399992e-02     2134      1     
+98       0.000000e+00   3.825019e+02    1.0000   2.813000e+00   3.299999e-02     2156      1     
+99       0.000000e+00   3.941615e+02    1.0000   2.847000e+00   3.400016e-02     2178      1     
+100      0.000000e+00   3.850648e+02    1.0000   2.863000e+00   1.600003e-02     2200      1     
+       100   3.850648e+02  0.000000e+00  2.863000e+00      2200   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.863000e+00
+total solves   : 2200
+best bound     :  0.000000e+00
+simulation ci  :  4.072134e+02 ± 2.910273e+01
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            3.32s /  86.4%           57.6MiB /  92.7%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    2.87s  100.0%   2.87s   53.4MiB  100.0%  53.4MiB
+   backward_pass          100    1.39s   48.4%  13.9ms   44.6MiB   83.6%   457KiB
+     solve_subproblem   1.80k    1.24s   43.3%   690μs   36.7MiB   68.8%  20.9KiB
+       get_dual_sol...  1.80k    653ms   22.7%   363μs   24.9MiB   46.7%  14.2KiB
+         compute_al...  1.80k    598ms   20.8%   332μs   23.4MiB   43.9%  13.3KiB
+       solver_call      1.80k    290ms   10.1%   161μs    931KiB    1.7%     530B
+       evaluate_cut...  1.80k    182ms    6.3%   101μs   5.31MiB   10.0%  3.02KiB
+     get_backward_n...    200   82.6ms    2.9%   413μs   4.21MiB    7.9%  21.6KiB
+     prepare_backwa...    200    649μs    0.0%  3.25μs   31.2KiB    0.1%     160B
+   forward_pass           100    784ms   27.3%  7.84ms   4.42MiB    8.3%  45.2KiB
+     solve_subproblem     300    142ms    4.9%   473μs   2.58MiB    4.8%  8.80KiB
+       solver_call        300   59.9ms    2.1%   200μs    218KiB    0.4%     743B
+       evaluate_cut...    300   43.4ms    1.5%   145μs   1.21MiB    2.3%  4.11KiB
+       get_dual_sol...    300   1.60ms    0.1%  5.35μs    164KiB    0.3%     560B
+     sample_scenario      100   19.9ms    0.7%   199μs    807KiB    1.5%  8.07KiB
+   calculate_bound        100   67.6ms    2.4%   676μs   1.32MiB    2.5%  13.5KiB
+     solver_call          100   29.6ms    1.0%   296μs   64.1KiB    0.1%     656B
+     evaluate_cut_i...    100   19.5ms    0.7%   195μs    658KiB    1.2%  6.58KiB
+     get_dual_solution    100    584μs    0.0%  5.84μs   54.7KiB    0.1%     560B
+ initialize_process         1   4.90μs    0.0%  4.90μs      752B    0.0%     752B
+ compute_cut_exponents      1   4.20μs    0.0%  4.20μs   1.02KiB    0.0%  1.02KiB
+ ────────────────────────────────────────────────────────────────────────────────
+

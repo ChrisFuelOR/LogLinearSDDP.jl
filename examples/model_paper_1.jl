@@ -69,19 +69,19 @@ function model_and_train()
 
     dim_1 = 1
     intercept_1 = zeros(dim_1)
-    coefficients_1 = ones(lag_order, dim_1, dim_1)
+    coefficients_1 = ones(lag_order, dim_1, dim_1)  # shouldn't this be zeros?
     eta_1 = zeros(dim_1, 1)
     data[1] = LogLinearSDDP.AutoregressiveDataStage(intercept_1, coefficients_1, eta_1, dim_1)
 
     dim_2 = 1
     intercept_2 = zeros(dim_1)
-    coefficients_2 = 1/4 * ones(lag_order, dim_1, dim_1)
+    coefficients_2 = 1/4 * ones(lag_order, dim_1, dim_1) # shouldn't this be zeros?
     eta_2 = [-1 1]
     data[2] = LogLinearSDDP.AutoregressiveDataStage(intercept_2, coefficients_2, eta_2, dim_2)
 
     dim_3 = 1
     intercept_3 = zeros(dim_1)
-    coefficients_3 = 1/4 * ones(lag_order, dim_1, dim_1)
+    coefficients_3 = 1/4 * ones(lag_order, dim_1, dim_1) # shouldn't this be zeros?
     eta_3 = [-1 1]
     data[3] = LogLinearSDDP.AutoregressiveDataStage(intercept_3, coefficients_3, eta_3, dim_3)
 

@@ -14,7 +14,7 @@ function initialize_process_state(
 
     min_time_index = 1 - autoregressive_data.ar_lag_order
     max_dimension = get_max_dimension(autoregressive_data)
-    process_state = Dict{Int64,Vector{Float64}}()
+    process_state = Dict{Int64,Any}()
 
     # Determine the historical process states
     for t in min_time_index:0
@@ -38,12 +38,12 @@ Per default, we define historical values of ξ as ones.
 function initialize_process_state(
     model::SDDP.PolicyGraph,
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
-    user_process_state::Dict{Int64,Vector{Float64}},
+    user_process_state::Dict{Int64,Any},
 )
 
     min_time_index = 1 - autoregressive_data.ar_lag_order
     max_dimension = get_max_dimension(autoregressive_data)
-    process_state = Dict{Int64,Vector{Float64}}()
+    process_state = Dict{Int64,Any}()
 
     # Determine the historical process states
     for t in min_time_index:0

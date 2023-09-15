@@ -26,7 +26,11 @@ function compute_cut_exponents(
             if τ == t
                 for ℓ in 1:L_t
                     for k in t-p:t-1
-                        L_k = autoregressive_data.ar_data[k].ar_dimension 
+                        if k < 1
+                            L_k = get_max_dimension(autoregressive_data)
+                        else
+                            L_k = autoregressive_data.ar_data[k].ar_dimension
+                        end 
                         for m in 1:L_k
                             cut_exponents_stage[τ,ℓ,m,t-k] = autoregressive_data_stage.ar_coefficients[ℓ,m,t-k]
                         end
@@ -37,14 +41,18 @@ function compute_cut_exponents(
                 L_τ = autoregressive_data.ar_data[τ].ar_dimension 
                 for ℓ in 1:L_τ
                     for k in t-p:t-1
-                        L_k = autoregressive_data.ar_data[k].ar_dimension
+                        if k < 1
+                            L_k = get_max_dimension(autoregressive_data)
+                        else
+                            L_k = autoregressive_data.ar_data[k].ar_dimension
+                        end
                         for m in 1:L_k
                             if k == t-p
                                 value = 0.0
                                 for ν in 1:L_t
                                     value = value + autoregressive_data_stage.ar_coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
-                                cut_exponents_stage[τ,ℓ,m,k] = value
+                                cut_exponents_stage[τ,ℓ,m,p] = value
                             else
                                 value = cut_exponents[t+1][τ,ℓ,m,t-k]  
                                 for ν in 1:L_t
@@ -77,7 +85,7 @@ Evaluation of all cut intrcepts for a given problem and the given scenario (proc
 
 function evaluate_cut_intercepts(
     node::SDDP.Node,
-    noise::Union{Float64,Vector{Float64}},
+    noise_term::Union{Float64,Any},
 )
 
     # Preparation steps
@@ -94,7 +102,7 @@ function evaluate_cut_intercepts(
         cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
         # Get process state for the considered cut
-        process_state_after_realization = update_process_state(model, t+1, process_state, noise)
+        process_state_after_realization = update_process_state(model, t+1, process_state, noise_term)
 
         # First compute scenario-specific factors
         scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
@@ -118,7 +126,7 @@ once instead of being included in the _evaluate_cut_intercept function call for 
 
 function compute_scenario_factors(
     t::Int64,
-    process_state::Dict{Int64, Vector{Float64}},
+    process_state::Dict{Int64, Any},
     problem_params::LogLinearSDDP.ProblemParams,
     cut_exponents_stage::Array{Float64,4},
     autoregressive_data::LogLinearSDDP.AutoregressiveData,
