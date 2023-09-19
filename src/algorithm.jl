@@ -178,7 +178,6 @@ function solve_subproblem(
         throw(InterruptException())
     end
     if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
-        Infiltrator.@infiltrate
         SDDP.attempt_numerical_recovery(model, node)
     end
     state = SDDP.get_outgoing_state(node)
@@ -250,11 +249,19 @@ function calculate_bound(
         end
         node = model[child.term]
         for noise in node.noise_terms
+            # CHANGES TO SDDP.jl
+            ####################################################################################
+            ar_process = model.ext[:ar_process]
+            noise_term = zeros(length(noise.term))
+            for ℓ in eachindex(noise_term)    
+                noise_term[ℓ] = ar_process.history[1][ℓ]
+            end
+
             if node.objective_state !== nothing
                 SDDP.update_objective_state(
                     node.objective_state,
                     node.objective_state.initial_value,
-                    noise.term,
+                    noise_term,
                 )
             end
             # Update belief state, etc.
@@ -265,20 +272,20 @@ function calculate_bound(
                     belief.belief,
                     current_belief,
                     partition_index,
-                    noise.term,
+                    noise_term,
                 )
             end
             subproblem_results = solve_subproblem(
                 model,
                 node,
                 root_state,
-                noise.term,
-                Tuple{T,Any}[(child.term, noise.term)],
+                noise_term,
+                Tuple{T,Any}[(child.term, noise)],
                 duality_handler = nothing,
             )
             push!(objectives, subproblem_results.objective)
             push!(probabilities, child.probability * noise.probability)
-            push!(noise_supports, noise.term)
+            push!(noise_supports, noise_term)
         end
     end
     # Now compute the risk-adjusted probability measure:
@@ -663,7 +670,9 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
     TimerOutputs.@timeit model.timer_output "calculate_bound" begin
         bound = calculate_bound(model)
     end
-
+   
+    Infiltrator.@infiltrate
+   
     push!(
         options.log,
         SDDP.Log(
@@ -823,7 +832,7 @@ function train(
     end
 
     if print_level > 1
-        print_helper(print_parameters, log_file_handle, model.ext[:algo_params], model.ext[:problem_params], model.ext[:applied_solver], model.ext[:autoregressive_data])
+        print_helper(print_parameters, log_file_handle, model.ext[:algo_params], model.ext[:problem_params], model.ext[:applied_solver], model.ext[:ar_process])
     end
 
     if print_level > 0
@@ -932,8 +941,7 @@ function train_loglinear(
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
     applied_solver::LogLinearSDDP.AppliedSolver,
-    autoregressive_data::LogLinearSDDP.AutoregressiveData,
-    user_process_state::Union{Nothing,Dict{Int64,Any}} = nothing,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
     # Reset the TimerOutput.
@@ -943,17 +951,19 @@ function train_loglinear(
     # Store autoregressive_data, problem_params and algo_params in model.ext
     model.ext[:algo_params] = algo_params
     model.ext[:problem_params] = problem_params
-    model.ext[:autoregressive_data] = autoregressive_data
+    model.ext[:ar_process] = ar_process
     model.ext[:applied_solver] = applied_solver
 
     # Compute and store cut exponents
     TimerOutputs.@timeit model.timer_output "compute_cut_exponents" begin
-        model.ext[:cut_exponents] = compute_cut_exponents(problem_params, autoregressive_data)    
+        model.ext[:cut_exponents] = compute_cut_exponents(problem_params, ar_process)    
     end
+
+    Infiltrator.@infiltrate
 
     # Initialize the process state
     TimerOutputs.@timeit model.timer_output "initialize_process" begin
-        initialize_process_state(model, autoregressive_data, user_process_state)
+        initialize_process_state(model, ar_process)
     end
 
     # Reset Bellman functions

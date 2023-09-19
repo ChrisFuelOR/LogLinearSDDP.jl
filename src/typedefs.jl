@@ -37,21 +37,9 @@ a scenario at hand.
 ################################################################################
 # DEFINING CUTS
 ################################################################################
-
-mutable struct Cut
-    coefficients::Dict{Symbol,Float64} # gradient
-    intercept::Float64 # for the construction scenario (only for checks)
-    intercept_factors::Array{Float64,2}
-    trial_state::Dict{Symbol,Float64}
-    constraint_ref::Union{Nothing,JuMP.ConstraintRef}
-    cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
-    obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
-    belief_y::Union{Nothing,Dict{T,Float64} where {T}}
-    non_dominated_count::Int
-    iteration::Int64
-end
-
 """
+Struct for storing information related to a cut.
+
 The argument "gradient" is the cut slope vector β.
 
 The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
@@ -76,10 +64,37 @@ The argument "iteration" stores the iteration number in which the cut was constr
     and analyses.
 """
 
+mutable struct Cut
+    coefficients::Dict{Symbol,Float64} # gradient
+    intercept::Float64 # for the construction scenario (only for checks)
+    intercept_factors::Array{Float64,2}
+    trial_state::Dict{Symbol,Float64}
+    constraint_ref::Union{Nothing,JuMP.ConstraintRef}
+    cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
+    obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
+    belief_y::Union{Nothing,Dict{T,Float64} where {T}}
+    non_dominated_count::Int
+    iteration::Int64
+end
+
 
 ################################################################################
 # SIMULATION
 ################################################################################
+"""
+Different simulation regimes.
+
+Simulation means that after training the model we perform a simulation with
+    number_of_replications. This can be either an in-sample simulation
+    (SDDP.InSampleMonteCarlo) or an out-of-sample simulation
+    (SDDP.OutOfSampleMonteCarlo). In the latter case, we have to provide a
+    method to generate new scenario trees. Different sampling schemes from
+    SDDP.jl such as HistoricalSampling or PSRSampling are not supported yet.
+NoSimulation means that we do not perform a simulation after training the model,
+    either because we do not want to or because we solve a determinist model.
+Default is NoSimulation.
+"""
+
 # Sampling schemes (similar to the ones in SDDP.jl)
 # abstract type AbstractSamplingScheme end
 
@@ -116,17 +131,6 @@ end
 
 mutable struct NoSimulation <: AbstractSimulationRegime end
 
-"""
-Simulation means that after training the model we perform a simulation with
-    number_of_replications. This can be either an in-sample simulation
-    (SDDP.InSampleMonteCarlo) or an out-of-sample simulation
-    (SDDP.OutOfSampleMonteCarlo). In the latter case, we have to provide a
-    method to generate new scenario trees. Different sampling schemes from
-    SDDP.jl such as HistoricalSampling or PSRSampling are not supported yet.
-NoSimulation means that we do not perform a simulation after training the model,
-    either because we do not want to or because we solve a determinist model.
-Default is NoSimulation.
-"""
 
 ################################################################################
 # DEFINING STRUCT FOR CONFIGURATION OF TEST PROBLEM PARAMETERS
@@ -247,46 +251,48 @@ end
 # DEFINING STRUCT FOR AUTOREGRESSIVE DATA
 ################################################################################
 """
-Struct containing the data for the log-linear autoregressive process for a given stage.
+Struct containing the parameters for the log-linear autoregressive process for a given stage.
 Note that the process is defined componentwise for each component ℓ.
 
-ar_dimension:       Int64 which defines the dimension of the random process at the current stage;
-                    denoted by L in the paper
-ar_intercept:       Vector containing the intercepts of the log-linear AR process;
-                    one-dimensional with component ℓ;
-                    denoted by γ in the paper
-ar_coefficients:    Array containing the coefficients of the log-linear AR process;
-                    three-dimensional with lag k and components ℓ, m;
-                    denoted by ϕ in the paper
-ar_eta:             Vector containing the stagewise independent realizations of the log-linear AR process;
-                    each element is an object containing different components ℓ (e.g. a vector or a tuple);
-                    denoted by η in the paper
-ar_probabilities:   Probabilities related to ar_eta (optional).
+dimension:      Int64 which defines the dimension of the random process at the current stage;
+                denoted by L in the paper
+intercept:      Vector containing the intercepts of the log-linear AR process;
+                one-dimensional with component ℓ;
+                denoted by γ in the paper
+coefficients:   Array containing the coefficients of the log-linear AR process;
+                three-dimensional with components ℓ, m and lag k;
+                denoted by ϕ in the paper
+eta:            Vector containing the stagewise independent realizations of the log-linear AR process;
+                each element is an object containing different components ℓ (e.g. a vector or a tuple);
+                denoted by η in the paper;
+                note that this is merely stored for logging purposes if required
+probabilities:  Probabilities related to eta (optional);
+                note that this is merely stored for logging purposes if required
 
-The size of ar_eta should match number_of_realizations defined in ProblemParams, so ProblemParams
+The size of eta should match number_of_realizations defined in ProblemParams, so ProblemParams
 should be defined in advance.
 """
 
-struct AutoregressiveDataStage
-    ar_dimension::Int64
-    ar_intercept::Vector{Float64}
-    ar_coefficients::Array{Float64,3}
-    ar_eta::Vector{Any}
-    ar_probabilities::Vector{Float64}
+struct AutoregressiveProcessStage
+    dimension::Int64
+    intercept::Vector{Float64}
+    coefficients::Array{Float64,3}
+    eta::Vector{Any}
+    probabilities::Vector{Float64}
 
-    function AutoregressiveDataStage(
-        ar_dimension,
-        ar_intercept,
-        ar_coefficients,
-        ar_eta;
-        ar_probabilities = fill(1 / length(ar_eta), length(ar_eta)),
+    function AutoregressiveProcessStage(
+        dimension,
+        intercept,
+        coefficients,
+        eta;
+        probabilities = fill(1 / length(eta), length(eta)),
     )
         return new(
-            ar_dimension,
-            ar_intercept,
-            ar_coefficients,
-            ar_eta,
-            ar_probabilities,
+            dimension,
+            intercept,
+            coefficients,
+            eta,
+            probabilities,
         )
     end
 end
@@ -294,23 +300,40 @@ end
 """
 Struct containing the data for the log-linear autoregressive process for all stages.
 
-Note that we assume that the lag order is the same for all stages and components because otherwise
+1.) Note that we assume that the lag order is the same for all stages and components because otherwise
 the cut formulas become way more sophisticated (see paper). In practice, different components and stages
 may require different lag orders, for instance in SPAR models. If a stage-component combination requires less
 lags than globally defined, we can set the ar_coefficients corresponding to excessive lags to 1, so that 
 they do not have any effect.
 
-ar_lag_order:      Int64 which defines the lag order of the random process (for each component and stage);
-                   denoted by p in the paper
-ar_data:           Vector containing the stage-specific data of the AR process;
-                   one-dimensional with component t
+2.) Note that we assume the first stage data to be deterministic. Therefore, it should be included in
+ar_history instead of ar_data.
+
+lag_order:      Int64 which defines the lag order of the random process (for each component and stage);
+                denoted by p in the paper
+parameters:     Dict containing the stage-specific data of the AR process. 
+                The key is the stage and the value is the actual data struct;
+                one-dimensional with component t
+history:        Dict containing the historic values of the AR process (including stage 1).
+                The key is the stage and the value is a vector of index ℓ.
 """
 
-struct AutoregressiveData
-    ar_lag_order::Int64
-    ar_data::Vector{AutoregressiveDataStage}
+struct AutoregressiveProcess
+    lag_order::Int64
+    parameters::Dict{Int64,AutoregressiveProcessStage}
+    history::Dict{Int64,Vector{Float64}}
 end
 
 
 
 
+""" 
+MAIN DOCUMENTATION FOR MODEL DEFINITION [SHOULD LATER BE MOVED TO A PROPER DOC FILE]
+###########################################################################
+
+The models should be defined in the following way:
+
+
+
+
+"""

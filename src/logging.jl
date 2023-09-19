@@ -73,7 +73,7 @@ function print_parameters(io,
     algo_params::LogLinearSDDP.AlgoParams, 
     problem_params:: LogLinearSDDP.ProblemParams, 
     applied_solver:: LogLinearSDDP.AppliedSolver, 
-    autoregressive_data::LogLinearSDDP.AutoregressiveData,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
     ) 
 
     # Printint the file name
@@ -130,8 +130,8 @@ function print_parameters(io,
 
     println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
     println(io, "AUTOREGRESSIVE PROCESS DESCRIPTION")
-    println(io, "Lag order: ", autoregressive_data.ar_lag_order)
-    println(io, "Max dimension of noises: ", LogLinearSDDP.get_max_dimension(autoregressive_data))
+    println(io, "Lag order: ", ar_process.lag_order)
+    println(io, "Max dimension of noises: ", LogLinearSDDP.get_max_dimension(ar_process))
     println(io)
 
     #TODO: What about the AR data (intercept, coefficients, eta)?

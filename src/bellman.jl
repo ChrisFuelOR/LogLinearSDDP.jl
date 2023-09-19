@@ -16,7 +16,7 @@ function _add_cut(
     cut = LogLinearSDDP.Cut(πᵏ, θᵏ, αᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
     _add_cut_constraint_to_model(V, cut)
     push!(V.cuts, cut)
-    #Infiltrator.@infiltrate
+
     if cut_selection
         @error("Cut selection is not supported yet.")
     end
@@ -79,6 +79,8 @@ function refine_bellman_function(
             length(objective_realizations) ==
             length(intercept_factors)
 
+    Infiltrator.@infiltrate
+
     # Preliminaries that are common to all cut types.
     risk_adjusted_probability = similar(nominal_probability)
     offset = SDDP.adjust_probability(
@@ -124,7 +126,7 @@ function _add_average_cut(
     model = SDDP.get_policy_graph(node.subproblem)
     t = node.index+1
     T = model.ext[:problem_params].number_of_stages
-    L = model.ext[:autoregressive_data].ar_data[t].ar_dimension
+    L = model.ext[:ar_process].parameters[t].dimension
     αᵏ = zeros(T-t+1, L)    
     
     # Calculate the expected intercept and dual variables with respect to the
@@ -140,7 +142,7 @@ function _add_average_cut(
         end
 
         for τ in t:T
-            L_τ = model.ext[:autoregressive_data].ar_data[τ].ar_dimension
+            L_τ = model.ext[:ar_process].parameters[τ].dimension
             for ℓ in 1:L_τ
                 αᵏ[τ-t+1,ℓ] += p * intercept_factors[i][τ-t+1,ℓ]
             end

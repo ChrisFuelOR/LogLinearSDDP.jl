@@ -52,7 +52,7 @@ function model_and_train()
     ###########################################################################################################
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(3, 3)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules=[SDDP.IterationLimit(1)])
+    algo_params = LogLinearSDDP.AlgoParams()
 
     # AUTOREGRESSIVE PROCESS (same definition for all three stages)
     ###########################################################################################################
@@ -72,8 +72,8 @@ function model_and_train()
     intercept = [0.0, 0.0]
     coefficients = zeros(lag_order, dim, dim)
     coefficients[1,1,1] = 1/5
-    coefficients[2,2,1] = 2/3
-    coefficients[2,2,2] = 1/3   
+    coefficients[1,2,2] = 2/3
+    coefficients[1,2,1] = 1/3
     eta_1 = [-4.0, 3/4, 2.0]
     eta_2 = [-0.5, 0.0, 0.5]
     eta = vec(collect(Iterators.product(eta_1, eta_2)))

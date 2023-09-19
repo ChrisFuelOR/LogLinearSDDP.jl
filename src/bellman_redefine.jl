@@ -135,6 +135,10 @@ function reset_bellman_function(
         lower_bound = JuMP.has_lower_bound(θ) ? JuMP.lower_bound(θ) : -Inf
         upper_bound = JuMP.has_upper_bound(θ) ? JuMP.upper_bound(θ) : Inf
 
+        # Get parameters of current Bellman function
+        cut_type = node.bellman_function.cut_type
+        cut_deletion_minimum = node.bellman_function.global_theta.deletion_minimum 
+        
         # Create a new bellman function
         bellman_function = LogLinearSDDP.BellmanFunction(
                 lower_bound = lower_bound,
@@ -144,5 +148,15 @@ function reset_bellman_function(
         # Initialize the bellman function
         node.bellman_function = initialize_bellman_function(bellman_function, model, node)
 
+        # Initialize parameters for new bellman function
+        node.bellman_function.cut_type = cut_type
+        node.bellman_function.global_theta.deletion_minimum =
+            cut_deletion_minimum
+        for oracle in node.bellman_function.local_thetas
+            oracle.deletion_minimum = cut_deletion_minimum
+        end
+
     end
 end
+
+

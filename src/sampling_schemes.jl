@@ -5,8 +5,7 @@ function sample_scenario(
     max_depth = min(sampling_scheme.max_depth, sampling_scheme.rollout_limit())
     # Storage for our scenario. Each tuple is (node_index, noise.term).
     scenario_path = Tuple{T,Any}[]
-    # We only use visited_nodes if terminate_on_cycle=true. Just initialize
-    # anyway.
+    # We only use visited_nodes if terminate_on_cycle=true. Just initialize anyway.
     visited_nodes = Set{T}()
     # Begin by sampling a node from the children of the root node.
     node_index = something(
@@ -22,36 +21,51 @@ function sample_scenario(
         all_independent_noises = SDDP.get_noise_terms(sampling_scheme, node, node_index)
         children = SDDP.get_children(sampling_scheme, node, node_index)
 
-        # Sample an independent noise term
+        # Sample an independent noise term (vector/tuple of index ℓ or a single AbstractFloat)
         independent_noise_terms = SDDP.sample_noise(all_independent_noises)
+
+        # Get autoregressive data
+        ar_process = graph.ext[:ar_process]
+        # Get the current process state
+        process_state = node.ext[:process_state]
 
         # # JUST FOR TESTING
         # if node_index == 2
-        #     independent_noise_term = 1.0
+        #     independent_noise_terms = 1.0
         # elseif node_index == 3
-        #     independent_noise_term = -2.0
+        #     independent_noise_terms = -2.0
         # end
 
-        # Get the current process state matrix
-        process_state = node.ext[:process_state]
-
-        # Get autoregressive data
-        autoregressive_data = graph.ext[:autoregressive_data]
-        autoregressive_data_stage = autoregressive_data.ar_data[node_index]
-
-        # Compute the actual noise ξ using the formula for the log-linear AR process
-        # Note: No matter how the noises are defined in parameterize in the model description, noise_term here is always a vector containing all components
-        # (or a single AbstractFloat).
-        noise_term = zeros(length(independent_noise_terms))
-        for ℓ in eachindex(noise_term)
-            t = node_index
-            intercept = autoregressive_data_stage.ar_intercept[ℓ]
-            independent_term = independent_noise_terms[ℓ]
-            coefficients = autoregressive_data_stage.ar_coefficients
-            ar_lag_order = autoregressive_data.ar_lag_order
-            ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
-            noise_term[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[k,ℓ,m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
+        # JUST FOR TESTING
+        if node_index == 2
+            independent_noise_terms = (3/4, -0.5)
+        elseif node_index == 3
+            independent_noise_terms = (3/4, 0.0)
         end
+
+        # First stage is deterministic
+        if node_index == 1
+            noise_term = zeros(length(independent_noise_terms))
+            for ℓ in eachindex(noise_term)    
+                noise_term[ℓ] = ar_process.history[1][ℓ]
+            end
+        else      
+            ar_process_stage = ar_process.parameters[node_index]
+            # Compute the actual noise ξ using the formula for the log-linear AR process
+            # Note: No matter how the noises are defined in parameterize in the model description, noise_term here is always 
+            # a vector with component index ℓ (or an AbstractFloat).
+            noise_term = zeros(length(independent_noise_terms))
+            for ℓ in eachindex(noise_term)
+                t = node_index
+                intercept = ar_process_stage.intercept[ℓ]
+                independent_term = independent_noise_terms[ℓ]
+                coefficients = ar_process_stage.coefficients
+                lag_order = ar_process.lag_order
+                lag_dimensions = get_lag_dimensions(ar_process, t)
+                noise_term[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
+            end
+        end
+        Infiltrator.@infiltrate
         ####################################################################################
 
         push!(scenario_path, (node_index, noise_term))
@@ -97,13 +111,13 @@ function update_process_state(
     graph::SDDP.PolicyGraph{T},
     node_index::Int,
     process_state::Dict{Int64,Any},
-    noise_term::Union{Float64,Any},
+    noise_term::Any,
 ) where {T}
 
     new_process_state = Dict{Int64,Any}()
 
     # Get lowest required index
-    min_time_index = 1 - graph.ext[:autoregressive_data].ar_lag_order
+    min_time_index = 1 - graph.ext[:ar_process].lag_order
     
     # Determine new process state
     for k in min_time_index:node_index-1
@@ -136,7 +150,7 @@ function sample_backward_noise_terms(
 
     # CHANGES TO SDDP.jl
     ####################################################################################
-
+    # Note that here no special consideration for the first stage data is required, as we do not consider this stage.
     graph = SDDP.get_policy_graph(node.subproblem)
 
     # Get the realizations for the stagewise independent term η
@@ -146,8 +160,8 @@ function sample_backward_noise_terms(
     process_state = node.ext[:process_state]
 
     # Get autoregressive data
-    autoregressive_data = graph.ext[:autoregressive_data]
-    autoregressive_data_stage = autoregressive_data.ar_data[node.index]
+    ar_process = graph.ext[:ar_process]
+    ar_process_stage = ar_process.parameters[node.index]
     
     all_dependent_noises = Vector{Any}(undef, length(all_independent_noises))
 
@@ -156,34 +170,21 @@ function sample_backward_noise_terms(
     for i in eachindex(all_independent_noises)
         independent_noise = all_independent_noises[i]
 
-        if isa(independent_noise.term, Float64)
+        noise_dimension = length(independent_noise.term)
+        noise_values = zeros(noise_dimension)
+
+        for ℓ in eachindex(noise_values)
             t = node.index
-            intercept = autoregressive_data_stage.ar_intercept[1]
-            independent_value = independent_noise.term
-            coefficients = autoregressive_data_stage.ar_coefficients
-            ar_lag_order = autoregressive_data.ar_lag_order
-            ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
+            intercept = ar_process_stage.intercept[ℓ]
+            independent_value = independent_noise.term[ℓ]
+            coefficients = ar_process_stage.coefficients
+            lag_order = ar_process.lag_order
+            lag_dimensions = get_lag_dimensions(ar_process, t)
 
-            noise_values = exp(intercept) * exp(independent_value) * prod(process_state[t-k][m]^coefficients[k,1,m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
-
-        else # independent_noise.term should be a vector or a tuple of Float64
-            noise_dimension = length(independent_noise.term)
-            noise_values = zeros(noise_dimension)
-
-            for ℓ in eachindex(noise_values)
-                t = node.index
-                intercept = autoregressive_data_stage.ar_intercept[ℓ]
-                independent_value = independent_noise.term[ℓ]
-                coefficients = autoregressive_data_stage.ar_coefficients
-                ar_lag_order = autoregressive_data.ar_lag_order
-                ar_lag_dimensions = get_lag_dimensions(autoregressive_data, t)
-
-                noise_values[ℓ] = exp(intercept) * exp(independent_value) * prod(process_state[t-k][m]^coefficients[k,ℓ,m] for k in 1:ar_lag_order for m in 1:ar_lag_dimensions[k])
-            end
+            noise_values[ℓ] = exp(intercept) * exp(independent_value) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
         end
 
-        # Note: No matter how the noises are defined in parameterize in the model description, noise_values here is always a vector containing all components
-        # (or a single AbstractFloat).
+        # Note: No matter how the noises are defined in parameterize in the model description, noise_values here is always a vector containing all components.
         all_dependent_noises[i] = SDDP.Noise(noise_values, independent_noise.probability)
     end
 

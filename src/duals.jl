@@ -61,16 +61,16 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
         # Moreover, we need the dual variables for all existing cut constraints.
         t = node.index
         T = model.ext[:problem_params].number_of_stages
-        autoregressive_data = model.ext[:autoregressive_data]
-        autoregressive_data_stage = autoregressive_data.ar_data[t]    
-        L = get_max_dimension(autoregressive_data)
-        L_t = autoregressive_data_stage.ar_dimension
+        ar_process = model.ext[:ar_process]
+        ar_process_stage = ar_process.parameters[t]    
+        L = get_max_dimension(ar_process)
+        L_t = ar_process_stage.dimension
         α = Array{Float64,2}(undef, T-t+1, L)
 
         current_independent_noise_term = node.ext[:current_independent_noise_term]
    
         for τ in t:T 
-            L_τ = autoregressive_data.ar_data[τ].ar_dimension
+            L_τ = ar_process.parameters[τ].dimension
             for ℓ in 1:L_τ
                 if τ == t
                     # Get coupling constraint reference
@@ -78,7 +78,7 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
                     μ = JuMP.dual(coupling_ref)
 
                     # Compute alpha value
-                    α[τ-t+1,ℓ] = μ * exp(autoregressive_data_stage.ar_intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
+                    α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
                 else
                     cut_exponents_required = model.ext[:cut_exponents][t+1]
 
@@ -86,10 +86,11 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
                     factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
 
                     # Compute second factor
-                    factor_2 = prod(exp(autoregressive_data_stage.ar_intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
+                    factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
 
                     # Compute alpha value
                     α[τ-t+1,ℓ] = factor_1 * factor_2
+                    Infiltrator.@infiltrate t==2
                 end
             end
         end

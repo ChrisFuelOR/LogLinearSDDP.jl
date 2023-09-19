@@ -6,59 +6,62 @@ For simplicity, we assume constant L for the array. Non-required values will jus
 
 function compute_cut_exponents(
     problem_params::LogLinearSDDP.ProblemParams,
-    autoregressive_data::LogLinearSDDP.AutoregressiveData
+    ar_process::LogLinearSDDP.AutoregressiveProcess
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(autoregressive_data)
-    p = autoregressive_data.ar_lag_order
+    L = LogLinearSDDP.get_max_dimension(ar_process)
+    p = ar_process.lag_order
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
     
+    println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
     for t in T:-1:2
         cut_exponents_stage = zeros(T, L, L, p)
-        #cut_exponents_stage = Array{Float64,4}(undef, T, L, L, p)
-        autoregressive_data_stage = autoregressive_data.ar_data[t]
-        L_t = autoregressive_data_stage.ar_dimension
+        ar_process_stage = ar_process.parameters[t]
+        L_t = ar_process_stage.dimension
 
         for τ in t:T
 
             if τ == t
                 for ℓ in 1:L_t
                     for k in t-p:t-1
-                        if k < 1
-                            L_k = get_max_dimension(autoregressive_data)
+                        if k <= 1
+                            L_k = get_max_dimension(ar_process)
                         else
-                            L_k = autoregressive_data.ar_data[k].ar_dimension
+                            L_k = ar_process.parameters[k].dimension
                         end 
                         for m in 1:L_k
-                            cut_exponents_stage[τ,ℓ,m,t-k] = autoregressive_data_stage.ar_coefficients[ℓ,m,t-k]
+                            cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
+                            println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                         end
                     end
                 end
                 
             else
-                L_τ = autoregressive_data.ar_data[τ].ar_dimension 
+                L_τ = ar_process.parameters[τ].dimension 
                 for ℓ in 1:L_τ
                     for k in t-p:t-1
-                        if k < 1
-                            L_k = get_max_dimension(autoregressive_data)
+                        if k <= 1
+                            L_k = get_max_dimension(ar_process)
                         else
-                            L_k = autoregressive_data.ar_data[k].ar_dimension
+                            L_k = ar_process.parameters[k].dimension
                         end
                         for m in 1:L_k
                             if k == t-p
                                 value = 0.0
                                 for ν in 1:L_t
-                                    value = value + autoregressive_data_stage.ar_coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
+                                    value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,p] = value
+                                println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             else
-                                value = cut_exponents[t+1][τ,ℓ,m,t-k]  
+                                value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
                                 for ν in 1:L_t
-                                    value = value + autoregressive_data_stage.ar_coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
+                                    value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,t-k] = value
+                                println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             end
                         end
                     end
@@ -70,7 +73,6 @@ function compute_cut_exponents(
         cut_exponents[t] = cut_exponents_stage
     end
 
-    #cut_exponents[1] = Array{Float64,4}(undef, T, L, L, p)
     cut_exponents[1] = zeros(T, L, L, p)
 
     return cut_exponents
@@ -94,7 +96,7 @@ function evaluate_cut_intercepts(
     problem_params = model.ext[:problem_params]
     cut_exponents = model.ext[:cut_exponents]
     process_state = node.ext[:process_state]
-    autoregressive_data = model.ext[:autoregressive_data]
+    autoregressive_data = model.ext[:ar_process]
     t = node.index
 
     if !isempty(node.bellman_function.global_theta.cuts)
@@ -129,24 +131,24 @@ function compute_scenario_factors(
     process_state::Dict{Int64, Any},
     problem_params::LogLinearSDDP.ProblemParams,
     cut_exponents_stage::Array{Float64,4},
-    autoregressive_data::LogLinearSDDP.AutoregressiveData,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(autoregressive_data)
-    p = autoregressive_data.ar_lag_order
+    L = LogLinearSDDP.get_max_dimension(ar_process)
+    p = ar_process.lag_order
     scenario_factors = Array{Float64,2}(undef, T, L)
 
     for τ in t:T
-        L_τ = autoregressive_data.ar_data[τ].ar_dimension
+        L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ 
             scenario_factor = 1.0
             
             for k in t-p:t-1
-                if k < 1
-                    L_k = get_max_dimension(autoregressive_data)
+                if k <= 1
+                    L_k = get_max_dimension(ar_process)
                 else
-                    L_k = autoregressive_data.ar_data[k].ar_dimension
+                    L_k = ar_process.parameters[k].dimension
                 end
 
                 for m in 1:L_k
@@ -172,17 +174,16 @@ function evaluate_cut_intercept(
     cut::LogLinearSDDP.Cut,
     scenario_factors::Array{Float64,2},
     problem_params::LogLinearSDDP.ProblemParams,
-    autoregressive_data::LogLinearSDDP.AutoregressiveData,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
     intercept_variable = cut.cut_intercept_variable
     T = problem_params.number_of_stages
-    p = autoregressive_data.ar_lag_order
 
     #Evaluate the intercept
     intercept_value = 0.0
     for τ in t:T
-        L_τ = autoregressive_data.ar_data[τ].ar_dimension
+        L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
             intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
         end

@@ -6,7 +6,7 @@ import Infiltrator
 import Revise
 
 
-function model_definition(autoregressive_data::LogLinearSDDP.AutoregressiveData, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams)
+function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams)
 
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
@@ -25,6 +25,12 @@ function model_definition(autoregressive_data::LogLinearSDDP.AutoregressiveData,
             JuMP.@constraint(sp, -w <= x.out - 4)
             JuMP.@constraint(sp, w >= x.out - 4)
 
+            # Parameterize the RHS
+            # realizations = [ar_process.history[1]]
+            SDDP.parameterize(sp, [[0.0]]) do ω
+                JuMP.fix(ξ, ω[1])
+            end
+
         elseif t == 2
             JuMP.@variable(sp, y >= 0)
             JuMP.@constraint(sp, y <= 6)
@@ -32,8 +38,14 @@ function model_definition(autoregressive_data::LogLinearSDDP.AutoregressiveData,
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, autoregressive_data.ar_data[t].ar_dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
             coupling_refs[1] = coupling_ref
+
+            realizations = ar_process.parameters[t].eta
+            # Parameterize the RHS
+            SDDP.parameterize(sp, realizations) do ω
+                JuMP.fix(ξ, ω[1])
+            end
 
         else
             JuMP.@variable(sp, y >= 0)
@@ -42,15 +54,16 @@ function model_definition(autoregressive_data::LogLinearSDDP.AutoregressiveData,
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, autoregressive_data.ar_data[t].ar_dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
             coupling_refs[1] = coupling_ref
             
+            realizations = ar_process.parameters[t].eta
+            # Parameterize the RHS
+            SDDP.parameterize(sp, realizations) do ω
+                JuMP.fix(ξ, ω[1])
+            end
         end
 
-        # Parameterize the demand
-        SDDP.parameterize(sp, vec(autoregressive_data.ar_data[t].ar_eta)) do ω
-            JuMP.fix(ξ, ω[1])
-        end
     end
 
     return model
@@ -64,40 +77,39 @@ function model_and_train()
     algo_params = LogLinearSDDP.AlgoParams()
 
     # AUTOREGRESSIVE PROCESS
-    data = Vector{LogLinearSDDP.AutoregressiveDataStage}(undef, 3)
     lag_order = 1
+    dim = 1 # constant in this case
 
-    dim_1 = 1
-    intercept_1 = zeros(dim_1)
-    coefficients_1 = ones(lag_order, dim_1, dim_1)
-    eta_1 = zeros(dim_1, 1)
-    data[1] = LogLinearSDDP.AutoregressiveDataStage(intercept_1, coefficients_1, eta_1, dim_1)
+    # AR history
+    # define also ξ₋₁, ξ₀ and ξ₁
+    ar_history = Dict{Int64,Any}()
+    #ar_history[0] = [3.0]
+    ar_history[1] = [3.0] 
 
-    dim_2 = 1
-    intercept_2 = zeros(dim_1)
-    coefficients_2 = 1/4 * ones(lag_order, dim_1, dim_1)
-    eta_2 = [-1 1]
-    data[2] = LogLinearSDDP.AutoregressiveDataStage(intercept_2, coefficients_2, eta_2, dim_2)
+    ar_parameters  = Dict{Int64, LogLinearSDDP.AutoregressiveProcessStage}()
 
-    dim_3 = 1
-    intercept_3 = zeros(dim_1)
-    coefficients_3 = 3/2 * ones(lag_order, dim_1, dim_1)
-    eta_3 = [-2 -1]
-    data[3] = LogLinearSDDP.AutoregressiveDataStage(intercept_3, coefficients_3, eta_3, dim_3)
+    # Stage 2
+    intercept = zeros(dim)
+    coefficients = 1/4 * ones(lag_order, dim, dim)
+    eta = [-1.0, 1.0]
+    ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 
-    autoregressive_data = LogLinearSDDP.AutoregressiveData(lag_order, data)
+    # Stage 3
+    intercept = zeros(dim)
+    coefficients = 3/2 * ones(lag_order, dim, dim)
+    eta = [-2.0, -1.0]
+    ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 
-    # define also ξ₀
-    user_process_state = Dict{Int64,Vector{Float64}}()
-    user_process_state[0] = [3.0]
+    # All stages
+    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
 
     # CREATE MODEL
-    model = model_definition(autoregressive_data, problem_params, algo_params)
+    model = model_definition(ar_process, problem_params, algo_params)
 
     Infiltrator.@infiltrate
 
     # TRAIN MODEL
-    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, autoregressive_data, user_process_state)
+    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
 end
 
