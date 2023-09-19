@@ -331,9 +331,53 @@ end
 MAIN DOCUMENTATION FOR MODEL DEFINITION [SHOULD LATER BE MOVED TO A PROPER DOC FILE]
 ###########################################################################
 
-The models should be defined in the following way:
+The models should be set up in the following way:
 
+> Define important parameters
+ >> AppliedSolver:  defines which solver should be used with which configuration within the algorithm
+ >> ProblemParams:  specifies the number of stages and the number of realizations per stage
+ >> AlgoParams:     specifies the configuration of the algorithm (note that only a few of the SDDP.jl parameters
+                    can be changed here; see above)
 
+> Define the AR process
+ >> The AR history should be defined as a dictionary with the time stages as indices and the vectors/tuples of
+    historic values as values.
+ >> Importantly, the deterministic first stage should be defined as part of the AR history.
+ >> The constant lag order should be defined.
+ >> For all following stages, intercepts, coefficients and dimensions of the AR process can be defined and stored
+    in a AutoregressiveProcessStage struct object.
+ >> Importantly, also the stagewise independent realizations are stored there, even if they are only used in
+    the model definition (or for logging) later on, but not required in the actual algorithm.
+ >> The stagewise independent realizations should be stored in a vector of vectors or a vector of tuples
+    (one vector with length equal to the number of different realizations, and each component containing a vector
+    or tuple of the multi-dimensional realization). Even a named tuple is possible. Hence, all the suggested
+    variants from the SDDP.jl documentation for multi-dimensional noise can be used.                    
+ >> The AutoregressiveProcessStage struct objects are stored in an AutoregressiveProcess struct object together
+    with the lag order and the AR history.
 
+> Define the policy graph and the subproblems as in SDDP.jl.
+ >> You should define a lower bound for minimization problems (upper bound for maximization problems).
+ >> Importantly, for the cut generation, the coupling constraint containing the .in-part of the 
+    state variables have to be stored in sp.ext[:coupling_constraints] in order to be accessed within
+    the cut generation process.
+> The realizations (and probabilities) that are given to the parameterize-function in the model
+    definition only include the stagewise independent part of the uncertainty.
+ >> The first stage data is considered deterministic, so there should be only one realization (for each
+    dimension of the uncertainty). This can always be set to 0.
+ >> For the following stages t, the realizations can be set to ar_process.parameters[t].eta.
+
+> Before the iteration loop is started, the constant cut exponents Θ are computed once. Note that, compared to the 
+  paper, the indexing is a bit different. Precisely, Θ(t,τ,ℓ,m,k) with k a stage translates to cut_exponents_stage[t][τ,ℓ,m,κ]
+  with κ the lag and κ = t-k.
+
+> If not enough history is provided by the user, based on the maximum dimension and the lag order some default history will be 
+  created by the algorithm.
+
+> In each iteration, based on the sampled stagewise independent noise (sampling is done using the SDDP.jl functionality),
+  the AR process definition is used to compute the stagewise dependent noise and to parameterize the uncertain data.
+  >> In order for this to work, the required lagged values are stored in node.ext[:process_state], which is a dict with
+     stages as keys and the corresponding values of the uncertain data as values.
+  >> After the new realization is computed, the process state for the following node is updated.
+  >> In addition, during the parameterization process all existing nonlinear cuts are evaluated for the considered scenario.
 
 """

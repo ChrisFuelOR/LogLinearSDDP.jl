@@ -65,7 +65,7 @@ function sample_scenario(
                 noise_term[ℓ] = exp(intercept) * exp(independent_term) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
             end
         end
-        Infiltrator.@infiltrate
+        #Infiltrator.@infiltrate
         ####################################################################################
 
         push!(scenario_path, (node_index, noise_term))

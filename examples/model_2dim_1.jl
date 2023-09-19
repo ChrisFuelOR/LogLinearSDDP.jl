@@ -22,7 +22,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         JuMP.@variable(sp, demand)
         JuMP.@variable(sp, inflow)
         coupling_ref_1 = JuMP.@constraint(sp, water_bal, x.out - x.in + g_h + s == inflow)
-        coupling_ref_2 = JuMP.@constraint(sp, demand_bal, g_h + g_t == demand)
+        coupling_ref_2 = JuMP.@constraint(sp, demand_bal, g_h + g_t == demand) # actually no coupling constraint
         SDDP.@stageobjective(sp, s + t * g_t)
 
         # Parameterize inflow and demand

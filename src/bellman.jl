@@ -79,8 +79,6 @@ function refine_bellman_function(
             length(objective_realizations) ==
             length(intercept_factors)
 
-    Infiltrator.@infiltrate
-
     # Preliminaries that are common to all cut types.
     risk_adjusted_probability = similar(nominal_probability)
     offset = SDDP.adjust_probability(

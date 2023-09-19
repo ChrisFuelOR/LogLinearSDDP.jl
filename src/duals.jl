@@ -90,7 +90,6 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 
                     # Compute alpha value
                     α[τ-t+1,ℓ] = factor_1 * factor_2
-                    Infiltrator.@infiltrate t==2
                 end
             end
         end

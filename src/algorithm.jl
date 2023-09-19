@@ -671,7 +671,7 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
         bound = calculate_bound(model)
     end
    
-    Infiltrator.@infiltrate
+    #Infiltrator.@infiltrate
    
     push!(
         options.log,
@@ -958,8 +958,6 @@ function train_loglinear(
     TimerOutputs.@timeit model.timer_output "compute_cut_exponents" begin
         model.ext[:cut_exponents] = compute_cut_exponents(problem_params, ar_process)    
     end
-
-    Infiltrator.@infiltrate
 
     # Initialize the process state
     TimerOutputs.@timeit model.timer_output "initialize_process" begin
