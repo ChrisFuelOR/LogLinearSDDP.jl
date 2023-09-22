@@ -107,7 +107,7 @@ Default is NoSimulation.
 
 # mutable struct InSampleMonteCarlo <: AbstractSamplingScheme end
 
-# mutable struct OutOfSampleMonteCarlo <: AbstractSamplingScheme
+# mutable struct OutOfSampleMonteCarlo <: SDDP.AbstractSamplingScheme
 #     number_of_realizations :: Int
 #     simulation_seed :: Int
 
@@ -118,8 +118,8 @@ Default is NoSimulation.
 #         return new(simulation_seed)
 #     end
 # end
-#
-#mutable struct HistoricalSample <: AbstractSamplingScheme end
+
+# mutable struct HistoricalSample <: SDDP.AbstractSamplingScheme end
 
 # Simulation regimes
 abstract type AbstractSimulationRegime end
@@ -129,7 +129,7 @@ mutable struct Simulation <: AbstractSimulationRegime
     number_of_replications :: Int
 
     function Simulation(;
-        sampling_scheme = DynamicSDDiP.InSampleMonteCarlo,
+        sampling_scheme = SDDP.InSampleMonteCarlo(),
         number_of_replications = 1000,
     )
         return new(sampling_scheme, number_of_replications)

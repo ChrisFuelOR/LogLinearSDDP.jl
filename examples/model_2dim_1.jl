@@ -59,7 +59,7 @@ function model_and_train()
     ###########################################################################################################
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(3, 3)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules=[SDDP.IterationLimit(1)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules=[SDDP.IterationLimit(1)], simulation_regime=LogLinearSDDP.Simulation())
 
     # AUTOREGRESSIVE PROCESS (same definition for all three stages)
     ###########################################################################################################
@@ -104,6 +104,11 @@ function model_and_train()
 
     # TRAIN MODEL
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
+
+    Infiltrator.@infiltrate
+
+    # SIMULATE MODEL
+    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, algo_params.simulation_regime)
 
 end
 

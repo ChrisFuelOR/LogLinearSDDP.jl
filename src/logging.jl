@@ -252,3 +252,16 @@ function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::A
         print_helper(print_iteration, log_file_handle, log[end], start_time)
     end
 end
+
+
+function print_simulation(io, algo_params::LogLinearSDDP.AlgoParams, μ::Float64, ci::Float64, lower_bound::Float64)
+
+    println(io)
+    println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+    println(io, "SIMULATION RESULTS")
+    println(io, algo_params.simulation_regime)
+    println(io, "Lower bound: ", lower_bound)
+    println(io, "Statistical upper bound (confidence interval): ", μ, " ± ", ci )
+    println(io, "Pessimistic upper bound: ", μ + ci )
+    flush(io)
+end

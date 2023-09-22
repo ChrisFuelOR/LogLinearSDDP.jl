@@ -40,5 +40,7 @@ include("algorithm.jl")
 include("duals.jl")
 include("bellman_redefine.jl")
 include("bellman.jl")
+include("simulate.jl")
+
 
 end

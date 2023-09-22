@@ -32330,3 +32330,937 @@ numeric issues : 0
  initialize_process         1   21.6μs    0.0%  21.6μs      720B    0.0%     720B
  ────────────────────────────────────────────────────────────────────────────────
 
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:31:04.291
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.511100e+01   1.511100e+01       22      1     
+         1   0.000000e+00  1.816135e+00  1.511100e+01        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.511100e+01
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            21.0s /  70.2%            455MiB /  74.3%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    14.6s   98.9%   14.6s    337MiB   99.7%   337MiB
+   forward_pass             1    8.28s   56.1%   8.28s    257MiB   76.0%   257MiB
+     solve_subproblem       3    6.66s   45.1%   2.22s    230MiB   68.0%  76.6MiB
+       solver_call          3    3.20s   21.7%   1.07s    144MiB   42.6%  47.9MiB
+       get_dual_sol...      3    946ms    6.4%   315ms   40.0MiB   11.8%  13.3MiB
+       evaluate_cut...      3   12.0ms    0.1%  3.98ms   68.5KiB    0.0%  22.8KiB
+     sample_scenario        1    383ms    2.6%   383ms   11.4MiB    3.4%  11.4MiB
+   backward_pass            1    4.88s   33.1%   4.88s   62.8MiB   18.6%  62.8MiB
+     solve_subproblem      18    1.04s    7.0%  57.8ms   15.8MiB    4.7%   898KiB
+       get_dual_sol...     18    572ms    3.9%  31.8ms   13.0MiB    3.9%   740KiB
+         compute_al...     18    345ms    2.3%  19.2ms   6.84MiB    2.0%   389KiB
+       evaluate_cut...     18   67.7ms    0.5%  3.76ms    179KiB    0.1%  9.94KiB
+       solver_call         18   6.40ms    0.0%   355μs   10.3KiB    0.0%     585B
+     prepare_backwa...      2    220ms    1.5%   110ms    702KiB    0.2%   351KiB
+     get_backward_n...      2    200ms    1.4%   100ms   7.55MiB    2.2%  3.77MiB
+   calculate_bound          1    209μs    0.0%   209μs   10.0KiB    0.0%  10.0KiB
+     solver_call            1    131μs    0.0%   131μs      656B    0.0%     656B
+     evaluate_cut_i...      1   15.3μs    0.0%  15.3μs   1.88KiB    0.0%  1.88KiB
+     get_dual_solution      1   3.40μs    0.0%  3.40μs      560B    0.0%     560B
+ compute_cut_exponents      1    146ms    1.0%   146ms    964KiB    0.3%   964KiB
+ initialize_process         1   9.53ms    0.1%  9.53ms   1.72KiB    0.0%  1.72KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:34:03.249
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.999998e-02   1.999998e-02       22      1     
+         1   0.000000e+00  1.816135e+00  1.999998e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.999998e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            136ms /  67.9%            868KiB /  52.4%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   70.4ms   76.0%  70.4ms   76.1KiB   16.7%  76.1KiB
+ loop                       1   22.2ms   23.9%  22.2ms    378KiB   83.1%   378KiB
+   forward_pass             1   13.1ms   14.1%  13.1ms    151KiB   33.2%   151KiB
+     solve_subproblem       3   10.1ms   10.9%  3.37ms    132KiB   29.1%  44.1KiB
+       solver_call          3   1.49ms    1.6%   498μs   54.6KiB   12.0%  18.2KiB
+       evaluate_cut...      3   12.7μs    0.0%  4.23μs     0.00B    0.0%    0.00B
+       get_dual_sol...      3   11.2μs    0.0%  3.73μs   1.64KiB    0.4%     560B
+     sample_scenario        1    207μs    0.2%   207μs   6.36KiB    1.4%  6.36KiB
+   backward_pass            1   7.41ms    8.0%  7.41ms    207KiB   45.5%   207KiB
+     solve_subproblem      18   6.77ms    7.3%   376μs    129KiB   28.4%  7.16KiB
+       solver_call         18   2.72ms    2.9%   151μs   10.3KiB    2.3%     585B
+       get_dual_sol...     18   1.65ms    1.8%  91.6μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18   1.24ms    1.3%  69.1μs   31.1KiB    6.8%  1.73KiB
+       evaluate_cut...     18    150μs    0.2%  8.32μs   12.7KiB    2.8%     720B
+     get_backward_n...      2    195μs    0.2%  97.7μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   7.70μs    0.0%  3.85μs      320B    0.1%     160B
+   calculate_bound          1    181μs    0.2%   181μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    121μs    0.1%   121μs      656B    0.1%     656B
+     evaluate_cut_i...      1   11.3μs    0.0%  11.3μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   2.70μs    0.0%  2.70μs      560B    0.1%     560B
+ initialize_process         1   22.8μs    0.0%  22.8μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:34:54.148
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.899981e-02   1.899981e-02       22      1     
+         1   0.000000e+00  1.816135e+00  1.899981e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.899981e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            154ms /  61.0%            868KiB /  52.4%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   70.3ms   75.0%  70.3ms   75.8KiB   16.7%  75.8KiB
+ loop                       1   23.4ms   24.9%  23.4ms    378KiB   83.2%   378KiB
+   forward_pass             1   17.1ms   18.3%  17.1ms    151KiB   33.2%   151KiB
+     solve_subproblem       3   14.1ms   15.0%  4.69ms    132KiB   29.1%  44.1KiB
+       solver_call          3   1.86ms    2.0%   619μs   54.6KiB   12.0%  18.2KiB
+       evaluate_cut...      3   20.3μs    0.0%  6.77μs     0.00B    0.0%    0.00B
+       get_dual_sol...      3   17.8μs    0.0%  5.93μs   1.64KiB    0.4%     560B
+     sample_scenario        1   93.9μs    0.1%  93.9μs   6.41KiB    1.4%  6.41KiB
+   backward_pass            1   4.43ms    4.7%  4.43ms    207KiB   45.5%   207KiB
+     solve_subproblem      18   3.71ms    4.0%   206μs    129KiB   28.4%  7.16KiB
+       solver_call         18   1.91ms    2.0%   106μs   10.3KiB    2.3%     585B
+       get_dual_sol...     18    817μs    0.9%  45.4μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18    466μs    0.5%  25.9μs   31.1KiB    6.8%  1.73KiB
+       evaluate_cut...     18    148μs    0.2%  8.24μs   12.7KiB    2.8%     720B
+     get_backward_n...      2    255μs    0.3%   128μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   3.80μs    0.0%  1.90μs      320B    0.1%     160B
+   calculate_bound          1    301μs    0.3%   301μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    182μs    0.2%   182μs      656B    0.1%     656B
+     evaluate_cut_i...      1   20.6μs    0.0%  20.6μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   5.10μs    0.0%  5.10μs      560B    0.1%     560B
+ initialize_process         1   7.10μs    0.0%  7.10μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:35:21.016
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   5.399990e-02   5.399990e-02       22      1     
+         1   0.000000e+00  1.816135e+00  5.399990e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 5.399990e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            189ms /  71.7%            868KiB /  52.3%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   80.5ms   59.3%  80.5ms   75.9KiB   16.7%  75.9KiB
+ loop                       1   55.2ms   40.7%  55.2ms    378KiB   83.2%   378KiB
+   backward_pass            1   34.8ms   25.6%  34.8ms    207KiB   45.6%   207KiB
+     solve_subproblem      18   4.25ms    3.1%   236μs    129KiB   28.4%  7.16KiB
+       solver_call         18   1.99ms    1.5%   110μs   10.3KiB    2.3%     585B
+       get_dual_sol...     18   1.33ms    1.0%  74.2μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18    598μs    0.4%  33.2μs   31.1KiB    6.8%  1.73KiB
+       evaluate_cut...     18    176μs    0.1%  9.76μs   12.7KiB    2.8%     720B
+     get_backward_n...      2    376μs    0.3%   188μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   6.60μs    0.0%  3.30μs      320B    0.1%     160B
+   forward_pass             1   18.2ms   13.4%  18.2ms    151KiB   33.3%   151KiB
+     solve_subproblem       3   15.0ms   11.1%  5.01ms    132KiB   29.1%  44.1KiB
+       solver_call          3   1.93ms    1.4%   642μs   54.6KiB   12.0%  18.2KiB
+       get_dual_sol...      3   16.9μs    0.0%  5.63μs   1.64KiB    0.4%     560B
+       evaluate_cut...      3   16.2μs    0.0%  5.40μs     0.00B    0.0%    0.00B
+     sample_scenario        1    105μs    0.1%   105μs   6.50KiB    1.4%  6.50KiB
+   calculate_bound          1    409μs    0.3%   409μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    271μs    0.2%   271μs      656B    0.1%     656B
+     evaluate_cut_i...      1   35.7μs    0.0%  35.7μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   6.10μs    0.0%  6.10μs      560B    0.1%     560B
+ initialize_process         1   7.10μs    0.0%  7.10μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:36:35.817
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.127400e+01   1.127400e+01       22      1     
+         1   0.000000e+00  1.816135e+00  1.127400e+01        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.127400e+01
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            16.7s /  65.0%            455MiB /  74.3%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    10.7s   98.2%   10.7s    337MiB   99.7%   337MiB
+   forward_pass             1    6.56s   60.4%   6.56s    257MiB   76.1%   257MiB
+     solve_subproblem       3    5.63s   51.9%   1.88s    230MiB   68.0%  76.6MiB
+       solver_call          3    2.37s   21.8%   790ms    144MiB   42.6%  47.9MiB
+       get_dual_sol...      3    708ms    6.5%   236ms   40.0MiB   11.8%  13.3MiB
+       evaluate_cut...      3   10.2ms    0.1%  3.41ms   68.5KiB    0.0%  22.8KiB
+     sample_scenario        1    355ms    3.3%   355ms   11.4MiB    3.4%  11.4MiB
+   backward_pass            1    3.28s   30.2%   3.28s   62.8MiB   18.6%  62.8MiB
+     solve_subproblem      18    693ms    6.4%  38.5ms   15.8MiB    4.7%   898KiB
+       get_dual_sol...     18    444ms    4.1%  24.7ms   13.0MiB    3.9%   741KiB
+         compute_al...     18    269ms    2.5%  14.9ms   6.85MiB    2.0%   389KiB
+       evaluate_cut...     18   23.2ms    0.2%  1.29ms    179KiB    0.1%  9.94KiB
+       solver_call         18   1.68ms    0.0%  93.2μs   10.3KiB    0.0%     585B
+     prepare_backwa...      2    201ms    1.9%   101ms    702KiB    0.2%   351KiB
+     get_backward_n...      2    142ms    1.3%  70.9ms   7.55MiB    2.2%  3.77MiB
+   calculate_bound          1    183μs    0.0%   183μs   10.0KiB    0.0%  10.0KiB
+     solver_call            1    111μs    0.0%   111μs      656B    0.0%     656B
+     evaluate_cut_i...      1   11.8μs    0.0%  11.8μs   1.88KiB    0.0%  1.88KiB
+     get_dual_solution      1   2.60μs    0.0%  2.60μs      560B    0.0%     560B
+ compute_cut_exponents      1    185ms    1.7%   185ms    964KiB    0.3%   964KiB
+ initialize_process         1   14.3ms    0.1%  14.3ms   1.72KiB    0.0%  1.72KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T10:42:50.299
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   2.300000e-02   2.300000e-02       22      1     
+         1   0.000000e+00  1.816135e+00  2.300000e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.300000e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            164ms /  66.2%            868KiB /  52.3%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   80.4ms   74.3%  80.4ms   75.9KiB   16.7%  75.9KiB
+ loop                       1   27.8ms   25.7%  27.8ms    378KiB   83.1%   378KiB
+   forward_pass             1   18.1ms   16.7%  18.1ms    151KiB   33.3%   151KiB
+     solve_subproblem       3   14.3ms   13.2%  4.75ms    132KiB   29.1%  44.1KiB
+       solver_call          3   2.61ms    2.4%   870μs   54.6KiB   12.0%  18.2KiB
+       evaluate_cut...      3   22.5μs    0.0%  7.50μs     0.00B    0.0%    0.00B
+       get_dual_sol...      3   21.9μs    0.0%  7.30μs   1.64KiB    0.4%     560B
+     sample_scenario        1   81.3μs    0.1%  81.3μs   6.45KiB    1.4%  6.45KiB
+   backward_pass            1   5.96ms    5.5%  5.96ms    207KiB   45.6%   207KiB
+     solve_subproblem      18   5.11ms    4.7%   284μs    129KiB   28.4%  7.16KiB
+       get_dual_sol...     18   2.43ms    2.2%   135μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18   2.14ms    2.0%   119μs   31.1KiB    6.8%  1.73KiB
+       solver_call         18   1.85ms    1.7%   103μs   10.3KiB    2.3%     585B
+       evaluate_cut...     18    162μs    0.1%  9.02μs   12.7KiB    2.8%     720B
+     get_backward_n...      2    435μs    0.4%   217μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   7.10μs    0.0%  3.55μs      320B    0.1%     160B
+   calculate_bound          1    258μs    0.2%   258μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    151μs    0.1%   151μs      656B    0.1%     656B
+     evaluate_cut_i...      1   16.2μs    0.0%  16.2μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   3.40μs    0.0%  3.40μs      560B    0.1%     560B
+ initialize_process         1   5.40μs    0.0%  5.40μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T11:16:45.220
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.184200e+01   1.184200e+01       22      1     
+         1   0.000000e+00  1.816135e+00  1.184200e+01        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.184200e+01
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            17.5s /  65.2%            452MiB /  74.2%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    11.3s   98.6%   11.3s    335MiB   99.7%   335MiB
+   forward_pass             1    6.39s   55.9%   6.39s    255MiB   76.0%   255MiB
+     solve_subproblem       3    5.71s   50.0%   1.90s    229MiB   68.4%  76.5MiB
+       solver_call          3    2.67s   23.4%   889ms    144MiB   42.8%  47.9MiB
+       get_dual_sol...      3    593ms    5.2%   198ms   39.7MiB   11.8%  13.2MiB
+       evaluate_cut...      3   11.0ms    0.1%  3.67ms   68.5KiB    0.0%  22.8KiB
+     sample_scenario        1    236ms    2.1%   236ms   9.74MiB    2.9%  9.74MiB
+   backward_pass            1    4.12s   36.1%   4.12s   62.8MiB   18.7%  62.8MiB
+     solve_subproblem      18    1.06s    9.3%  59.1ms   15.8MiB    4.7%   898KiB
+       get_dual_sol...     18    725ms    6.3%  40.3ms   13.0MiB    3.9%   740KiB
+         compute_al...     18    490ms    4.3%  27.2ms   6.84MiB    2.0%   389KiB
+       evaluate_cut...     18   23.1ms    0.2%  1.28ms    179KiB    0.1%  9.94KiB
+       solver_call         18   1.49ms    0.0%  82.9μs   10.3KiB    0.0%     585B
+     prepare_backwa...      2    281ms    2.5%   141ms    702KiB    0.2%   351KiB
+     get_backward_n...      2    141ms    1.2%  70.5ms   7.54MiB    2.2%  3.77MiB
+   calculate_bound          1    218μs    0.0%   218μs   10.0KiB    0.0%  10.0KiB
+     solver_call            1    126μs    0.0%   126μs      656B    0.0%     656B
+     evaluate_cut_i...      1   14.7μs    0.0%  14.7μs   1.88KiB    0.0%  1.88KiB
+     get_dual_solution      1   2.80μs    0.0%  2.80μs      560B    0.0%     560B
+ compute_cut_exponents      1    149ms    1.3%   149ms    964KiB    0.3%   964KiB
+ initialize_process         1   11.5ms    0.1%  11.5ms   1.72KiB    0.0%  1.72KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T11:18:35.811
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   1.999998e-02   1.999998e-02       22      1     
+         1   0.000000e+00  1.816135e+00  1.999998e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.999998e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            167ms /  65.5%            868KiB /  52.4%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   82.9ms   75.9%  82.9ms   75.9KiB   16.7%  75.9KiB
+ loop                       1   26.3ms   24.1%  26.3ms    378KiB   83.2%   378KiB
+   forward_pass             1   18.8ms   17.2%  18.8ms    151KiB   33.2%   151KiB
+     solve_subproblem       3   15.3ms   14.1%  5.11ms    132KiB   29.1%  44.1KiB
+       solver_call          3   2.59ms    2.4%   862μs   54.6KiB   12.0%  18.2KiB
+       evaluate_cut...      3   18.8μs    0.0%  6.27μs     0.00B    0.0%    0.00B
+       get_dual_sol...      3   15.9μs    0.0%  5.30μs   1.64KiB    0.4%     560B
+     sample_scenario        1    104μs    0.1%   104μs   6.38KiB    1.4%  6.38KiB
+   backward_pass            1   5.87ms    5.4%  5.87ms    207KiB   45.5%   207KiB
+     solve_subproblem      18   3.71ms    3.4%   206μs    129KiB   28.4%  7.16KiB
+       solver_call         18   1.91ms    1.7%   106μs   10.3KiB    2.3%     585B
+       get_dual_sol...     18    743μs    0.7%  41.3μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18    484μs    0.4%  26.9μs   31.1KiB    6.8%  1.73KiB
+       evaluate_cut...     18    240μs    0.2%  13.3μs   12.7KiB    2.8%     720B
+     get_backward_n...      2   1.70ms    1.6%   848μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   6.40μs    0.0%  3.20μs      320B    0.1%     160B
+   calculate_bound          1    172μs    0.2%   172μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    115μs    0.1%   115μs      656B    0.1%     656B
+     evaluate_cut_i...      1   12.7μs    0.0%  12.7μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   2.80μs    0.0%  2.80μs      560B    0.1%     560B
+ initialize_process         1   6.90μs    0.0%  6.90μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T11:20:12.884
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.816135e+00   0.000000e+00    1.0000   2.099991e-02   2.099991e-02       22      1     
+         1   0.000000e+00  1.816135e+00  2.099991e-02        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.099991e-02
+total solves   : 22
+best bound     :  1.816135e+00
+simulation ci  :  0.000000e+00 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            161ms /  65.8%            868KiB /  52.4%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ compute_cut_exponents      1   81.8ms   77.5%  81.8ms   75.8KiB   16.7%  75.8KiB
+ loop                       1   23.8ms   22.5%  23.8ms    378KiB   83.2%   378KiB
+   forward_pass             1   17.4ms   16.4%  17.4ms    151KiB   33.2%   151KiB
+     solve_subproblem       3   13.7ms   13.0%  4.57ms    132KiB   29.1%  44.1KiB
+       solver_call          3   2.55ms    2.4%   849μs   54.6KiB   12.0%  18.2KiB
+       get_dual_sol...      3   16.8μs    0.0%  5.60μs   1.64KiB    0.4%     560B
+       evaluate_cut...      3   14.0μs    0.0%  4.67μs     0.00B    0.0%    0.00B
+     sample_scenario        1   96.5μs    0.1%  96.5μs   6.44KiB    1.4%  6.44KiB
+   backward_pass            1   4.82ms    4.6%  4.82ms    207KiB   45.5%   207KiB
+     solve_subproblem      18   4.22ms    4.0%   235μs    129KiB   28.4%  7.16KiB
+       solver_call         18   1.99ms    1.9%   110μs   10.3KiB    2.3%     585B
+       get_dual_sol...     18   1.40ms    1.3%  77.7μs   47.3KiB   10.4%  2.63KiB
+         compute_al...     18    627μs    0.6%  34.8μs   31.1KiB    6.8%  1.73KiB
+       evaluate_cut...     18    151μs    0.1%  8.38μs   12.7KiB    2.8%     720B
+     get_backward_n...      2    236μs    0.2%   118μs   34.4KiB    7.6%  17.2KiB
+     prepare_backwa...      2   4.40μs    0.0%  2.20μs      320B    0.1%     160B
+   calculate_bound          1    178μs    0.2%   178μs   9.91KiB    2.2%  9.91KiB
+     solver_call            1    120μs    0.1%   120μs      656B    0.1%     656B
+     evaluate_cut_i...      1   13.1μs    0.0%  13.1μs   1.88KiB    0.4%  1.88KiB
+     get_dual_solution      1   3.90μs    0.0%  3.90μs      560B    0.1%     560B
+ initialize_process         1   12.9μs    0.0%  12.9μs      720B    0.2%     720B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 1000)
+Lower bound: 1.8161351220879025
+Statistical upper bound (confidence interval): 0.0 ± 0.0
+Pessimistic upper bound: 0.0
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 3
+  state variables : 1
+  scenarios       : 8.10000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [9, 9]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [2, 2]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [6, 6]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [1, 3]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\model_2dim_1.jl
+DATETIME
+2023-09-22T11:21:43.940
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(1)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 3
+Number of realizations per stage: 3
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 2
+Max dimension of noises: 2
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.237340e+00   2.111001e+01    0.9414   1.069000e+01   1.069000e+01       22      1     
+         1   2.111001e+01  1.237340e+00  1.069000e+01        22   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.069000e+01
+total solves   : 22
+best bound     :  1.237340e+00
+simulation ci  :  2.111001e+01 ±          NaN
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            15.9s /  64.4%            453MiB /  74.2%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    10.1s   98.5%   10.1s    335MiB   99.7%   335MiB
+   forward_pass             1    6.30s   61.6%   6.30s    255MiB   75.8%   255MiB
+     solve_subproblem       3    5.36s   52.3%   1.79s    229MiB   68.2%  76.5MiB
+       solver_call          3    2.59s   25.3%   862ms    144MiB   42.7%  47.9MiB
+       get_dual_sol...      3    461ms    4.5%   154ms   39.7MiB   11.8%  13.2MiB
+       evaluate_cut...      3   10.0ms    0.1%  3.35ms   68.5KiB    0.0%  22.8KiB
+     sample_scenario        1    223ms    2.2%   223ms   9.69MiB    2.9%  9.69MiB
+   backward_pass            1    3.18s   31.1%   3.18s   63.6MiB   18.9%  63.6MiB
+     solve_subproblem      18    708ms    6.9%  39.3ms   15.8MiB    4.7%   898KiB
+       get_dual_sol...     18    430ms    4.2%  23.9ms   13.0MiB    3.9%   740KiB
+         compute_al...     18    260ms    2.5%  14.4ms   6.84MiB    2.0%   389KiB
+       evaluate_cut...     18   22.0ms    0.2%  1.22ms    179KiB    0.1%  9.94KiB
+       solver_call         18   1.78ms    0.0%  98.8μs   10.0KiB    0.0%     567B
+     prepare_backwa...      2    205ms    2.0%   103ms    702KiB    0.2%   351KiB
+     get_backward_n...      2    111ms    1.1%  55.4ms   7.54MiB    2.2%  3.77MiB
+   calculate_bound          1    195μs    0.0%   195μs   10.0KiB    0.0%  10.0KiB
+     solver_call            1    122μs    0.0%   122μs      656B    0.0%     656B
+     evaluate_cut_i...      1   12.8μs    0.0%  12.8μs   1.88KiB    0.0%  1.88KiB
+     get_dual_solution      1   3.00μs    0.0%  3.00μs      560B    0.0%     560B
+ compute_cut_exponents      1    140ms    1.4%   140ms    964KiB    0.3%   964KiB
+ initialize_process         1   12.4ms    0.1%  12.4ms   1.72KiB    0.0%  1.72KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 1000)
+Lower bound: 1.2373404158451011
+Statistical upper bound (confidence interval): 8.207070668846285 ± 0.6261713641287201
+Pessimistic upper bound: 8.833242032975004

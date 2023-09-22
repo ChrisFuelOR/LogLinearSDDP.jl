@@ -47,12 +47,12 @@ function sample_scenario(
         #     independent_noise_terms = -2.0
         # end
 
-        # JUST FOR TESTING
-        if node_index == 2
-            independent_noise_terms = (3/4, -0.5)
-        elseif node_index == 3
-            independent_noise_terms = (3/4, 0.0)
-        end
+        # # JUST FOR TESTING
+        # if node_index == 2
+        #     independent_noise_terms = (3/4, -0.5)
+        # elseif node_index == 3
+        #     independent_noise_terms = (3/4, 0.0)
+        # end
 
         # First stage is deterministic
         if node_index == 1
