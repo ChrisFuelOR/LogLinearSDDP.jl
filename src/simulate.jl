@@ -222,8 +222,6 @@ function simulate_loglinear(
         return sum(stage[:stage_objective] for stage in simulation)
     end
 
-    Infiltrator.@infiltrate
-
     μ, ci = SDDP.confidence_interval(objectives)
     # get last lower bound again
     lower_bound = calculate_bound(model)

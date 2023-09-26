@@ -79,7 +79,7 @@ function model_and_train()
     # MAIN MODEL AND RUN PARAMETERS    
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(3, 2)
-    algo_params = LogLinearSDDP.AlgoParams()
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules=[SDDP.IterationLimit(1)], simulation_regime=LogLinearSDDP.Simulation())
 
     # AUTOREGRESSIVE PROCESS
     lag_order = 1

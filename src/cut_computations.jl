@@ -22,7 +22,7 @@ function compute_cut_exponents(
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
     
-    println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
+    #println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
     for t in T:-1:2
         cut_exponents_stage = zeros(T, L, L, p)
         ar_process_stage = ar_process.parameters[t]
@@ -40,7 +40,7 @@ function compute_cut_exponents(
                         end 
                         for m in 1:L_k
                             cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
-                            println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
+                            #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                         end
                     end
                 end
@@ -61,14 +61,14 @@ function compute_cut_exponents(
                                     value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,p] = value
-                                println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
+                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             else
                                 value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
                                 for ν in 1:L_t
                                     value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,t-k] = value
-                                println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
+                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             end
                         end
                     end
@@ -117,8 +117,10 @@ function evaluate_cut_intercepts(
         scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
 
         # Iterate over all cuts and adapt intercept
-        for cut in node.bellman_function.global_theta.cuts 
-            evaluate_cut_intercept(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+        for cut in node.bellman_function.global_theta.cuts
+            intercept_variable = cut.cut_intercept_variable 
+            intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+            JuMP.fix(intercept_variable, intercept_value)
         end
     end
 
@@ -173,10 +175,10 @@ end
 
 
 """ 
-Evaluation of the cut intercept for the given cut and the given scenario (process state/history) at hand.
+Compute the value of the cut intercept for the given cut and the given scenario (process state/history) at hand.
 """
 
-function evaluate_cut_intercept(
+function compute_intercept_value(
     t::Int,
     cut::LogLinearSDDP.Cut,
     scenario_factors::Array{Float64,2},
@@ -184,7 +186,6 @@ function evaluate_cut_intercept(
     ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
-    intercept_variable = cut.cut_intercept_variable
     T = problem_params.number_of_stages
 
     #Evaluate the intercept
@@ -196,9 +197,6 @@ function evaluate_cut_intercept(
         end
     end
 
-    #Fix the intercept variable
-    JuMP.fix(intercept_variable, intercept_value)
-
-    return
+    return intercept_value
 
 end

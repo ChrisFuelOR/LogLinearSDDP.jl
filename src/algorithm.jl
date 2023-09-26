@@ -997,7 +997,3 @@ function train_loglinear(
     )
 
 end
-
-
-# simulation_regime::AbstractSimulationRegime
-# seed::Union{Nothing,Int}
