@@ -67,45 +67,9 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 
     model = SDDP.get_policy_graph(node.subproblem)
     TimerOutputs.@timeit model.timer_output "compute_alphas" begin
-        # We also need the dual variables for all coupling constraints.
-        # In order to identify the coupling constraints, we should specify them in the problem definition.
-        # Moreover, we need the dual variables for all existing cut constraints.
-        t = node.index
-        T = model.ext[:problem_params].number_of_stages
-        ar_process = model.ext[:ar_process]
-        ar_process_stage = ar_process.parameters[t]    
-        L = get_max_dimension(ar_process)
-        L_t = ar_process_stage.dimension
-        α = Array{Float64,2}(undef, T-t+1, L)
-
-        current_independent_noise_term = node.ext[:current_independent_noise_term]
-   
-        for τ in t:T 
-            L_τ = ar_process.parameters[τ].dimension
-            for ℓ in 1:L_τ
-                if τ == t
-                    # Get coupling constraint reference
-                    coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
-                    μ = JuMP.dual(coupling_ref)
-
-                    # Compute alpha value
-                    α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
-                else
-                    cut_exponents_required = model.ext[:cut_exponents][t+1]
-
-                    # Get cut constraint duals and compute first factor
-                    factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
-
-                    # Compute second factor
-                    factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
-
-                    # Compute alpha value
-                    α[τ-t+1,ℓ] = factor_1 * factor_2
-                end
-            end
-        end
+        α = get_alphas(node)
     end
-
+    Infiltrator.@infiltrate
     return JuMP.objective_value(node.subproblem), λ, α
 end
 
@@ -135,4 +99,49 @@ function get_existing_cuts_factor(node::SDDP.Node, t::Int64, τ::Int64, ℓ::Int
     return factor
 end
 
+function get_alphas(node::SDDP.Node)
+
+    # We also need the dual variables for all coupling constraints.
+    # In order to identify the coupling constraints, we should specify them in the problem definition.
+    # Moreover, we need the dual variables for all existing cut constraints.
+    model = SDDP.get_policy_graph(node.subproblem)
+    t = node.index
+    T = model.ext[:problem_params].number_of_stages
+    ar_process = model.ext[:ar_process]
+    ar_process_stage = ar_process.parameters[t]    
+    L = get_max_dimension(ar_process)
+    L_t = ar_process_stage.dimension
+    α = Array{Float64,2}(undef, T-t+1, L)
+
+    current_independent_noise_term = node.ext[:current_independent_noise_term]
+
+    for τ in t:T 
+        L_τ = ar_process.parameters[τ].dimension
+        for ℓ in 1:L_τ
+            if τ == t
+                # Get coupling constraint reference
+                coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
+                μ = JuMP.dual(coupling_ref)
+
+                # Compute alpha value
+                α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
+            else
+                cut_exponents_required = model.ext[:cut_exponents][t+1]
+
+                # Get cut constraint duals and compute first factor
+                factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
+
+                # Compute second factor
+                factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
+
+                # Compute alpha value
+                α[τ-t+1,ℓ] = factor_1 * factor_2
+            end
+        end
+    end
+
+    return α
+end
+
 duality_log_key(::ContinuousConicDuality) = " "
+

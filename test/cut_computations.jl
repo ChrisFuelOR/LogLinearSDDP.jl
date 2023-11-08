@@ -15,7 +15,7 @@ function runtests()
     return
 end
 
-function _create_autoregressive_data_1D()
+function create_autoregressive_data_1D()
     stages = 3
     realizations = 2
     lag_order = 1
@@ -43,7 +43,7 @@ end
 
 function test_compute_cut_exponents_1D()
 
-    autoregressive_data, stages, realizations = _create_autoregressive_data_1D()
+    autoregressive_data, stages, realizations = create_autoregressive_data_1D()
     cut_exponents = LogLinearSDDP.compute_cut_exponents(LogLinearSDDP.ProblemParams(stages, realizations), autoregressive_data)
 
     @test length(cut_exponents) == 3
@@ -58,7 +58,7 @@ function test_compute_cut_exponents_1D()
     return
 end
 
-function _create_autoregressive_data_2D()
+function create_autoregressive_data_2D()
     stages = 3
     realizations = 3
     lag_order = 2
@@ -89,7 +89,7 @@ end
 
 function test_compute_cut_exponents_2D()
 
-    autoregressive_data, stages, realizations = _create_autoregressive_data_2D()
+    autoregressive_data, stages, realizations = create_autoregressive_data_2D()
     cut_exponents = LogLinearSDDP.compute_cut_exponents(LogLinearSDDP.ProblemParams(stages, realizations), autoregressive_data)
 
     @test cut_exponents[3][3,1,1,2] == 0.0
@@ -125,7 +125,7 @@ end
 
 function test_compute_scenario_factors_1D()
 
-    ar_process, stages, realizations = _create_autoregressive_data_1D()
+    ar_process, stages, realizations = create_autoregressive_data_1D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     cut_exponents = LogLinearSDDP.compute_cut_exponents(problem_params, ar_process)
 
@@ -164,7 +164,7 @@ end
 
 function test_compute_intercept_value_1D()
 
-    ar_process, stages, realizations = _create_autoregressive_data_1D()
+    ar_process, stages, realizations = create_autoregressive_data_1D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     T = problem_params.number_of_stages
     L = LogLinearSDDP.get_max_dimension(ar_process)
@@ -200,7 +200,7 @@ end
 
 function test_compute_scenario_factors_2D()
 
-    ar_process, stages, realizations = _create_autoregressive_data_2D()
+    ar_process, stages, realizations = create_autoregressive_data_2D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     cut_exponents = LogLinearSDDP.compute_cut_exponents(problem_params, ar_process)
 
@@ -243,7 +243,7 @@ end
 
 function test_compute_intercept_value_2D()
 
-    ar_process, stages, realizations = _create_autoregressive_data_2D()
+    ar_process, stages, realizations = create_autoregressive_data_2D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     T = problem_params.number_of_stages
     L = LogLinearSDDP.get_max_dimension(ar_process)

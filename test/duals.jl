@@ -1,4 +1,4 @@
-module TestArPreparations
+module TestDuals
 
 using LogLinearSDDP
 using Test
@@ -6,6 +6,7 @@ using Infiltrator
 using JuMP
 using SDDP
 using Gurobi
+using MathOptInterface
 
 function runtests()
     for name in names(@__MODULE__; all = true)
@@ -174,66 +175,63 @@ function create_model_2D(ar_process::LogLinearSDDP.AutoregressiveProcess)
 
 end
 
-function test_get_max_dimension()
+function test_get_dual_solution_1D()
 
-    # 1D example
-    ar_process, stages, realizations = create_autoregressive_data_1D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test L == 1
-
-    # 2D example
-    ar_process, stages, realizations = create_autoregressive_data_2D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test L == 2
-
-    return
-end
-
-function test_get_lag_dimensions()
-
-    # 1D example
-    ar_process, stages, realizations = create_autoregressive_data_1D()
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 2) == [1]
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 3) == [1]
-
-    # 2D example
-    ar_process, stages, realizations = create_autoregressive_data_2D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 2) == [2, 2]
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 3) == [2, 2]
-
-    return
-end
-
-
-function test_initialize_process_state()
-
-    # 1D example
     ar_process, stages, realizations = create_autoregressive_data_1D()
     model = create_model_1D(ar_process)
+
+    # Preparations
+    model.ext[:ar_process] = ar_process
+    model.ext[:problem_params] = LogLinearSDDP.ProblemParams(stages, realizations)
+    model.ext[:algo_params] = LogLinearSDDP.AlgoParams()
+    model.ext[:applied_solver] = LogLinearSDDP.AppliedSolver()
+    model.ext[:cut_exponents] = LogLinearSDDP.compute_cut_exponents(model.ext[:problem_params], ar_process)    
     LogLinearSDDP.initialize_process_state(model, ar_process)
+    LogLinearSDDP.reset_bellman_function(model)
+    LogLinearSDDP.set_solver_for_model(model, model.ext[:algo_params], model.ext[:applied_solver])
 
-    @test length(model.ext[:initial_process_state]) == 1
-    @test model.ext[:initial_process_state][0] == [1.0]
-    @test length(model.nodes[1].ext[:process_state]) == 1
-    @test model.nodes[1].ext[:process_state][0] == [1.0] 
+    # NODE 3
+    ##################################################################################################
+    # Set node parameters
+    node = model.nodes[3]
+    node.ext[:current_independent_noise_term] = 1.0
+    node.ext[:process_state] = Dict{Int64, Any}(0 => [1.0], 2 => [exp(1) * 3.0^(1/4)], 1 => [3.0])
 
-    # 2D example
-    ar_process, stages, realizations = create_autoregressive_data_2D()
-    model = create_model_2D(ar_process)
-    LogLinearSDDP.initialize_process_state(model, ar_process)    
+    # Parameterize problem
+    x = node.subproblem[:x]
+    ξ = node.subproblem[:ξ]
+    JuMP.fix(x.in, 0.42253992568406584)
+    JuMP.fix(ξ, exp(1) * (exp(1) * 3.0^(1/4))^(1/4)) # ≈ 3.738
+    LogLinearSDDP.set_objective(node)
 
-    @test length(model.ext[:initial_process_state]) == 2
-    @test model.ext[:initial_process_state][-1] == [1.0, 1.0]
-    @test model.ext[:initial_process_state][0] == [4.0, 5.0]
-    @test length(model.nodes[1].ext[:process_state]) == 2
-    @test model.nodes[1].ext[:process_state][-1] == [1.0, 1.0] 
-    @test model.nodes[1].ext[:process_state][0] == [4.0, 5.0] 
+    # Optimize
+    JuMP.optimize!(node.subproblem)
 
-    return
+    # Tests
+    @test JuMP.termination_status(node.subproblem) == MathOptInterface.OPTIMAL
+    
+    dual_sign = JuMP.objective_sense(node.subproblem) == MOI.MIN_SENSE ? 1 : -1
+    λ = Dict{Symbol,Float64}(
+        name => dual_sign * JuMP.dual(JuMP.FixRef(state.in)) for
+        (name, state) in node.states
+    )
+    
+    @test JuMP.objective_value(node.subproblem) ≈ 3.315880843569521
+    @test λ == Dict(:x => -1.0)
+    @test length(LogLinearSDDP.get_alphas(node)) == 1
+    @test LogLinearSDDP.get_alphas(node)[1] == exp(1)
+
+    # NODE 2
+    ##################################################################################################
+
+
+    #@test get_existing_cuts_factor(node, ..., ..., ...) ==
+
+    #get_existing_cuts_factor(node, t+1, τ, ℓ)
+
 end
 
 
 end
 
-TestArPreparations.runtests()
+TestDuals.runtests()

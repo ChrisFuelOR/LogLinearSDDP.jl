@@ -40,19 +40,19 @@ function sample_scenario(
         # Get the current process state
         process_state = node.ext[:process_state]
 
-        # # JUST FOR TESTING
-        # if node_index == 2
-        #     independent_noise_terms = 1.0
-        # elseif node_index == 3
-        #     independent_noise_terms = -2.0
-        # end
-
         # JUST FOR TESTING
         if node_index == 2
-            independent_noise_terms = (3/4, -0.5)
+            independent_noise_terms = 1.0
         elseif node_index == 3
-            independent_noise_terms = (3/4, 0.0)
+            independent_noise_terms = -2.0
         end
+
+        # # JUST FOR TESTING
+        # if node_index == 2
+        #     independent_noise_terms = (3/4, -0.5)
+        # elseif node_index == 3
+        #     independent_noise_terms = (3/4, 0.0)
+        # end
 
         # First stage is deterministic
         if node_index == 1
