@@ -269,6 +269,9 @@ intercept:      Vector containing the intercepts of the log-linear AR process;
 coefficients:   Array containing the coefficients of the log-linear AR process;
                 three-dimensional with components ℓ, m and lag k;
                 denoted by ϕ in the paper
+psi:            Vector containing the pre-factor for eta in the log-linear AR process;
+                one-dimensional with component ℓ; 
+                denoted by ψ in the paper               
 eta:            Vector containing the stagewise independent realizations of the log-linear AR process;
                 each element is an object containing different components ℓ (e.g. a vector or a tuple);
                 denoted by η in the paper;
@@ -284,6 +287,7 @@ struct AutoregressiveProcessStage
     dimension::Int64
     intercept::Vector{Float64}
     coefficients::Array{Float64,3}
+    psi::Vector{Any}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 
@@ -291,6 +295,7 @@ struct AutoregressiveProcessStage
         dimension,
         intercept,
         coefficients,
+        psi,
         eta;
         probabilities = fill(1 / length(eta), length(eta)),
     )
@@ -298,6 +303,7 @@ struct AutoregressiveProcessStage
             dimension,
             intercept,
             coefficients,
+            psi,
             eta,
             probabilities,
         )

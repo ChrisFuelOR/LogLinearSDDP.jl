@@ -124,7 +124,7 @@ function get_alphas(node::SDDP.Node)
                 μ = JuMP.dual(coupling_ref)
 
                 # Compute alpha value
-                α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ])
+                α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
             else
                 cut_exponents_required = model.ext[:cut_exponents][t+1]
 
@@ -132,7 +132,7 @@ function get_alphas(node::SDDP.Node)
                 factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
 
                 # Compute second factor
-                factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1]) for ν in 1:L_t)
+                factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
 
                 # Compute alpha value
                 α[τ-t+1,ℓ] = factor_1 * factor_2
