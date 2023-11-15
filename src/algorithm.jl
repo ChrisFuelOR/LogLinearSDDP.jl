@@ -651,7 +651,7 @@ function forward_pass(
         end
     end
     # ===== End: drop off starting state if terminated due to cycle =====
-    println(scenario_path)
+    #println(scenario_path)
     return (
         scenario_path = scenario_path,
         sampled_states = sampled_states,

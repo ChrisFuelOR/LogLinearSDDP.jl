@@ -10,7 +10,7 @@ function prepare_ar_model()
     file_names = ["hist1.csv", "hist2.csv", "hist3.csv", "hist4.csv"]
     system_names = ["SE", "S", "NE", "N"]
 
-    for system_number in 1:1
+    for system_number in 1:4
         system_name = system_names[system_number]
         file_name = file_names[system_number] 
         output_file_name = "model_" * String(system_name) * ".txt"   

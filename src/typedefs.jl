@@ -295,8 +295,8 @@ struct AutoregressiveProcessStage
         dimension,
         intercept,
         coefficients,
-        psi,
         eta;
+        psi = ones(length(intercept)),
         probabilities = fill(1 / length(eta), length(eta)),
     )
         return new(

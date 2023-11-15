@@ -5,6 +5,7 @@ version = "1.0.0-DEV"
 
 [deps]
 ARCHModels = "6d3278bc-c23a-5105-85e5-0d57d2bf684f"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
