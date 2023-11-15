@@ -1,3 +1,71 @@
+import Distributions
+import DataFrames
+
+
+""" Check if coefficients are transformed correctly. """
+function check_model(
+    df::DataFrames.DataFrame,
+    log_df::DataFrames.DataFrame,
+    detrended_log_df::DataFrames.DataFrame,
+    month::Int,
+    lag_order::Int,
+    coefficients::Vector{Float64},
+    coefficients_corrected::Vector{Float64},
+    intercept_corrected::Float64,
+    psi::Float64,
+    monthly_mean::Float64,
+    monthly_std::Float64,
+    residual_error::Float64,
+)
+
+    computed_year = 5
+    intercept = coefficients[1]
+    coefficients = coefficients[2:lag_order+1]
+
+    # Sample a random realization of the error term
+    d = Distributions.Normal(0.0, residual_error)
+    eta = Distributions.rand(d, 1)[1]
+    
+    # Compute values for computed_year using the detrended log model
+    z1 = intercept + eta
+    for k in 1:lag_order
+        # Get correct month corresponding to lag
+        lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
+        lag_year_offset = month - k > 0 ? 0 : Int(ceil((k - month + 1)/12))    
+
+        z1 += coefficients[k] * detrended_log_df[computed_year - lag_year_offset, lag_month]
+    end
+    y1 = z1 * monthly_std + monthly_mean
+    x1 = exp(y1)
+
+    # Compute values for computed_year using the log model
+    y2 = intercept_corrected + psi * eta
+    for k in 1:lag_order
+        # Get correct month corresponding to lag
+        lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
+        lag_year_offset = month - k > 0 ? 0 : Int(ceil((k - month + 1)/12))    
+
+        y2 += coefficients_corrected[k] * log_df[computed_year - lag_year_offset, lag_month]
+    end 
+    x2 = exp(y2)
+
+    # Compute values for computed_year using the original (exp) model
+    x3 = exp(intercept_corrected) * exp(psi * eta)
+    for k in 1:lag_order
+        # Get correct month corresponding to lag
+        lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
+        lag_year_offset = month - k > 0 ? 0 : Int(ceil((k - month + 1)/12))    
+
+        x3 *= df[computed_year - lag_year_offset, lag_month]^coefficients_corrected[k]
+    end 
+
+    @assert isapprox(y1, y2)
+    @assert isapprox(x1, x2) && isapprox(x1, x3)
+
+    return
+end
+
+
 """ Run analysis, fitting and validation of PAR model."""
 function prepare_ar_model()
 
@@ -97,6 +165,9 @@ function prepare_ar_model()
             
             error_factor = all_monthly_models[month].detrending_sigma
  
+            # Check formulas for intercept, coefficients etc. by comparing model output before and after transformation
+            check_model(df, log_df, detrended_log_df, month, lag_order, coefficients, coefficient_corrected, intercept_corrected, error_factor, monthly_mean, monthly_std, std_error)
+
             # Output to console
             println("Month: ", month)
             println("Lag order: ", lag_order)

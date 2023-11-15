@@ -150,7 +150,7 @@ function scenario_and_history_generation(number_of_realizations::Int, number_of_
     scenario_generation(number_of_realizations, number_of_stages)
     ar_history = history_generation()
 
-    return
+    return ar_history
 end
 
 
