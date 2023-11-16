@@ -14,6 +14,7 @@ import Revise
 import DataFrames
 import DataFramesMeta
 import CSV
+import Random
 
 struct Generator
     name::String
@@ -361,18 +362,20 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 60 #120
+    number_of_stages = 20 #120
     number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
     ar_process = get_ar_process(number_of_stages, number_of_realizations)
     model = model_definition(ar_process, problem_params, algo_params)
        
+    Random.seed!(algo_params.seed)
+
     # Train model
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
