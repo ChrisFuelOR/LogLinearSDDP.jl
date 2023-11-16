@@ -191,10 +191,10 @@ function print_iteration_header(io)
     header = "[s]"
     print(io, lpad(Printf.@sprintf("%s", header), 13))
     print(io, "  ")
-    header = "[s]"
+    header = "Total"
     print(io, lpad(Printf.@sprintf("%s", header), 13))
     print(io, "  ")
-    header = "Total"
+    header = "pid"
     print(io, lpad(Printf.@sprintf("%s", header), 9))
     print(io, "  ")
     # header = "Total"

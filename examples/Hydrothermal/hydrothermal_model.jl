@@ -159,7 +159,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
     curtailment_ratio = [0.05, 0.05, 0.1, 0.8]
     deficit_cost = [1142.8, 2465.4, 5152.46, 5845.54]
-    annual_discount_rate = 0.12
+    annual_discount_rate = 1-0.12
 
     #exchange capacity from sytem k to l in MWmonth
     exchange_cap = [99999999.0 7379.0 1000.0 0.0 4000.0; 5625.0 99999999.0 0.0 0.0 0.0; 600.0 0.0 99999999.0 0.0 2236.0; 0.0 0.0 0.0 99999999.0 99999999.0; 3154.0 0.0 3951.0 3053.0 99999999.0]
@@ -184,7 +184,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         JuMP.@variable(subproblem, deficit[k in 1:num_of_sys])
 
         # Load curtailment modeling
-        JuMP.@variable(subproblem, deficit_part[k in 1:num_of_sys, i=1:4], lower_bound = 0.0, upper_bound = curtailment_ratio[i] * demand[t,k])        
+        JuMP.@variable(subproblem, deficit_part[k in 1:num_of_sys, i=1:4], lower_bound = 0.0, upper_bound = curtailment_ratio[i] * demand[t,Symbol(k)])        
         JuMP.@constraint(subproblem, deficit_sum[k in 1:num_of_sys], deficit[k] == sum(deficit_part[k,i] for i in 1:4))
     
         """ The deficit (load curtailment) costs are piecewise linear convex, i.e., they increase with the amount of load curtailment.
@@ -361,12 +361,12 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 2 #120
-    number_of_realizations = 1 #100
+    number_of_stages = 60 #120
+    number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(5)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)])
   
     # CREATE AND RUN MODEL
     ###########################################################################################################

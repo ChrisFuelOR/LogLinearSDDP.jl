@@ -21,7 +21,7 @@ function _add_cut(
     belief_y::Union{Nothing,Dict{T,Float64}};
     cut_selection::Bool = false,
 ) where {N,T}
-    Infiltrator.@infiltrate
+
     for (key, x) in xᵏ
         θᵏ -= πᵏ[key] * x
     end
@@ -165,7 +165,6 @@ function _add_average_cut(
             end
         end
     end
-    Infiltrator.@infiltrate
 
     ####################################################################################
 

@@ -4708,3 +4708,1767 @@ numeric issues : 0
  compute_cut_exponents      1   7.60μs    0.0%  7.60μs   5.41KiB    0.0%  5.41KiB
  ────────────────────────────────────────────────────────────────────────────────
 
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 2
+  state variables : 4
+  scenarios       : 1.00000e+00
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T12:59:59.972
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(5)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 2
+Number of realizations per stage: 1
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        2.622254e+05   3.039038e+05    0.1371   1.412000e+00   1.412000e+00        4      1     
+2        2.750300e+05   2.779488e+05    0.0105   1.418000e+00   6.000042e-03        8      1     
+3        2.752816e+05   2.752816e+05    0.0000   1.424000e+00   6.000042e-03       12      1     
+4        2.752816e+05   2.752816e+05    0.0000   1.429000e+00   4.999876e-03       16      1     
+5        2.752816e+05   2.752816e+05    0.0000   1.433000e+00   3.999949e-03       20      1     
+         5   2.752816e+05  2.752816e+05  1.433000e+00        20   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.433000e+00
+total solves   : 20
+best bound     :  2.752816e+05
+simulation ci  :  2.815395e+05 ± 1.100519e+04
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.48s /  96.9%           39.9MiB /  99.3%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    1.44s  100.0%   1.44s   39.6MiB  100.0%  39.6MiB
+   backward_pass            5    557ms   38.8%   111ms   20.3MiB   51.3%  4.07MiB
+     solve_subproblem       5    213ms   14.9%  42.7ms   2.71MiB    6.8%   555KiB
+       solver_call          5    629μs    0.0%   126μs   3.20KiB    0.0%     656B
+       get_dual_sol...      5    483μs    0.0%  96.6μs   73.5KiB    0.2%  14.7KiB
+         compute_al...      5    170μs    0.0%  34.0μs   10.9KiB    0.0%  2.17KiB
+       evaluate_cut...      5   15.1μs    0.0%  3.02μs     0.00B    0.0%    0.00B
+     get_backward_n...      5    105ms    7.3%  20.9ms   7.60MiB   19.2%  1.52MiB
+     prepare_backwa...     10   18.6μs    0.0%  1.86μs   1.56KiB    0.0%     160B
+   forward_pass             5    412ms   28.7%  82.4ms   13.0MiB   32.9%  2.61MiB
+     sample_scenario        5    212ms   14.8%  42.4ms   9.15MiB   23.1%  1.83MiB
+     solve_subproblem      10    200ms   13.9%  20.0ms   3.87MiB    9.8%   397KiB
+       solver_call         10   4.13ms    0.3%   413μs    209KiB    0.5%  20.9KiB
+       evaluate_cut...     10    472μs    0.0%  47.2μs   50.3KiB    0.1%  5.03KiB
+       get_dual_sol...     10   29.5μs    0.0%  2.95μs   5.47KiB    0.0%     560B
+   calculate_bound          5   2.65ms    0.2%   529μs    219KiB    0.5%  43.9KiB
+     solver_call            5   1.35ms    0.1%   270μs   3.73KiB    0.0%     765B
+     evaluate_cut_i...      5    284μs    0.0%  56.8μs   63.1KiB    0.2%  12.6KiB
+     get_dual_solution      5   25.9μs    0.0%  5.18μs   2.73KiB    0.0%     560B
+ initialize_process         1   7.30μs    0.0%  7.30μs   2.08KiB    0.0%  2.08KiB
+ compute_cut_exponents      1   6.70μs    0.0%  6.70μs   5.41KiB    0.0%  5.41KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 2
+  state variables : 4
+  scenarios       : 1.00000e+01
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:00:22.458
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(5)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 2
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        2.736882e+05   2.752010e+05    0.0055   1.967100e+01   1.967100e+01       13      1     
+2        2.868771e+05   2.949149e+05    0.0273   2.279400e+01   3.123000e+00       26      1     
+3        2.868771e+05   3.048638e+05    0.0590   2.281900e+01   2.499986e-02       39      1     
+4        2.868771e+05   2.778244e+05    0.0316   2.283000e+01   1.100016e-02       52      1     
+5        2.868771e+05   3.048638e+05    0.0590   2.284400e+01   1.399994e-02       65      1     
+         5   3.048638e+05  2.868771e+05  2.284400e+01        65   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.284400e+01
+total solves   : 65
+best bound     :  2.868771e+05
+simulation ci  :  2.915336e+05 ± 1.256173e+04
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            22.9s /  99.8%           24.8MiB /  98.8%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    22.8s  100.0%   22.8s   24.5MiB  100.0%  24.5MiB
+   backward_pass            5    22.8s   99.6%   4.55s   23.5MiB   95.7%  4.70MiB
+     solve_subproblem      50   48.9ms    0.2%   977μs   2.11MiB    8.6%  43.2KiB
+       solver_call         50   15.9ms    0.1%   318μs   36.6KiB    0.1%     750B
+       get_dual_sol...     50   7.66ms    0.0%   153μs    728KiB    2.9%  14.6KiB
+         compute_al...     50   2.58ms    0.0%  51.6μs    109KiB    0.4%  2.17KiB
+       evaluate_cut...     50    152μs    0.0%  3.04μs     0.00B    0.0%    0.00B
+     get_backward_n...      5   10.9ms    0.0%  2.18ms    822KiB    3.3%   164KiB
+     prepare_backwa...     10   33.0μs    0.0%  3.30μs   1.56KiB    0.0%     160B
+   forward_pass             5   41.5ms    0.2%  8.30ms    801KiB    3.2%   160KiB
+     solve_subproblem      10   39.2ms    0.2%  3.92ms    688KiB    2.7%  68.8KiB
+       solver_call         10   10.0ms    0.0%   996μs    210KiB    0.8%  20.9KiB
+       evaluate_cut...     10    860μs    0.0%  86.0μs   50.3KiB    0.2%  5.03KiB
+       get_dual_sol...     10   76.4μs    0.0%  7.64μs   5.47KiB    0.0%     560B
+     sample_scenario        5   2.09ms    0.0%   419μs   98.7KiB    0.4%  19.7KiB
+   calculate_bound          5   21.3ms    0.1%  4.26ms    219KiB    0.9%  43.9KiB
+     solver_call            5   15.6ms    0.1%  3.11ms   3.64KiB    0.0%     746B
+     evaluate_cut_i...      5    816μs    0.0%   163μs   63.1KiB    0.3%  12.6KiB
+     get_dual_solution      5   50.0μs    0.0%  10.0μs   2.73KiB    0.0%     560B
+ initialize_process         1   7.00μs    0.0%  7.00μs   2.08KiB    0.0%  2.08KiB
+ compute_cut_exponents      1   6.70μs    0.0%  6.70μs   5.41KiB    0.0%  5.41KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 10
+  state variables : 4
+  scenarios       : 1.00000e+09
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:01:07.311
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 10
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 10
+  state variables : 4
+  scenarios       : 1.00000e+09
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:01:55.379
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 10
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:03:45.171
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:04:18.062
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:04:41.470
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:06:28.056
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:14:17.579
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:15:08.761
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:17:02.882
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:17:58.361
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:24:12.360
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:24:41.547
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.393588e+06   1.592728e+07    0.9125   3.504000e+00   3.504000e+00      123      1     
+2        7.199420e+06   1.816548e+08    0.9604   3.702000e+00   1.980000e-01      246      1     
+3        7.400753e+06   6.882048e+07    0.8925   3.872000e+00   1.700001e-01      369      1     
+4        9.121230e+06   4.249991e+07    0.7854   4.006000e+00   1.340001e-01      492      1     
+5        1.089154e+07   9.801473e+07    0.8889   4.180000e+00   1.739998e-01      615      1     
+6        1.182763e+07   3.809617e+07    0.6895   4.333000e+00   1.530001e-01      738      1     
+7        1.458481e+07   7.545210e+07    0.8067   4.510000e+00   1.770000e-01      861      1     
+8        1.579178e+07   3.446059e+07    0.5417   4.666000e+00   1.559999e-01      984      1     
+9        1.588637e+07   3.184681e+07    0.5012   4.836000e+00   1.700001e-01     1107      1     
+10       1.774093e+07   5.527432e+07    0.6790   5.014000e+00   1.780000e-01     1230      1     
+11       1.847970e+07   1.877784e+07    0.0159   5.186000e+00   1.719999e-01     1353      1     
+12       1.891402e+07   5.359612e+07    0.6471   5.364000e+00   1.780000e-01     1476      1     
+13       1.896836e+07   3.241359e+07    0.4148   5.550000e+00   1.860001e-01     1599      1     
+14       1.904879e+07   2.239573e+07    0.1494   5.725000e+00   1.750000e-01     1722      1     
+15       1.918244e+07   2.416557e+07    0.2062   5.913000e+00   1.880000e-01     1845      1     
+16       1.942225e+07   1.831962e+07    0.0568   6.113000e+00   2.000000e-01     1968      1     
+17       2.021682e+07   8.030809e+07    0.7483   6.299000e+00   1.860001e-01     2091      1     
+18       2.043213e+07   1.303245e+07    0.3622   6.507000e+00   2.079999e-01     2214      1     
+19       2.049073e+07   6.101454e+07    0.6642   6.721000e+00   2.140000e-01     2337      1     
+20       2.055004e+07   6.480393e+07    0.6829   6.923000e+00   2.019999e-01     2460      1     
+21       2.079807e+07   2.643137e+07    0.2131   7.134000e+00   2.110000e-01     2583      1     
+22       2.092809e+07   2.877464e+07    0.2727   7.362000e+00   2.280002e-01     2706      1     
+23       2.191423e+07   2.509751e+07    0.1268   7.589000e+00   2.270000e-01     2829      1     
+24       2.197473e+07   2.651212e+07    0.1711   7.796000e+00   2.070000e-01     2952      1     
+25       2.204743e+07   2.931671e+07    0.2480   8.029000e+00   2.330000e-01     3075      1     
+26       2.241901e+07   1.879591e+07    0.1616   8.275000e+00   2.459998e-01     3198      1     
+27       2.255940e+07   1.294172e+07    0.4263   8.519000e+00   2.440000e-01     3321      1     
+28       2.263773e+07   9.777478e+07    0.7685   8.771000e+00   2.520001e-01     3444      1     
+29       2.355410e+07   1.807065e+07    0.2328   9.017000e+00   2.460001e-01     3567      1     
+30       2.357642e+07   1.441077e+07    0.3888   9.262000e+00   2.449999e-01     3690      1     
+31       2.382337e+07   4.474763e+07    0.4676   9.524000e+00   2.620001e-01     3813      1     
+32       2.391569e+07   2.413887e+07    0.0092   9.775000e+00   2.509999e-01     3936      1     
+33       2.405565e+07   5.763476e+07    0.5826   1.003100e+01   2.560000e-01     4059      1     
+34       2.421339e+07   1.942666e+07    0.1977   1.030400e+01   2.730000e-01     4182      1     
+35       2.438760e+07   3.128627e+07    0.2205   1.059300e+01   2.890000e-01     4305      1     
+36       2.444263e+07   5.705682e+07    0.5716   1.088900e+01   2.960000e-01     4428      1     
+37       2.451862e+07   1.826338e+07    0.2551   1.114100e+01   2.520001e-01     4551      1     
+38       2.495923e+07   2.700280e+07    0.0757   1.142000e+01   2.789998e-01     4674      1     
+39       2.503757e+07   4.976838e+07    0.4969   1.169700e+01   2.770002e-01     4797      1     
+40       2.523141e+07   8.489219e+07    0.7028   1.197600e+01   2.789998e-01     4920      1     
+41       2.558055e+07   1.556951e+07    0.3914   1.226300e+01   2.870002e-01     5043      1     
+42       2.574518e+07   1.815457e+07    0.2948   1.255400e+01   2.909999e-01     5166      1     
+43       2.588934e+07   2.062173e+07    0.2035   1.286300e+01   3.090000e-01     5289      1     
+44       2.593053e+07   1.917379e+07    0.2606   1.315500e+01   2.920001e-01     5412      1     
+45       2.624836e+07   4.391917e+07    0.4023   1.346800e+01   3.130000e-01     5535      1     
+46       2.627629e+07   2.313814e+07    0.1194   1.377800e+01   3.099999e-01     5658      1     
+47       2.637174e+07   3.607186e+07    0.2689   1.408700e+01   3.090000e-01     5781      1     
+48       2.638328e+07   1.799575e+07    0.3179   1.440000e+01   3.130000e-01     5904      1     
+49       2.657708e+07   1.918305e+07    0.2782   1.471500e+01   3.150001e-01     6027      1     
+50       2.661769e+07   2.339631e+07    0.1210   1.504300e+01   3.280001e-01     6150      1     
+51       2.673864e+07   3.001857e+07    0.1093   1.535500e+01   3.120000e-01     6273      1     
+52       2.679284e+07   1.504882e+08    0.8220   1.568900e+01   3.339999e-01     6396      1     
+53       2.684608e+07   4.414615e+07    0.3919   1.602100e+01   3.320000e-01     6519      1     
+54       2.685637e+07   3.115789e+07    0.1381   1.635000e+01   3.290000e-01     6642      1     
+55       2.703181e+07   1.539102e+07    0.4306   1.670500e+01   3.550000e-01     6765      1     
+56       2.721053e+07   1.350568e+07    0.5037   1.704600e+01   3.410001e-01     6888      1     
+57       2.731642e+07   2.487895e+07    0.0892   1.738400e+01   3.379998e-01     7011      1     
+58       2.734107e+07   1.458775e+07    0.4665   1.774600e+01   3.620002e-01     7134      1     
+59       2.739662e+07   1.777509e+07    0.3512   1.809200e+01   3.460000e-01     7257      1     
+60       2.739827e+07   2.499894e+07    0.0876   1.844400e+01   3.520000e-01     7380      1     
+61       2.748057e+07   5.247893e+07    0.4764   1.881600e+01   3.720000e-01     7503      1     
+62       2.749355e+07   1.174508e+07    0.5728   1.919800e+01   3.820000e-01     7626      1     
+63       2.753395e+07   4.702953e+07    0.4145   1.959500e+01   3.970001e-01     7749      1     
+64       2.753686e+07   5.017922e+07    0.4512   1.997000e+01   3.750000e-01     7872      1     
+65       2.788692e+07   2.790758e+07    0.0007   2.033400e+01   3.639998e-01     7995      1     
+66       2.792564e+07   3.606906e+07    0.2258   2.071700e+01   3.830001e-01     8118      1     
+67       2.796308e+07   6.101360e+07    0.5417   2.110300e+01   3.859999e-01     8241      1     
+68       2.797001e+07   9.130283e+06    0.6736   2.148600e+01   3.829999e-01     8364      1     
+69       2.800062e+07   3.140439e+07    0.1084   2.186300e+01   3.770001e-01     8487      1     
+70       2.801431e+07   4.133772e+07    0.3223   2.225800e+01   3.950000e-01     8610      1     
+71       2.810681e+07   7.300285e+07    0.6150   2.264900e+01   3.910000e-01     8733      1     
+72       2.813183e+07   2.465766e+07    0.1235   2.304300e+01   3.940001e-01     8856      1     
+73       2.819632e+07   2.052162e+07    0.2722   2.345400e+01   4.110000e-01     8979      1     
+74       2.822995e+07   1.409372e+07    0.5008   2.387900e+01   4.250000e-01     9102      1     
+75       2.825574e+07   2.641142e+07    0.0653   2.427500e+01   3.959999e-01     9225      1     
+76       2.828371e+07   3.899494e+07    0.2747   2.470300e+01   4.280000e-01     9348      1     
+77       2.828865e+07   1.308566e+07    0.5374   2.511200e+01   4.090002e-01     9471      1     
+78       2.830785e+07   1.670094e+07    0.4100   2.554600e+01   4.340000e-01     9594      1     
+79       2.831216e+07   2.289382e+07    0.1914   2.597500e+01   4.289999e-01     9717      1     
+80       2.836897e+07   3.315073e+07    0.1442   2.638800e+01   4.130001e-01     9840      1     
+81       2.847090e+07   8.216632e+06    0.7114   2.683100e+01   4.429998e-01     9963      1     
+82       2.847626e+07   2.831589e+07    0.0056   2.725900e+01   4.280000e-01    10086      1     
+83       2.857275e+07   2.146965e+07    0.2486   2.771700e+01   4.580002e-01    10209      1     
+84       2.860022e+07   1.762000e+07    0.3839   2.815100e+01   4.340000e-01    10332      1     
+85       2.860029e+07   4.494830e+07    0.3637   2.860300e+01   4.519999e-01    10455      1     
+86       2.867497e+07   3.997273e+07    0.2826   2.907500e+01   4.720001e-01    10578      1     
+87       2.867506e+07   8.852931e+06    0.6913   2.961600e+01   5.409999e-01    10701      1     
+88       2.868685e+07   2.021391e+07    0.2954   3.008000e+01   4.640000e-01    10824      1     
+89       2.870505e+07   1.383422e+07    0.5181   3.056300e+01   4.830000e-01    10947      1     
+90       2.872036e+07   3.698116e+07    0.2234   3.103600e+01   4.730000e-01    11070      1     
+91       2.874534e+07   5.744587e+07    0.4996   3.151300e+01   4.770000e-01    11193      1     
+92       2.874534e+07   9.604398e+06    0.6659   3.199000e+01   4.770000e-01    11316      1     
+93       2.876872e+07   4.795428e+07    0.4001   3.246500e+01   4.749999e-01    11439      1     
+94       2.877624e+07   1.619663e+07    0.4372   3.295500e+01   4.900000e-01    11562      1     
+95       2.881822e+07   3.395149e+07    0.1512   3.342200e+01   4.670000e-01    11685      1     
+96       2.883734e+07   3.473874e+07    0.1699   3.392000e+01   4.979999e-01    11808      1     
+97       2.885051e+07   2.488454e+07    0.1375   3.441700e+01   4.970000e-01    11931      1     
+98       2.887729e+07   2.675139e+07    0.0736   3.489800e+01   4.810002e-01    12054      1     
+99       2.889793e+07   3.937919e+07    0.2662   3.540500e+01   5.070000e-01    12177      1     
+100      2.889793e+07   8.060253e+07    0.6415   3.590300e+01   4.979999e-01    12300      1     
+       100   8.060253e+07  2.889793e+07  3.590300e+01     12300   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 3.590300e+01
+total solves   : 12300
+best bound     :  2.889793e+07
+simulation ci  :  3.611134e+07 ± 5.370144e+06
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            36.2s /  99.1%           4.71GiB /  99.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    35.9s  100.0%   35.9s   4.70GiB  100.0%  4.70GiB
+   backward_pass          100    34.3s   95.5%   343ms   4.56GiB   96.9%  46.7MiB
+     solve_subproblem   11.0k    30.8s   85.7%  2.80ms   4.27GiB   90.9%   407KiB
+       get_dual_sol...  11.0k    22.1s   61.6%  2.01ms   3.36GiB   71.5%   320KiB
+         compute_al...  11.0k    19.2s   53.4%  1.74ms   2.67GiB   56.7%   254KiB
+       evaluate_cut...  11.0k    3.08s    8.6%   280μs    618MiB   12.8%  57.6KiB
+       solver_call      11.0k    2.98s    8.3%   271μs   8.99MiB    0.2%     857B
+     get_backward_n...  1.10k    750ms    2.1%   681μs    184MiB    3.8%   171KiB
+     prepare_backwa...    200    240ms    0.7%  1.20ms    772KiB    0.0%  3.86KiB
+   forward_pass           100    1.07s    3.0%  10.7ms    131MiB    2.7%  1.31MiB
+     solve_subproblem   1.20k    958ms    2.7%   798μs    109MiB    2.3%  93.1KiB
+       evaluate_cut...  1.20k    359ms    1.0%   299μs   72.6MiB    1.5%  61.9KiB
+       solver_call      1.20k    344ms    1.0%   287μs   2.28MiB    0.0%  1.95KiB
+       get_dual_sol...  1.20k   4.12ms    0.0%  3.44μs    656KiB    0.0%     560B
+     sample_scenario      100   94.7ms    0.3%   947μs   20.4MiB    0.4%   209KiB
+   calculate_bound        100    108ms    0.3%  1.08ms   14.8MiB    0.3%   151KiB
+     evaluate_cut_i...    100   48.5ms    0.1%   485μs   11.5MiB    0.2%   118KiB
+     solver_call          100   39.1ms    0.1%   391μs   77.5KiB    0.0%     794B
+     get_dual_solution    100    372μs    0.0%  3.72μs   54.7KiB    0.0%     560B
+ compute_cut_exponents      1    767μs    0.0%   767μs    182KiB    0.0%   182KiB
+ initialize_process         1   14.1μs    0.0%  14.1μs   2.08KiB    0.0%  2.08KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:26:47.073
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        9.903178e+05   1.386627e+08    0.9929   1.550000e-01   1.550000e-01      123      1     
+2        6.130866e+06   1.004040e+08    0.9389   3.060000e-01   1.510000e-01      246      1     
+3        7.624123e+06   6.834348e+07    0.8884   4.380000e-01   1.320000e-01      369      1     
+4        1.251331e+07   5.522702e+07    0.7734   5.940001e-01   1.560001e-01      492      1     
+5        1.497541e+07   2.023288e+07    0.2598   7.560000e-01   1.619999e-01      615      1     
+6        1.529644e+07   3.968121e+07    0.6145   8.989999e-01   1.429999e-01      738      1     
+7        1.546218e+07   3.812288e+07    0.5944   1.056000e+00   1.570001e-01      861      1     
+8        1.565543e+07   2.994148e+07    0.4771   1.211000e+00   1.550000e-01      984      1     
+9        1.772582e+07   1.918552e+07    0.0761   1.373000e+00   1.619999e-01     1107      1     
+10       1.803479e+07   1.857615e+07    0.0291   1.538000e+00   1.650002e-01     1230      1     
+11       1.838596e+07   2.240934e+07    0.1795   1.717000e+00   1.789999e-01     1353      1     
+12       1.876470e+07   2.200924e+07    0.1474   1.888000e+00   1.710000e-01     1476      1     
+13       1.886230e+07   1.856797e+07    0.0156   2.064000e+00   1.760001e-01     1599      1     
+14       1.991434e+07   1.854934e+07    0.0685   2.244000e+00   1.799998e-01     1722      1     
+15       2.075202e+07   3.602927e+07    0.4240   2.433000e+00   1.890001e-01     1845      1     
+16       2.098813e+07   4.004511e+07    0.4759   2.605000e+00   1.719999e-01     1968      1     
+17       2.110997e+07   3.017623e+07    0.3004   2.800000e+00   1.949999e-01     2091      1     
+18       2.168626e+07   8.971135e+07    0.7583   2.997000e+00   1.970000e-01     2214      1     
+19       2.231794e+07   6.653659e+07    0.6646   3.181000e+00   1.840000e-01     2337      1     
+20       2.244859e+07   1.683586e+07    0.2500   3.390000e+00   2.090001e-01     2460      1     
+21       2.309265e+07   4.329167e+07    0.4666   3.600000e+00   2.100000e-01     2583      1     
+22       2.316531e+07   2.960719e+07    0.2176   3.816000e+00   2.159998e-01     2706      1     
+23       2.318754e+07   2.758044e+07    0.1593   4.028000e+00   2.120001e-01     2829      1     
+24       2.335117e+07   1.415255e+07    0.3939   4.247000e+00   2.189999e-01     2952      1     
+25       2.336919e+07   1.174773e+07    0.4973   4.471000e+00   2.240000e-01     3075      1     
+26       2.373183e+07   5.603896e+07    0.5765   4.703000e+00   2.320001e-01     3198      1     
+27       2.403741e+07   1.729942e+07    0.2803   4.931000e+00   2.279999e-01     3321      1     
+28       2.416877e+07   2.302941e+07    0.0471   5.157000e+00   2.260001e-01     3444      1     
+29       2.467505e+07   2.250686e+07    0.0879   5.390000e+00   2.330000e-01     3567      1     
+30       2.478746e+07   1.207349e+07    0.5129   5.629000e+00   2.389998e-01     3690      1     
+31       2.510882e+07   3.194364e+07    0.2140   5.886000e+00   2.570000e-01     3813      1     
+32       2.527400e+07   2.004006e+07    0.2071   6.132000e+00   2.460001e-01     3936      1     
+33       2.547549e+07   1.716619e+07    0.3262   6.379000e+00   2.470000e-01     4059      1     
+34       2.566431e+07   8.952467e+07    0.7133   6.633000e+00   2.540002e-01     4182      1     
+35       2.571680e+07   3.556935e+07    0.2770   6.878000e+00   2.449999e-01     4305      1     
+36       2.572295e+07   2.276807e+07    0.1149   7.149000e+00   2.709999e-01     4428      1     
+37       2.578217e+07   1.076089e+07    0.5826   7.418000e+00   2.690001e-01     4551      1     
+38       2.580416e+07   1.473233e+07    0.4291   7.692000e+00   2.739999e-01     4674      1     
+39       2.581056e+07   1.511797e+07    0.4143   7.967000e+00   2.750001e-01     4797      1     
+40       2.591934e+07   7.902024e+07    0.6720   8.241000e+00   2.739999e-01     4920      1     
+41       2.596314e+07   6.794044e+07    0.6179   8.523000e+00   2.820001e-01     5043      1     
+42       2.601123e+07   1.285054e+07    0.5060   8.805000e+00   2.820001e-01     5166      1     
+43       2.623956e+07   2.937147e+07    0.1066   9.088000e+00   2.830000e-01     5289      1     
+44       2.640748e+07   3.407590e+07    0.2250   9.375000e+00   2.869999e-01     5412      1     
+45       2.651241e+07   1.816393e+07    0.3149   9.669000e+00   2.939999e-01     5535      1     
+46       2.658231e+07   1.246932e+07    0.5309   9.975000e+00   3.060002e-01     5658      1     
+47       2.672861e+07   3.292295e+07    0.1881   1.027300e+01   2.979999e-01     5781      1     
+48       2.678472e+07   4.634898e+07    0.4221   1.056800e+01   2.950001e-01     5904      1     
+49       2.678507e+07   1.390095e+07    0.4810   1.088000e+01   3.120000e-01     6027      1     
+50       2.694859e+07   1.278120e+08    0.7892   1.120800e+01   3.279998e-01     6150      1     
+51       2.697218e+07   1.668600e+07    0.3814   1.154600e+01   3.380001e-01     6273      1     
+52       2.700136e+07   1.090238e+07    0.5962   1.185700e+01   3.110001e-01     6396      1     
+53       2.717810e+07   4.440076e+07    0.3879   1.218500e+01   3.279998e-01     6519      1     
+54       2.721402e+07   9.881485e+06    0.6369   1.250100e+01   3.160000e-01     6642      1     
+55       2.733434e+07   1.848509e+07    0.3237   1.283000e+01   3.290000e-01     6765      1     
+56       2.733483e+07   1.717155e+07    0.3718   1.319300e+01   3.630002e-01     6888      1     
+57       2.737825e+07   4.086098e+07    0.3300   1.352600e+01   3.329999e-01     7011      1     
+58       2.743882e+07   1.378618e+07    0.4976   1.387500e+01   3.490000e-01     7134      1     
+59       2.747610e+07   3.530865e+07    0.2218   1.426200e+01   3.870001e-01     7257      1     
+60       2.750190e+07   1.385297e+07    0.4963   1.461700e+01   3.550000e-01     7380      1     
+61       2.752749e+07   1.795686e+07    0.3477   1.495700e+01   3.399999e-01     7503      1     
+62       2.757268e+07   2.001283e+07    0.2742   1.532300e+01   3.659999e-01     7626      1     
+63       2.757337e+07   2.907896e+07    0.0518   1.568500e+01   3.620000e-01     7749      1     
+64       2.758585e+07   1.676496e+07    0.3923   1.606000e+01   3.750000e-01     7872      1     
+65       2.766591e+07   1.008819e+07    0.6354   1.642300e+01   3.630002e-01     7995      1     
+66       2.770291e+07   1.351265e+07    0.5122   1.678900e+01   3.659999e-01     8118      1     
+67       2.771856e+07   2.523100e+07    0.0897   1.717200e+01   3.829999e-01     8241      1     
+68       2.773815e+07   2.078235e+07    0.2508   1.756500e+01   3.930001e-01     8364      1     
+69       2.775409e+07   6.891090e+06    0.7517   1.795200e+01   3.870001e-01     8487      1     
+70       2.776596e+07   1.772174e+07    0.3617   1.833800e+01   3.859999e-01     8610      1     
+71       2.776657e+07   1.175355e+07    0.5767   1.872900e+01   3.910000e-01     8733      1     
+72       2.788272e+07   9.541016e+07    0.7078   1.912200e+01   3.929999e-01     8856      1     
+73       2.803161e+07   2.104979e+07    0.2491   1.951200e+01   3.900001e-01     8979      1     
+74       2.807560e+07   1.623034e+07    0.4219   1.991900e+01   4.069998e-01     9102      1     
+75       2.828677e+07   6.462001e+07    0.5623   2.031300e+01   3.940001e-01     9225      1     
+76       2.836598e+07   1.391418e+07    0.5095   2.073000e+01   4.170001e-01     9348      1     
+77       2.837662e+07   2.545625e+07    0.1029   2.114200e+01   4.119999e-01     9471      1     
+78       2.842854e+07   4.703461e+07    0.3956   2.155100e+01   4.090002e-01     9594      1     
+79       2.852431e+07   2.983834e+07    0.0440   2.197100e+01   4.199998e-01     9717      1     
+80       2.855607e+07   1.443378e+07    0.4945   2.239100e+01   4.200001e-01     9840      1     
+81       2.856096e+07   5.321213e+07    0.4633   2.282100e+01   4.300001e-01     9963      1     
+82       2.856566e+07   1.880919e+07    0.3415   2.325400e+01   4.329998e-01    10086      1     
+83       2.857185e+07   1.054453e+07    0.6309   2.375500e+01   5.010002e-01    10209      1     
+84       2.859805e+07   3.750841e+07    0.2376   2.422800e+01   4.729998e-01    10332      1     
+85       2.861832e+07   1.275187e+07    0.5544   2.467500e+01   4.470000e-01    10455      1     
+86       2.861939e+07   1.902220e+07    0.3353   2.513500e+01   4.600000e-01    10578      1     
+87       2.875583e+07   8.642530e+07    0.6673   2.558400e+01   4.490001e-01    10701      1     
+88       2.876200e+07   2.191183e+07    0.2382   2.604000e+01   4.559999e-01    10824      1     
+89       2.879450e+07   3.320986e+07    0.1330   2.651600e+01   4.760001e-01    10947      1     
+90       2.882131e+07   1.947182e+07    0.3244   2.695600e+01   4.400001e-01    11070      1     
+91       2.882602e+07   1.659214e+07    0.4244   2.743600e+01   4.800000e-01    11193      1     
+92       2.884516e+07   1.929171e+07    0.3312   2.790000e+01   4.640000e-01    11316      1     
+93       2.887077e+07   5.453729e+07    0.4706   2.837500e+01   4.749999e-01    11439      1     
+94       2.893809e+07   1.247263e+07    0.5690   2.885500e+01   4.800000e-01    11562      1     
+95       2.895159e+07   5.784108e+07    0.4995   2.932600e+01   4.710000e-01    11685      1     
+96       2.897366e+07   1.731062e+07    0.4025   2.980900e+01   4.830000e-01    11808      1     
+97       2.898298e+07   1.148106e+07    0.6039   3.028600e+01   4.770000e-01    11931      1     
+98       2.898298e+07   2.076713e+07    0.2835   3.080000e+01   5.139999e-01    12054      1     
+99       2.900384e+07   9.142378e+07    0.6828   3.130000e+01   5.000000e-01    12177      1     
+100      2.900502e+07   3.285942e+07    0.1173   3.179000e+01   4.900000e-01    12300      1     
+       100   3.285942e+07  2.900502e+07  3.179000e+01     12300   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 3.179000e+01
+total solves   : 12300
+best bound     :  2.900502e+07
+simulation ci  :  3.265637e+07 ± 5.131030e+06
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            31.9s /  99.8%           4.63GiB / 100.0%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    31.8s  100.0%   31.8s   4.63GiB  100.0%  4.63GiB
+   backward_pass          100    30.3s   95.3%   303ms   4.49GiB   96.9%  46.0MiB
+     solve_subproblem   11.0k    29.4s   92.5%  2.67ms   4.26GiB   92.0%   406KiB
+       get_dual_sol...  11.0k    21.3s   67.1%  1.94ms   3.35GiB   72.3%   319KiB
+         compute_al...  11.0k    18.8s   59.1%  1.71ms   2.66GiB   57.4%   254KiB
+       solver_call      11.0k    2.98s    9.4%   271μs   8.98MiB    0.2%     856B
+       evaluate_cut...  11.0k    2.89s    9.1%   262μs    618MiB   13.0%  57.5KiB
+     get_backward_n...  1.10k    546ms    1.7%   496μs    177MiB    3.7%   164KiB
+     prepare_backwa...    200    490μs    0.0%  2.45μs   64.1KiB    0.0%     328B
+   forward_pass           100    1.02s    3.2%  10.2ms    130MiB    2.8%  1.30MiB
+     solve_subproblem   1.20k    946ms    3.0%   788μs    109MiB    2.3%  93.1KiB
+       evaluate_cut...  1.20k    358ms    1.1%   299μs   72.6MiB    1.5%  61.9KiB
+       solver_call      1.20k    333ms    1.0%   277μs   2.28MiB    0.0%  1.95KiB
+       get_dual_sol...  1.20k   4.12ms    0.0%  3.43μs    656KiB    0.0%     560B
+     sample_scenario      100   72.7ms    0.2%   727μs   20.4MiB    0.4%   209KiB
+   calculate_bound        100    114ms    0.4%  1.14ms   14.8MiB    0.3%   151KiB
+     evaluate_cut_i...    100   55.3ms    0.2%   553μs   11.5MiB    0.2%   118KiB
+     solver_call          100   38.1ms    0.1%   381μs   79.1KiB    0.0%     810B
+     get_dual_solution    100    364μs    0.0%  3.64μs   54.7KiB    0.0%     560B
+ compute_cut_exponents      1    526μs    0.0%   526μs    182KiB    0.0%   182KiB
+ initialize_process         1   10.6μs    0.0%  10.6μs   2.08KiB    0.0%  2.08KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 12
+  state variables : 4
+  scenarios       : 1.00000e+11
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:29:20.586
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 12
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        7.035162e+06   1.021200e+08    0.9311   7.440000e-01   7.440000e-01      123      1     
+2        7.696004e+06   6.883990e+07    0.8882   9.110000e-01   1.670001e-01      246      1     
+3        8.281980e+06   3.728448e+07    0.7779   1.065000e+00   1.540000e-01      369      1     
+4        9.640817e+06   8.278605e+07    0.8835   1.198000e+00   1.329999e-01      492      1     
+5        1.014479e+07   4.095575e+07    0.7523   1.370000e+00   1.719999e-01      615      1     
+6        1.248735e+07   1.875532e+07    0.3342   1.511000e+00   1.410000e-01      738      1     
+7        1.279569e+07   4.984226e+07    0.7433   1.675000e+00   1.640000e-01      861      1     
+8        1.555994e+07   2.765535e+07    0.4374   1.815000e+00   1.400001e-01      984      1     
+9        1.872612e+07   2.524642e+07    0.2583   1.988000e+00   1.729999e-01     1107      1     
+10       1.940955e+07   8.750151e+07    0.7782   2.164000e+00   1.760001e-01     1230      1     
+11       2.018440e+07   1.465355e+08    0.8623   2.326000e+00   1.619999e-01     1353      1     
+12       2.042235e+07   4.243052e+07    0.5187   2.497000e+00   1.710000e-01     1476      1     
+13       2.141758e+07   3.615260e+07    0.4076   2.667000e+00   1.700001e-01     1599      1     
+14       2.156735e+07   2.032040e+07    0.0578   2.846000e+00   1.789999e-01     1722      1     
+15       2.183813e+07   2.282377e+07    0.0432   3.029000e+00   1.830001e-01     1845      1     
+16       2.191547e+07   5.786357e+07    0.6213   3.214000e+00   1.849999e-01     1968      1     
+17       2.196059e+07   3.294707e+07    0.3335   3.410000e+00   1.960001e-01     2091      1     
+18       2.245508e+07   2.935774e+07    0.2351   3.616000e+00   2.059999e-01     2214      1     
+19       2.266969e+07   1.437707e+07    0.3658   3.821000e+00   2.050002e-01     2337      1     
+20       2.284817e+07   3.061830e+07    0.2538   4.010000e+00   1.889999e-01     2460      1     
+21       2.325498e+07   7.830764e+07    0.7030   4.220000e+00   2.100000e-01     2583      1     
+22       2.339411e+07   3.986061e+07    0.4131   4.431000e+00   2.110000e-01     2706      1     
+23       2.347535e+07   1.425197e+07    0.3929   4.638000e+00   2.070000e-01     2829      1     
+24       2.351501e+07   2.079211e+07    0.1158   4.856000e+00   2.179999e-01     2952      1     
+25       2.361861e+07   1.919566e+07    0.1873   5.087000e+00   2.309999e-01     3075      1     
+26       2.365158e+07   2.712534e+07    0.1281   5.314000e+00   2.270000e-01     3198      1     
+27       2.372692e+07   2.412722e+07    0.0166   5.549000e+00   2.350001e-01     3321      1     
+28       2.383646e+07   4.859378e+07    0.5095   5.775000e+00   2.260001e-01     3444      1     
+29       2.424729e+07   1.520177e+07    0.3731   6.008000e+00   2.329998e-01     3567      1     
+30       2.442360e+07   3.408651e+07    0.2835   6.250000e+00   2.420001e-01     3690      1     
+31       2.449604e+07   1.543299e+07    0.3700   6.497000e+00   2.470000e-01     3813      1     
+32       2.536354e+07   2.481083e+07    0.0218   6.741000e+00   2.440000e-01     3936      1     
+33       2.564031e+07   1.803576e+07    0.2966   6.994000e+00   2.530000e-01     4059      1     
+34       2.576489e+07   3.228288e+07    0.2019   7.248000e+00   2.539999e-01     4182      1     
+35       2.607775e+07   1.492763e+07    0.4276   7.505000e+00   2.570000e-01     4305      1     
+36       2.610558e+07   5.497243e+07    0.5251   7.757000e+00   2.520001e-01     4428      1     
+37       2.624868e+07   2.867585e+07    0.0846   8.025000e+00   2.680001e-01     4551      1     
+38       2.625982e+07   1.003130e+08    0.7382   8.289000e+00   2.639999e-01     4674      1     
+39       2.679071e+07   1.012986e+08    0.7355   8.567000e+00   2.779999e-01     4797      1     
+40       2.680790e+07   3.839511e+07    0.3018   8.836000e+00   2.690001e-01     4920      1     
+41       2.680790e+07   3.987592e+07    0.3277   9.123000e+00   2.869999e-01     5043      1     
+42       2.681094e+07   9.672382e+07    0.7228   9.409000e+00   2.860000e-01     5166      1     
+43       2.722742e+07   1.913650e+08    0.8577   9.697000e+00   2.880001e-01     5289      1     
+44       2.725815e+07   1.824712e+07    0.3306   9.989000e+00   2.920001e-01     5412      1     
+45       2.738915e+07   3.895703e+07    0.2969   1.028000e+01   2.909999e-01     5535      1     
+46       2.742902e+07   1.970901e+07    0.2815   1.057500e+01   2.950001e-01     5658      1     
+47       2.748993e+07   3.485265e+07    0.2113   1.087600e+01   3.009999e-01     5781      1     
+48       2.766275e+07   1.506941e+07    0.4552   1.118400e+01   3.080001e-01     5904      1     
+49       2.768833e+07   7.377558e+07    0.6247   1.149500e+01   3.109999e-01     6027      1     
+50       2.785727e+07   7.778778e+07    0.6419   1.183100e+01   3.360002e-01     6150      1     
+51       2.793270e+07   9.016924e+07    0.6902   1.220800e+01   3.769999e-01     6273      1     
+52       2.795218e+07   2.262685e+07    0.1905   1.252900e+01   3.210001e-01     6396      1     
+53       2.798716e+07   1.995281e+07    0.2871   1.288400e+01   3.550000e-01     6519      1     
+54       2.798756e+07   1.480329e+08    0.8109   1.321700e+01   3.329999e-01     6642      1     
+55       2.800183e+07   1.369828e+07    0.5108   1.356200e+01   3.450000e-01     6765      1     
+56       2.803615e+07   1.859511e+07    0.3367   1.390400e+01   3.420000e-01     6888      1     
+57       2.806182e+07   1.773773e+07    0.3679   1.427900e+01   3.750000e-01     7011      1     
+58       2.810941e+07   3.554962e+07    0.2093   1.466500e+01   3.859999e-01     7134      1     
+59       2.811559e+07   1.504025e+07    0.4651   1.500500e+01   3.399999e-01     7257      1     
+60       2.815884e+07   1.417094e+07    0.4967   1.535600e+01   3.510001e-01     7380      1     
+61       2.821905e+07   6.313511e+07    0.5530   1.570500e+01   3.490000e-01     7503      1     
+62       2.823207e+07   2.010424e+07    0.2879   1.606200e+01   3.570001e-01     7626      1     
+63       2.823994e+07   1.421870e+07    0.4965   1.645100e+01   3.889999e-01     7749      1     
+64       2.826009e+07   2.115483e+07    0.2514   1.685700e+01   4.059999e-01     7872      1     
+65       2.833022e+07   3.668040e+07    0.2276   1.725400e+01   3.970001e-01     7995      1     
+66       2.840532e+07   6.607562e+07    0.5701   1.763000e+01   3.759999e-01     8118      1     
+67       2.840663e+07   1.141831e+07    0.5980   1.801700e+01   3.870001e-01     8241      1     
+68       2.842864e+07   3.406641e+07    0.1655   1.839700e+01   3.800001e-01     8364      1     
+69       2.843073e+07   1.933610e+07    0.3199   1.878200e+01   3.850000e-01     8487      1     
+70       2.844282e+07   3.837999e+07    0.2589   1.916600e+01   3.839998e-01     8610      1     
+71       2.880012e+07   1.538546e+07    0.4658   1.955800e+01   3.920002e-01     8733      1     
+72       2.881450e+07   1.043380e+07    0.6379   1.995000e+01   3.920000e-01     8856      1     
+73       2.887256e+07   1.351704e+07    0.5318   2.035500e+01   4.050000e-01     8979      1     
+74       2.889553e+07   1.052212e+07    0.6359   2.076300e+01   4.080000e-01     9102      1     
+75       2.892235e+07   4.747789e+07    0.3908   2.115900e+01   3.959999e-01     9225      1     
+76       2.897568e+07   1.344472e+08    0.7845   2.156400e+01   4.050000e-01     9348      1     
+77       2.898865e+07   1.867840e+07    0.3557   2.196800e+01   4.040000e-01     9471      1     
+78       2.901293e+07   1.249159e+07    0.5694   2.237100e+01   4.030001e-01     9594      1     
+79       2.902659e+07   4.071559e+07    0.2871   2.279900e+01   4.280000e-01     9717      1     
+80       2.903340e+07   1.809198e+07    0.3769   2.321600e+01   4.170001e-01     9840      1     
+81       2.913499e+07   9.525614e+07    0.6941   2.365300e+01   4.369998e-01     9963      1     
+82       2.914049e+07   1.758274e+07    0.3966   2.408200e+01   4.290001e-01    10086      1     
+83       2.914501e+07   9.949578e+06    0.6586   2.451500e+01   4.330001e-01    10209      1     
+84       2.917088e+07   1.820528e+07    0.3759   2.493800e+01   4.229999e-01    10332      1     
+85       2.918247e+07   4.204217e+07    0.3059   2.539000e+01   4.520001e-01    10455      1     
+86       2.921236e+07   3.485334e+07    0.1618   2.582500e+01   4.349999e-01    10578      1     
+87       2.924708e+07   4.906299e+07    0.4039   2.628300e+01   4.579999e-01    10701      1     
+88       2.926166e+07   2.798338e+07    0.0437   2.673600e+01   4.530001e-01    10824      1     
+89       2.927627e+07   1.891750e+07    0.3538   2.720100e+01   4.649999e-01    10947      1     
+90       2.930732e+07   1.421123e+07    0.5151   2.766100e+01   4.600000e-01    11070      1     
+91       2.931739e+07   2.313044e+07    0.2110   2.814400e+01   4.830000e-01    11193      1     
+92       2.936630e+07   3.309318e+07    0.1126   2.861500e+01   4.710000e-01    11316      1     
+93       2.938528e+07   1.501685e+07    0.4890   2.909300e+01   4.779999e-01    11439      1     
+94       2.939192e+07   1.220178e+07    0.5849   2.957600e+01   4.830000e-01    11562      1     
+95       2.939655e+07   3.111694e+07    0.0553   3.005400e+01   4.779999e-01    11685      1     
+96       2.941780e+07   4.272239e+07    0.3114   3.055500e+01   5.010002e-01    11808      1     
+97       2.944119e+07   1.793048e+07    0.3910   3.103900e+01   4.840000e-01    11931      1     
+98       2.945786e+07   3.529387e+07    0.1654   3.154900e+01   5.100000e-01    12054      1     
+99       2.946354e+07   2.304745e+07    0.2178   3.206000e+01   5.109999e-01    12177      1     
+100      2.946579e+07   2.205093e+07    0.2516   3.254700e+01   4.870000e-01    12300      1     
+       100   2.205093e+07  2.946579e+07  3.254700e+01     12300   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 3.254700e+01
+total solves   : 12300
+best bound     :  2.946579e+07
+simulation ci  :  3.957038e+07 ± 6.585088e+06
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            32.6s /  99.8%           4.65GiB / 100.0%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    32.6s  100.0%   32.6s   4.65GiB  100.0%  4.65GiB
+   backward_pass          100    31.0s   95.4%   310ms   4.50GiB   96.9%  46.1MiB
+     solve_subproblem   11.0k    29.9s   91.7%  2.71ms   4.27GiB   91.8%   407KiB
+       get_dual_sol...  11.0k    21.6s   66.3%  1.96ms   3.35GiB   72.2%   320KiB
+         compute_al...  11.0k    19.0s   58.3%  1.72ms   2.66GiB   57.3%   254KiB
+           exiting_...   220k    17.7s   54.4%  80.5μs   2.48GiB   53.5%  11.8KiB
+       solver_call      11.0k    2.95s    9.1%   268μs   8.94MiB    0.2%     852B
+       evaluate_cut...  11.0k    2.87s    8.8%   261μs    618MiB   13.0%  57.5KiB
+     get_backward_n...  1.10k    587ms    1.8%   534μs    177MiB    3.7%   164KiB
+     prepare_backwa...    200    507μs    0.0%  2.54μs   64.1KiB    0.0%     328B
+   forward_pass           100    1.01s    3.1%  10.1ms    130MiB    2.7%  1.30MiB
+     solve_subproblem   1.20k    938ms    2.9%   781μs    109MiB    2.3%  93.1KiB
+       evaluate_cut...  1.20k    337ms    1.0%   280μs   72.6MiB    1.5%  61.9KiB
+       solver_call      1.20k    325ms    1.0%   271μs   2.27MiB    0.0%  1.93KiB
+       get_dual_sol...  1.20k   3.96ms    0.0%  3.30μs    656KiB    0.0%     560B
+     sample_scenario      100   71.0ms    0.2%   710μs   20.4MiB    0.4%   209KiB
+   calculate_bound        100    111ms    0.3%  1.11ms   14.8MiB    0.3%   151KiB
+     evaluate_cut_i...    100   53.0ms    0.2%   530μs   11.5MiB    0.2%   118KiB
+     solver_call          100   37.9ms    0.1%   379μs   78.0KiB    0.0%     799B
+     get_dual_solution    100    364μs    0.0%  3.65μs   54.7KiB    0.0%     560B
+ compute_cut_exponents      1    526μs    0.0%   526μs    182KiB    0.0%   182KiB
+ initialize_process         1   12.1μs    0.0%  12.1μs   2.08KiB    0.0%  2.08KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 120
+  state variables : 4
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:30:47.445
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 120
+Number of realizations per stage: 100
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 20
+  state variables : 4
+  scenarios       : 1.00000e+38
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:33:16.350
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(10)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 20
+Number of realizations per stage: 100
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        1.406773e+06   1.663582e+08    0.9915   1.254800e+01   1.254800e+01     1921      1     
+2        3.484015e+06   1.824223e+08    0.9809   1.537400e+01   2.826000e+00     3842      1     
+3        7.515839e+06   7.123906e+07    0.8945   1.823500e+01   2.861000e+00     5763      1     
+4        9.044809e+06   5.688931e+07    0.8410   2.117700e+01   2.942000e+00     7684      1     
+5        9.578365e+06   5.094119e+07    0.8120   2.449400e+01   3.317000e+00     9605      1     
+6        1.055719e+07   7.359251e+07    0.8565   2.765300e+01   3.159000e+00    11526      1     
+7        1.138241e+07   5.491236e+07    0.7927   3.099300e+01   3.340000e+00    13447      1     
+8        1.262287e+07   4.736617e+07    0.7335   3.438900e+01   3.396000e+00    15368      1     
+9        1.551384e+07   7.060421e+07    0.7803   3.788000e+01   3.491000e+00    17289      1     
+10       1.765008e+07   7.320571e+07    0.7589   4.151100e+01   3.631000e+00    19210      1     
+        10   7.320571e+07  1.765008e+07  4.151100e+01     19210   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 4.151100e+01
+total solves   : 19210
+best bound     :  1.765008e+07
+simulation ci  :  8.475310e+07 ± 2.997318e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            46.6s /  87.4%           6.44GiB /  98.2%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    40.7s  100.0%   40.7s   6.32GiB  100.0%  6.32GiB
+   backward_pass           10    34.6s   84.8%   3.46s   6.03GiB   95.3%   618MiB
+     solve_subproblem   19.0k    30.6s   75.1%  1.61ms   5.55GiB   87.8%   306KiB
+       get_dual_sol...  19.0k    16.7s   41.0%   879μs   3.33GiB   52.7%   184KiB
+         compute_al...  19.0k    9.25s   22.7%   487μs   1.37GiB   21.6%  75.4KiB
+           existing...   684k    6.56s   16.1%  9.58μs    863MiB   13.3%  1.29KiB
+       evaluate_cut...  19.0k    6.52s   16.0%   343μs   1.70GiB   26.8%  93.6KiB
+       solver_call      19.0k    3.61s    8.9%   190μs   15.0MiB    0.2%     828B
+     get_backward_n...    190    1.06s    2.6%  5.56ms    312MiB    4.8%  1.64MiB
+     prepare_backwa...     20    239ms    0.6%  11.9ms    714KiB    0.0%  35.7KiB
+   forward_pass            10    5.40s   13.2%   540ms    282MiB    4.3%  28.2MiB
+     solve_subproblem     200    4.99s   12.3%  25.0ms    266MiB    4.1%  1.33MiB
+       solver_call        200    2.25s    5.5%  11.2ms    160MiB    2.5%   819KiB
+       get_dual_sol...    200    478ms    1.2%  2.39ms   39.0MiB    0.6%   200KiB
+       evaluate_cut...    200   78.9ms    0.2%   394μs   17.4MiB    0.3%  89.0KiB
+     sample_scenario       10    368ms    0.9%  36.8ms   15.2MiB    0.2%  1.52MiB
+   calculate_bound         10   12.4ms    0.0%  1.24ms   2.21MiB    0.0%   226KiB
+     evaluate_cut_i...     10   7.05ms    0.0%   705μs   1.89MiB    0.0%   193KiB
+     solver_call           10   3.35ms    0.0%   335μs   8.16KiB    0.0%     835B
+     get_dual_solution     10   35.0μs    0.0%  3.50μs   5.47KiB    0.0%     560B
+ initialize_process         1   5.91ms    0.0%  5.91ms   3.09KiB    0.0%  3.09KiB
+ compute_cut_exponents      1   1.22ms    0.0%  1.22ms    502KiB    0.0%   502KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 20
+  state variables : 4
+  scenarios       : 1.00000e+38
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:35:13.966
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(50)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 20
+Number of realizations per stage: 100
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        3.249218e+06   2.709634e+08    0.9880   2.614000e+00   2.614000e+00     1921      1     
+2        6.301466e+06   1.080108e+08    0.9417   5.291000e+00   2.677000e+00     3842      1     
+3        7.585436e+06   1.604087e+08    0.9527   8.063000e+00   2.772000e+00     5763      1     
+4        9.254677e+06   1.230053e+08    0.9248   1.122500e+01   3.162000e+00     7684      1     
+5        9.724513e+06   6.061501e+07    0.8396   1.424700e+01   3.022000e+00     9605      1     
+6        9.774107e+06   5.701333e+07    0.8286   1.740600e+01   3.159000e+00    11526      1     
+7        1.033674e+07   9.106755e+07    0.8865   2.063700e+01   3.231000e+00    13447      1     
+8        1.115163e+07   4.289681e+07    0.7400   2.402500e+01   3.388000e+00    15368      1     
+9        1.259257e+07   5.559948e+07    0.7735   2.742700e+01   3.402000e+00    17289      1     
+10       1.327030e+07   5.881044e+07    0.7744   3.100100e+01   3.574000e+00    19210      1     
+11       1.415791e+07   3.454549e+07    0.5902   3.470100e+01   3.700000e+00    21131      1     
+12       1.644455e+07   4.716411e+07    0.6513   3.896600e+01   4.265000e+00    23052      1     
+13       1.712375e+07   6.309900e+07    0.7286   4.286000e+01   3.894000e+00    24973      1     
+14       1.725924e+07   1.192704e+08    0.8553   4.697100e+01   4.111000e+00    26894      1     
+15       1.801419e+07   4.440135e+07    0.5943   5.118600e+01   4.215000e+00    28815      1     
+16       1.946487e+07   2.118483e+07    0.0812   5.543000e+01   4.244000e+00    30736      1     
+17       2.017892e+07   3.856770e+07    0.4768   6.012000e+01   4.690000e+00    32657      1     
+18       2.088555e+07   6.352616e+07    0.6712   6.469200e+01   4.572000e+00    34578      1     
+19       2.154922e+07   2.926760e+07    0.2637   6.947100e+01   4.779000e+00    36499      1     
+20       2.170851e+07   4.083281e+07    0.4684   7.417900e+01   4.708000e+00    38420      1     
+21       2.178548e+07   2.597662e+07    0.1613   7.898500e+01   4.806000e+00    40341      1     
+22       2.191624e+07   4.394480e+07    0.5013   8.390100e+01   4.916000e+00    42262      1     
+23       2.248211e+07   8.973821e+07    0.7495   8.889800e+01   4.997000e+00    44183      1     
+24       2.268525e+07   4.757783e+07    0.5232   9.407500e+01   5.177000e+00    46104      1     
+25       2.280097e+07   7.950092e+07    0.7132   9.944300e+01   5.368000e+00    48025      1     
+26       2.291414e+07   4.882458e+07    0.5307   1.048440e+02   5.401000e+00    49946      1     
+27       2.316841e+07   5.780253e+07    0.5992   1.103680e+02   5.524000e+00    51867      1     
+28       2.352250e+07   4.858768e+07    0.5159   1.158550e+02   5.487000e+00    53788      1     
+29       2.365506e+07   2.303498e+07    0.0262   1.223000e+02   6.445000e+00    55709      1     
+30       2.387554e+07   1.374108e+07    0.4245   1.285540e+02   6.254000e+00    57630      1     
+31       2.405827e+07   3.585517e+07    0.3290   1.372530e+02   8.699000e+00    59551      1     
+32       2.414582e+07   3.835226e+07    0.3704   1.489510e+02   1.169800e+01    61472      1     
+33       2.470799e+07   1.163977e+08    0.7877   1.617790e+02   1.282800e+01    63393      1     
+34       2.485605e+07   3.812043e+07    0.3480   1.713500e+02   9.571000e+00    65314      1     
+35       2.507733e+07   5.501794e+07    0.5442   1.778820e+02   6.532000e+00    67235      1     
+36       2.512826e+07   2.462898e+07    0.0199   1.845900e+02   6.708000e+00    69156      1     
+37       2.518984e+07   2.209809e+07    0.1227   1.913930e+02   6.803000e+00    71077      1     
+38       2.588706e+07   1.733141e+07    0.3305   1.981400e+02   6.747000e+00    72998      1     
+39       2.598955e+07   1.010243e+08    0.7427   2.051230e+02   6.983000e+00    74919      1     
+40       2.616720e+07   1.551217e+07    0.4072   2.122360e+02   7.113000e+00    76840      1     
+41       2.629976e+07   2.203557e+07    0.1621   2.190410e+02   6.805000e+00    78761      1     
+42       2.638030e+07   3.733710e+07    0.2935   2.262930e+02   7.252000e+00    80682      1     
+43       2.659607e+07   1.592458e+07    0.4012   2.334780e+02   7.185000e+00    82603      1     
+44       2.668012e+07   2.986244e+07    0.1066   2.411290e+02   7.651000e+00    84524      1     
+45       2.684294e+07   3.528372e+07    0.2392   2.486750e+02   7.546000e+00    86445      1     
+46       2.701148e+07   2.247215e+07    0.1681   2.562650e+02   7.590000e+00    88366      1     
+47       2.710848e+07   5.065533e+07    0.4648   2.639430e+02   7.678000e+00    90287      1     
+48       2.718218e+07   6.987123e+07    0.6110   2.717620e+02   7.819000e+00    92208      1     
+49       2.725229e+07   4.577011e+07    0.4046   2.796760e+02   7.914000e+00    94129      1     
+50       2.732849e+07   4.461171e+07    0.3874   2.877860e+02   8.110000e+00    96050      1     
+        50   4.461171e+07  2.732849e+07  2.877860e+02     96050   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.877860e+02
+total solves   : 96050
+best bound     :  2.732849e+07
+simulation ci  :  5.694284e+07 ± 1.230137e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:             288s / 100.0%           45.5GiB / 100.0%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1     288s  100.0%    288s   45.5GiB  100.0%  45.5GiB
+   backward_pass           50     287s   99.6%   5.73s   45.3GiB   99.7%   928MiB
+     solve_subproblem   95.0k     278s   96.8%  2.93ms   43.2GiB   94.9%   476KiB
+       get_dual_sol...  95.0k     203s   70.5%  2.14ms   31.9GiB   70.1%   352KiB
+         compute_al...  95.0k     166s   57.6%  1.74ms   22.1GiB   48.6%   244KiB
+           existing...  3.42M     151s   52.4%  44.1μs   19.5GiB   42.9%  5.98KiB
+       evaluate_cut...  95.0k    35.3s   12.3%   371μs   8.67GiB   19.1%  95.7KiB
+       solver_call      95.0k    21.8s    7.6%   230μs   75.6MiB    0.2%     835B
+     get_backward_n...    950    4.80s    1.7%  5.05ms   1.49GiB    3.3%  1.60MiB
+     prepare_backwa...    100    284μs    0.0%  2.84μs   32.0KiB    0.0%     328B
+   forward_pass            50    1.04s    0.4%  20.9ms    148MiB    0.3%  2.96MiB
+     solve_subproblem   1.00k    969ms    0.3%   969μs    127MiB    0.3%   130KiB
+       evaluate_cut...  1.00k    430ms    0.1%   430μs   96.3MiB    0.2%  98.6KiB
+       solver_call      1.00k    295ms    0.1%   295μs   2.89MiB    0.0%  2.96KiB
+       get_dual_sol...  1.00k   3.75ms    0.0%  3.75μs    547KiB    0.0%     560B
+     sample_scenario       50   69.2ms    0.0%  1.38ms   19.7MiB    0.0%   403KiB
+   calculate_bound         50   69.0ms    0.0%  1.38ms   11.2MiB    0.0%   228KiB
+     evaluate_cut_i...     50   39.6ms    0.0%   793μs   9.55MiB    0.0%   196KiB
+     solver_call           50   19.0ms    0.0%   381μs   39.5KiB    0.0%     810B
+     get_dual_solution     50    183μs    0.0%  3.66μs   27.3KiB    0.0%     560B
+ compute_cut_exponents      1   1.36ms    0.0%  1.36ms    502KiB    0.0%   502KiB
+ initialize_process         1   7.00μs    0.0%  7.00μs   2.08KiB    0.0%  2.08KiB
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 60
+  state variables : 4
+  scenarios       : 1.00000e+118
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [14, 14]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-11-16T13:45:19.605
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(50)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 60
+Number of realizations per stage: 100
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Lag order: 10
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]            [s]      Total  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+1        2.872035e+06   1.457512e+08    0.9803   2.065000e+01   2.065000e+01     5961      1     
+2        4.672882e+06   1.175806e+08    0.9603   4.308600e+01   2.243600e+01    11922      1     
+3        6.039827e+06   8.096774e+07    0.9254   6.812000e+01   2.503400e+01    17883      1     
+4        7.576407e+06   8.252410e+07    0.9082   8.938700e+01   2.126700e+01    23844      1     
+5        1.002462e+07   4.976961e+07    0.7986   1.285140e+02   3.912700e+01    29805      1     
+6        1.061767e+07   4.617818e+07    0.7701   1.542090e+02   2.569500e+01    35766      1     
+7        1.140163e+07   8.435878e+07    0.8648   1.792930e+02   2.508400e+01    41727      1     
+8        1.535454e+07   7.261792e+07    0.7886   2.052170e+02   2.592400e+01    47688      1     
+9        1.608392e+07   5.302388e+07    0.6967   2.328110e+02   2.759400e+01    53649      1     
+10       2.128925e+07   3.116061e+07    0.3168   2.609090e+02   2.809800e+01    59610      1     
+11       2.225006e+07   4.879380e+07    0.5440   2.901510e+02   2.924200e+01    65571      1     
+12       2.254962e+07   5.862392e+07    0.6154   3.208770e+02   3.072600e+01    71532      1     
+13       2.266975e+07   3.880096e+07    0.4157   3.526160e+02   3.173900e+01    77493      1     
+14       2.308511e+07   2.400450e+07    0.0383   3.946060e+02   4.199000e+01    83454      1     
+15       2.344443e+07   4.376786e+07    0.4643   4.427690e+02   4.816300e+01    89415      1     
+16       2.385544e+07   1.279523e+08    0.8136   4.932760e+02   5.050700e+01    95376      1     
+17       2.399180e+07   2.633225e+07    0.0889   5.480950e+02   5.481900e+01   101337      1     
+18       2.400295e+07   3.359437e+07    0.2855   6.086690e+02   6.057400e+01   107298      1     
+19       2.529999e+07   5.681136e+07    0.5547   6.682440e+02   5.957500e+01   113259      1     
+20       2.594007e+07   7.581694e+07    0.6579   7.323160e+02   6.407200e+01   119220      1     
+21       2.636867e+07   2.884604e+07    0.0859   7.859730e+02   5.365700e+01   125181      1     
+22       2.690701e+07   6.399951e+07    0.5796   8.636940e+02   7.772100e+01   131142      1     
+23       2.737425e+07   5.654528e+07    0.5159   9.281880e+02   6.449400e+01   137103      1     
+24       2.753583e+07   4.485027e+07    0.3860   9.826750e+02   5.448700e+01   143064      1     
+25       2.768310e+07   5.525376e+07    0.4990   1.032169e+03   4.949400e+01   149025      1     
+26       2.793620e+07   3.388561e+07    0.1756   1.082304e+03   5.013500e+01   154986      1     
+27       2.802655e+07   1.707109e+07    0.3909   1.132192e+03   4.988800e+01   160947      1     
+28       2.810010e+07   2.560876e+07    0.0887   1.193981e+03   6.178900e+01   166908      1     
+29       2.819103e+07   1.663898e+07    0.4098   1.250215e+03   5.623400e+01   172869      1     
+30       2.823044e+07   1.655289e+07    0.4137   1.318453e+03   6.823800e+01   178830      1     
+31       2.838693e+07   3.085087e+07    0.0799   1.389677e+03   7.122400e+01   184791      1     
+32       2.848341e+07   3.851955e+07    0.2605   1.446470e+03   5.679300e+01   190752      1     
+33       2.898441e+07   1.231001e+08    0.7645   1.502781e+03   5.631100e+01   196713      1     
+34       2.949401e+07   1.632382e+07    0.4465   1.565199e+03   6.241800e+01   202674      1     
+35       2.963275e+07   3.706493e+07    0.2005   1.617052e+03   5.185300e+01   208635      1     
+36       2.991082e+07   2.746344e+07    0.0818   1.672912e+03   5.586000e+01   214596      1     
+37       3.016606e+07   1.390205e+07    0.5391   1.733393e+03   6.048100e+01   220557      1     
+38       3.022430e+07   1.893830e+07    0.3734   1.825100e+03   9.170700e+01   226518      1     
+39       3.055055e+07   3.501540e+07    0.1275   1.910068e+03   8.496800e+01   232479      1     
+40       3.078876e+07   3.951829e+07    0.2209   1.977103e+03   6.703500e+01   238440      1     
+41       3.094554e+07   1.101393e+08    0.7190   2.044574e+03   6.747100e+01   244401      1     
+42       3.106769e+07   6.560871e+07    0.5265   2.105254e+03   6.068000e+01   250362      1     
+43       3.125824e+07   1.028178e+08    0.6960   2.191743e+03   8.648900e+01   256323      1     
+44       3.132113e+07   4.959246e+07    0.3684   2.252942e+03   6.119900e+01   262284      1     
+45       3.152701e+07   1.031945e+08    0.6945   2.320350e+03   6.740800e+01   268245      1     
+46       3.156175e+07   4.909511e+07    0.3571   2.390198e+03   6.984800e+01   274206      1     
+47       3.158344e+07   8.081918e+07    0.6092   2.463773e+03   7.357500e+01   280167      1     
+48       3.177745e+07   3.325401e+07    0.0444   2.552591e+03   8.881800e+01   286128      1     
+49       3.185223e+07   2.617934e+07    0.1781   2.660796e+03   1.082050e+02   292089      1     
+50       3.186369e+07   8.710122e+07    0.6342   2.773100e+03   1.123040e+02   298050      1     
+        50   8.710122e+07  3.186369e+07  2.773100e+03    298050   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 2.773100e+03
+total solves   : 298050
+best bound     :  3.186369e+07
+simulation ci  :  5.492363e+07 ± 9.113148e+06
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            2774s / 100.0%            414GiB / 100.0%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ loop                       1    2773s  100.0%   2773s    414GiB  100.0%   414GiB
+   backward_pass           50    2766s   99.7%   55.3s    413GiB   99.7%  8.26GiB
+     solve_subproblem    295k    2721s   98.1%  9.22ms    403GiB   97.2%  1.40MiB
+       get_dual_sol...   295k    2216s   79.9%  7.51ms    310GiB   74.9%  1.08MiB
+         compute_al...   295k    1838s   66.3%  6.23ms    220GiB   53.1%   781KiB
+           existing...  34.2M    1683s   60.7%  49.2μs    195GiB   47.1%  5.98KiB
+       evaluate_cut...   295k     358s   12.9%  1.21ms   84.4GiB   20.4%   300KiB
+       solver_call       295k    79.8s    2.9%   270μs    229MiB    0.1%     814B
+     get_backward_n...  2.95k    16.3s    0.6%  5.51ms   4.62GiB    1.1%  1.60MiB
+     prepare_backwa...    100    656μs    0.0%  6.56μs    105KiB    0.0%  1.05KiB
+   forward_pass            50    6.51s    0.2%   130ms   1.02GiB    0.2%  20.8MiB
+     solve_subproblem   3.00k    6.21s    0.2%  2.07ms   0.95GiB    0.2%   331KiB
+       evaluate_cut...  3.00k    3.99s    0.1%  1.33ms    876MiB    0.2%   299KiB
+       solver_call      3.00k    1.36s    0.0%   454μs   8.64MiB    0.0%  2.95KiB
+       get_dual_sol...  3.00k   14.2ms    0.0%  4.74μs   1.60MiB    0.0%     560B
+     sample_scenario       50    280ms    0.0%  5.60ms   69.5MiB    0.0%  1.39MiB
+   calculate_bound         50    236ms    0.0%  4.73ms   30.8MiB    0.0%   632KiB
+     evaluate_cut_i...     50    202ms    0.0%  4.04ms   29.1MiB    0.0%   597KiB
+     solver_call           50   22.8ms    0.0%   457μs   39.6KiB    0.0%     810B
+     get_dual_solution     50    240μs    0.0%  4.79μs   27.3KiB    0.0%     560B
+ compute_cut_exponents      1   37.9ms    0.0%  37.9ms   4.40MiB    0.0%  4.40MiB
+ initialize_process         1   18.0μs    0.0%  18.0μs   2.08KiB    0.0%  2.08KiB
+ ────────────────────────────────────────────────────────────────────────────────
+

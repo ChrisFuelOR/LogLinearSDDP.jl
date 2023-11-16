@@ -133,7 +133,9 @@ function get_alphas(node::SDDP.Node)
                 cut_exponents_required = model.ext[:cut_exponents][t+1]
 
                 # Get cut constraint duals and compute first factor
-                factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
+                TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
+                    factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
+                end
 
                 # Compute second factor
                 factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
