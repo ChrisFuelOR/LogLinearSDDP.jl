@@ -139,13 +139,12 @@ function get_alphas(node::SDDP.Node)
 
             else
                 cut_exponents_required = model.ext[:cut_exponents][t+1]
-                factor_1 = 0.0
 
                 # Compute second factor
-                factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+                factor = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
 
                 # Compute alpha value
-                α[τ-t+1,ℓ] = factor_1 * factor_2
+                α[τ-t+1,ℓ] = cut_factors[τ-t+1,ℓ] * factor
             end
         end
     end
