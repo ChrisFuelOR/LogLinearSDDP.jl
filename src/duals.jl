@@ -148,7 +148,6 @@ function get_alphas(node::SDDP.Node)
         end
     end
 
-    Infiltrator.@infiltrate
     return α
 end
 

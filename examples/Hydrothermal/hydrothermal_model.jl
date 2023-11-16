@@ -361,12 +361,12 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 5 #120
-    number_of_realizations = 1 #100
+    number_of_stages = 20 #120
+    number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
