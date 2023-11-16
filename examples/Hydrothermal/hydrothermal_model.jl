@@ -361,8 +361,8 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 60 #120
-    number_of_realizations = 100 #100
+    number_of_stages = 5 #120
+    number_of_realizations = 1 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
