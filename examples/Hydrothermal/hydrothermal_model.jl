@@ -50,7 +50,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
     #1: SUDESTE (SE), 2: SUL (S), 3: NORDESTE (NE), 4: NORTE (N), 5: artificial for interconnections
 
     reservoirs = [
-        Reservoir(1, "SUDESTE", 45414.3, 200717-6, 59419.3),
+        Reservoir(1, "SUDESTE", 45414.3, 200717.6, 59419.3),
         Reservoir(2, "SUL", 13081.5, 19617.2, 5874.9),
         Reservoir(3, "NORDESTE", 9900.9, 51806.1, 12859.2),
         Reservoir(4, "NORTE", 7629.9, 12744.9, 5271.5),
@@ -175,7 +175,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
     )  do subproblem, t
 
         # Subproblem variables    
-        JuMP.@variable(subproblem, level[k in 1:num_of_res], SDDP.State, upper_bound = reservoirs[k].max_level, initial_value = reservoirs[k].init_level)
+        JuMP.@variable(subproblem, level[k in 1:num_of_res], SDDP.State, lower_bound = 0.0, upper_bound = reservoirs[k].max_level, initial_value = reservoirs[k].init_level)
         JuMP.@variable(subproblem, hydro_gen[k in 1:num_of_res], lower_bound = 0.0, upper_bound = reservoirs[k].max_gen)
         JuMP.@variable(subproblem, spillage[k in 1:num_of_res], lower_bound = 0.0)
         JuMP.@variable(subproblem, inflow[k in 1:num_of_res]) # random variable
@@ -319,11 +319,11 @@ function get_ar_process(number_of_stages::Int, number_of_realizations::Int)
         month = mod(t, 12) > 0 ? mod(t,12) : 12
 
         intercept = Float64[]
-        coefficients = zeros(lag_order, dim, dim)
+        coefficients = zeros(dim, dim, lag_order)
         psi = Float64[]
         eta_data = Vector{Vector{Float64}}(undef, dim)
 
-        for ℓ in eachindex(data)
+        for ℓ in 1:4
             # Get model data
             df = data[ℓ]  
 
@@ -337,7 +337,7 @@ function get_ar_process(number_of_stages::Int, number_of_realizations::Int)
             current_coefficients = split(current_coefficients, ",")
             for k in eachindex(current_coefficients)
                 coefficient = current_coefficients[k]
-                coefficients[k, ℓ, ℓ] = parse(Float64, coefficient)
+                coefficients[ℓ, ℓ, k] = parse(Float64, coefficient)
             end
 
             # Get psi
@@ -361,22 +361,20 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120
-    number_of_realizations = 100
+    number_of_stages = 2 #120
+    number_of_realizations = 1 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(5)])
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
     ar_process = get_ar_process(number_of_stages, number_of_realizations)
     model = model_definition(ar_process, problem_params, algo_params)
-    
-    Infiltrator.@infiltrate
-    
+       
     # Train model
-    #LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
+    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
     # Simulate model
     # TODO

@@ -97,13 +97,13 @@ function model_and_train()
 
     # Stage 2
     intercept = zeros(dim)
-    coefficients = 1/4 * ones(lag_order, dim, dim)
+    coefficients = 1/4 * ones(dim, dim, lag_order)
     eta = [-1.0, 1.0]
     ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 
     # Stage 3
     intercept = zeros(dim)
-    coefficients = 3/2 * ones(lag_order, dim, dim)
+    coefficients = 3/2 * ones(dim, dim, lag_order)
     eta = [-2.0, -1.0]
     ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 

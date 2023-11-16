@@ -30,12 +30,12 @@ function create_autoregressive_data_1D()
     ar_parameters  = Dict{Int64, LogLinearSDDP.AutoregressiveProcessStage}()
 
     intercept = zeros(dim)
-    coefficients = 1/4 * ones(lag_order, dim, dim)
+    coefficients = 1/4 * ones(dim, dim, lag_order)
     eta = [-1.0, 1.0]
     ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 
     intercept = zeros(dim)
-    coefficients = 1/4 * ones(lag_order, dim, dim)
+    coefficients = 1/4 * ones(dim, dim, lag_order)
     eta = [-1.0, 1.0]
     ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
 
@@ -58,7 +58,7 @@ function create_autoregressive_data_2D()
     ar_parameters  = Dict{Int64, LogLinearSDDP.AutoregressiveProcessStage}()
 
     intercept = [0.0, 0.0]
-    coefficients = zeros(lag_order, dim, dim)
+    coefficients = zeros(dim, dim, lag_order)
     coefficients[1,1,1] = 1/5
     coefficients[2,2,1] = 2/3
     coefficients[2,2,2] = 1/3   

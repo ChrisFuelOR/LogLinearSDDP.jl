@@ -77,7 +77,7 @@ function model_and_train()
     
     # Stages 2 and 3
     intercept = [0.0, 0.0]
-    coefficients = zeros(lag_order, dim, dim)
+    coefficients = zeros(dim, dim, lag_order)
     coefficients[1,1,1] = 1/5
     coefficients[2,2,1] = 2/3
     coefficients[2,2,2] = 1/3   
