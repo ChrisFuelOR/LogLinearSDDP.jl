@@ -99,7 +99,6 @@ function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64
         factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
     end
 
-    Infiltrator.@infiltrate
     return factors
 end
 
@@ -144,11 +143,12 @@ function get_alphas(node::SDDP.Node)
                 factor = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
 
                 # Compute alpha value
-                α[τ-t+1,ℓ] = cut_factors[τ-t+1,ℓ] * factor
+                α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * factor
             end
         end
     end
 
+    Infiltrator.@infiltrate
     return α
 end
 
