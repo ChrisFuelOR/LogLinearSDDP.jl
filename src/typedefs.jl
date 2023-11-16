@@ -47,16 +47,20 @@ a scenario at hand.
 """
 Struct for storing information related to a cut.
 
-The argument "gradient" is the cut slope vector β.
+The argument "gradient" is the cut slope vector β. It can be computed as the dual vector corresponding
+    to copy constraints.
+
+The argument "intercept_tight" is the value of the full intercept at the state of construction,
+    i.e. where the cut is tight. This is used for checks and to compute other values.
 
 The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
     but a matrix of intercept factors for each τ=t,...  ,T and each component ℓ of the autoregressive process. 
     These factors are used to compute (adapt) the intercept of a cut to the scenario at hand.
     This is done by fixing the corresponding cut_intercept_variable.
 
-The third and fourth arguments are the optimal dual multipliers from the cut generation process.
-    Note that in this specific case we cannot compute the cut coefficients using copy constraints, but we have
-    to explicitly get the dual variables to all existing cuts for our formulas.
+The argument "deterministic_intercept" is used to account for the contribution of deterministic constraints
+    to the intercept. Handling them as coupling constraints is unnecessary, e.g. from a memory perspective, 
+    but not taking them into account leads to a wrong intercept.
 
 The argument "trial state" is the point (incumbent) where the cut is constructed.
 
@@ -72,9 +76,10 @@ The argument "iteration" stores the iteration number in which the cut was constr
 """
 
 mutable struct Cut
-    coefficients::Dict{Symbol,Float64} # gradient
-    intercept::Float64 # for the construction scenario (only for checks)
+    coefficients::Dict{Symbol,Float64}
     intercept_factors::Array{Float64,2}
+    stochastic_intercept_tight::Float64
+    deterministic_intercept::Float64
     trial_state::Dict{Symbol,Float64}
     constraint_ref::Union{Nothing,JuMP.ConstraintRef}
     cut_intercept_variable::Union{Nothing,JuMP.VariableRef}

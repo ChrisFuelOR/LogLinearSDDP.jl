@@ -197,8 +197,9 @@ function solve_subproblem(
     # CHANGES TO SDDP.jl
     ####################################################################################
     TimerOutputs.@timeit model.timer_output "get_dual_solution" begin
-        objective, dual_values, intercept_factors = get_dual_solution(node, duality_handler)
+        objective, dual_values, intercept_factors, stochastic_intercept_tight = get_dual_solution(node, duality_handler)
     end
+
     ####################################################################################
     if node.post_optimize_hook !== nothing
         node.post_optimize_hook(pre_optimize_ret)
@@ -209,6 +210,7 @@ function solve_subproblem(
         objective = objective,
         stage_objective = stage_objective,
         intercept_factors = intercept_factors,
+        stochastic_intercept_tight = stochastic_intercept_tight,
     )
 end
 
@@ -218,6 +220,7 @@ struct BackwardPassItems{T,U}
     cached_solutions::Dict{Tuple{T,Any},Int}
     duals::Vector{Dict{Symbol,Float64}}
     intercept_factors::Vector{Array{Float64,2}}
+    stochastic_intercepts_tight::Vector{Float64}
     supports::Vector{U}
     nodes::Vector{T}
     probability::Vector{Float64}
@@ -228,6 +231,7 @@ struct BackwardPassItems{T,U}
             Dict{Tuple{T,Any},Int}(),
             Dict{Symbol,Float64}[],
             Array{Float64,2}[],
+            Float64[],
             U[],
             T[],
             Float64[],
@@ -376,6 +380,7 @@ function backward_pass(
                     items.probability .* items.belief,
                     items.objectives,
                     items.intercept_factors,
+                    items.stochastic_intercepts_tight,
                 )
                 push!(cuts[node_index], new_cuts)
             end
@@ -408,6 +413,7 @@ function backward_pass(
                 items.probability,
                 items.objectives,
                 items.intercept_factors,
+                items.stochastic_intercepts_tight,
             )
             push!(cuts[node_index], new_cuts)
             if options.refine_at_similar_nodes
@@ -434,6 +440,7 @@ function backward_pass(
                             copied_probability,
                             items.objectives,
                             items.intercept_factors,
+                            items.stochastic_intercepts_tight,
                         )
                     end
                     push!(cuts[other_index], new_cuts)
@@ -484,6 +491,7 @@ function solve_all_children(
                 sol_index = items.cached_solutions[(child.term, noise.term)]
                 push!(items.duals, items.duals[sol_index])
                 push!(items.intercept_factors, items.intercept_factors[sol_index])
+                push!(items.stochastic_intercepts_tight, subproblem_results.stochastic_intercepts_tight[sol_index])
                 push!(items.supports, items.supports[sol_index])
                 push!(items.nodes, child_node.index)
                 push!(items.probability, items.probability[sol_index])
@@ -519,6 +527,7 @@ function solve_all_children(
                 end
                 push!(items.duals, subproblem_results.duals)
                 push!(items.intercept_factors, subproblem_results.intercept_factors)
+                push!(items.stochastic_intercepts_tight, subproblem_results.stochastic_intercept_tight)
                 push!(items.supports, noise)
                 push!(items.nodes, child_node.index)
                 push!(items.probability, child.probability * noise.probability)
@@ -682,7 +691,8 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
         bound = calculate_bound(model)
     end
    
-    #Infiltrator.@infiltrate
+    # println(forward_trajectory.scenario_path)
+    # Infiltrator.@infiltrate
    
     push!(
         options.log,

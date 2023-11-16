@@ -189,7 +189,7 @@ function compute_intercept_value(
     T = problem_params.number_of_stages
 
     #Evaluate the intercept
-    intercept_value = 0.0
+    intercept_value = cut.deterministic_intercept
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
@@ -199,4 +199,44 @@ function compute_intercept_value(
 
     return intercept_value
 
+end
+
+""" 
+Evaluation the cut intercept for the about to be created cut at the state of construction (point of tightness)
+"""
+
+function evaluate_cut_intercept_tight(
+    node::SDDP.Node,
+    intercept_factors::Array{Float64,2},
+)
+
+    # Preparation steps
+    subproblem = node.subproblem
+    model = SDDP.get_policy_graph(subproblem)
+    problem_params = model.ext[:problem_params]
+    cut_exponents = model.ext[:cut_exponents]
+    process_state = node.ext[:process_state]
+    ar_process = model.ext[:ar_process]
+    t = node.index
+    T = problem_params.number_of_stages
+
+    # Get exponents for the considered cut
+    cut_exponents_stage = cut_exponents[t]
+
+    # Get process state for the considered cut
+    process_state = node.ext[:process_state]
+
+    # First compute scenario-specific factors
+    scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+
+    #Evaluate the stochastic part of the intercept
+    intercept_value = 0.0
+    for τ in t:T
+        L_τ = ar_process.parameters[τ].dimension
+        for ℓ in 1:L_τ
+            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
+        end
+    end
+
+    return intercept_value
 end

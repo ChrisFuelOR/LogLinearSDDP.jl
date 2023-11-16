@@ -15,16 +15,18 @@ function _add_cut(
     πᵏ::Dict{Symbol,Float64},
     xᵏ::Dict{Symbol,Float64},
     αᵏ::Array{Float64,2},
+    uᵏ::Float64,
     iteration::Int64,
     obj_y::Union{Nothing,NTuple{N,Float64}},
     belief_y::Union{Nothing,Dict{T,Float64}};
     cut_selection::Bool = false,
 ) where {N,T}
+    Infiltrator.@infiltrate
     for (key, x) in xᵏ
         θᵏ -= πᵏ[key] * x
     end
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
-    cut = LogLinearSDDP.Cut(πᵏ, θᵏ, αᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
+    cut = LogLinearSDDP.Cut(πᵏ, αᵏ, uᵏ, θᵏ - uᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
     _add_cut_constraint_to_model(V, cut)
     push!(V.cuts, cut)
 
@@ -82,13 +84,15 @@ function refine_bellman_function(
     nominal_probability::Vector{Float64},
     objective_realizations::Vector{Float64}, #actually not required
     intercept_factors::Vector{Array{Float64,2}},
+    stochastic_intercepts_tight::Vector{Float64},
 ) where {T}
     # Sanity checks.
     @assert length(dual_variables) ==
             length(noise_supports) ==
             length(nominal_probability) ==
             length(objective_realizations) ==
-            length(intercept_factors)
+            length(intercept_factors) ==
+            length(stochastic_intercepts_tight)
 
     # Preliminaries that are common to all cut types.
     risk_adjusted_probability = similar(nominal_probability)
@@ -110,6 +114,7 @@ function refine_bellman_function(
             dual_variables,
             offset,
             intercept_factors,
+            stochastic_intercepts_tight,
         )
     else  # Add a multi-cut
         @assert bellman_function.cut_type == SDDP.MULTI_CUT
@@ -126,6 +131,7 @@ function _add_average_cut(
     dual_variables::Vector{Dict{Symbol,Float64}},
     offset::Float64,
     intercept_factors::Vector{Array{Float64,2}},
+    stochastic_intercepts_tight::Vector{Float64},
 )
     N = length(risk_adjusted_probability)
     @assert N == length(objective_realizations) == length(dual_variables) == length(intercept_factors)
@@ -142,10 +148,12 @@ function _add_average_cut(
     # risk-adjusted probability distribution.
     πᵏ = Dict(key => 0.0 for key in keys(outgoing_state))
     θᵏ = offset
+    uᵏ = 0.0
 
     for i in 1:length(objective_realizations)
         p = risk_adjusted_probability[i]
         θᵏ += p * objective_realizations[i]
+        uᵏ += p * stochastic_intercepts_tight[i]
         for (key, dual) in dual_variables[i]
             πᵏ[key] += p * dual
         end
@@ -157,9 +165,8 @@ function _add_average_cut(
             end
         end
     end
+    Infiltrator.@infiltrate
 
-    # Note that θᵏ is actually not required for the modified cut formulas. However, we compute it for 
-    # possible checks.
     ####################################################################################
 
     # Now add the average-cut to the subproblem. We include the objective-state
@@ -174,6 +181,7 @@ function _add_average_cut(
         πᵏ,
         outgoing_state,
         αᵏ,
+        uᵏ,
         model.ext[:iteration],
         obj_y,
         belief_y,

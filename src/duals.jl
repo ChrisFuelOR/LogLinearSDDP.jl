@@ -12,7 +12,7 @@
 struct ContinuousConicDuality <: SDDP.AbstractDualityHandler end
 
 function get_dual_solution(node::SDDP.Node, Nothing)
-    return JuMP.objective_value(node.subproblem), Dict{Symbol,Float64}(), nothing
+    return JuMP.objective_value(node.subproblem), Dict{Symbol,Float64}(), nothing, -Inf
 end
 
 
@@ -69,8 +69,11 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
     TimerOutputs.@timeit model.timer_output "compute_alphas" begin
         α = get_alphas(node)
     end
-    Infiltrator.@infiltrate
-    return JuMP.objective_value(node.subproblem), λ, α
+
+    # Evaluate the "stochastic" part of the intercept for the current noise in the backward pass
+    stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+
+    return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight
 end
 
 
@@ -125,6 +128,7 @@ function get_alphas(node::SDDP.Node)
 
                 # Compute alpha value
                 α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+
             else
                 cut_exponents_required = model.ext[:cut_exponents][t+1]
 
