@@ -114,12 +114,16 @@ function evaluate_cut_intercepts(
         process_state_after_realization = update_process_state(model, t+1, process_state, noise_term)
 
         # First compute scenario-specific factors
-        scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+        TimerOutputs.@timeit model.timer_output "scenario_factors" begin
+            scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+        end
 
         # Iterate over all cuts and adapt intercept
         for cut in node.bellman_function.global_theta.cuts
-            intercept_variable = cut.cut_intercept_variable 
-            intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+            intercept_variable = cut.cut_intercept_variable
+            TimerOutputs.@timeit model.timer_output "intercept_value" begin    
+                intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+            end
             JuMP.fix(intercept_variable, intercept_value)
         end
     end
