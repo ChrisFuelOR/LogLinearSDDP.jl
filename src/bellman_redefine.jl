@@ -18,14 +18,14 @@ mutable struct ConvexApproximation
     cuts::Vector{LogLinearSDDP.Cut}
     sampled_states::Vector{SDDP.SampledState}
     cuts_to_be_deleted::Vector{LogLinearSDDP.Cut}
-    deletion_minimum::Int
+    deletion_minimum::Int64
 
     function ConvexApproximation(
         theta::JuMP.VariableRef,
         states::Dict{Symbol,JuMP.VariableRef},
         objective_states,
         belief_states,
-        deletion_minimum::Int,
+        deletion_minimum::Int64,
     )
         return new(
             theta,
@@ -60,14 +60,14 @@ end
     BellmanFunction(;
         lower_bound = -Inf,
         upper_bound = Inf,
-        deletion_minimum::Int = 1,
+        deletion_minimum::Int64 = 1,
         cut_type::CutType = SDDP.MULTI_CUT,
     )
 """
 function BellmanFunction(;
     lower_bound = -Inf,
     upper_bound = Inf,
-    deletion_minimum::Int = 1,
+    deletion_minimum::Int64 = 1,
     cut_type::SDDP.CutType = SDDP.MULTI_CUT,
 )
     return SDDP.InstanceFactory{LogLinearSDDP.BellmanFunction}(

@@ -83,7 +83,7 @@ struct Options{T}
     similar_children::Dict{T,Vector{T}}
     stopping_rules::Vector{SDDP.AbstractStoppingRule}
     dashboard_callback::Function
-    print_level::Int
+    print_level::Int64
     start_time::Float64
     log::Vector{SDDP.Log}
     log_file_handle::Any
@@ -105,7 +105,7 @@ struct Options{T}
         refine_at_similar_nodes::Bool = true,
         stopping_rules::Vector{SDDP.AbstractStoppingRule} = SDDP.AbstractStoppingRule[],
         dashboard_callback::Function = (a, b) -> nothing,
-        print_level::Int = 0,
+        print_level::Int64 = 0,
         start_time::Float64 = 0.0,
         log::Vector{SDDP.Log} = SDDP.Log[],
         log_file_handle = IOBuffer(),
@@ -757,9 +757,9 @@ function train(
     model::SDDP.PolicyGraph;
     iteration_limit::Union{Int,Nothing} = nothing,
     time_limit::Union{Real,Nothing} = nothing,
-    print_level::Int = 1,
+    print_level::Int64 = 1,
     log_file::String = "SDDP.log",
-    log_frequency::Int = 1,
+    log_frequency::Int64 = 1,
     log_every_seconds::Float64 = log_frequency == 1 ? -1.0 : 0.0,
     run_numerical_stability_report::Bool = false, # TODO: Not implemented yet
     stopping_rules = SDDP.AbstractStoppingRule[],
@@ -768,7 +768,7 @@ function train(
     cut_type = SDDP.SINGLE_CUT,
     cycle_discretization_delta::Float64 = 0.0,
     refine_at_similar_nodes::Bool = true,
-    cut_deletion_minimum::Int = 1,
+    cut_deletion_minimum::Int64 = 1,
     backward_sampling_scheme::SDDP.AbstractBackwardSamplingScheme = CompleteSampler(),
     dashboard::Bool = false,
     parallel_scheme::SDDP.AbstractParallelScheme = SDDP.Serial(),

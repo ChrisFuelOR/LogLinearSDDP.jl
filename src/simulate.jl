@@ -12,7 +12,7 @@
 function _simulate(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
-    number_replications::Int,
+    number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
@@ -157,7 +157,7 @@ For more complicated data, the `custom_recorders` keyword argument can be used.
 """
 function simulate(
     model::SDDP.PolicyGraph,
-    number_replications::Int = 1,
+    number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
     custom_recorders = Dict{Symbol,Function}(),

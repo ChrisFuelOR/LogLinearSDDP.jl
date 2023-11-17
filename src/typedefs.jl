@@ -85,7 +85,7 @@ mutable struct Cut
     cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
     obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
     belief_y::Union{Nothing,Dict{T,Float64} where {T}}
-    non_dominated_count::Int
+    non_dominated_count::Int64
     iteration::Int64
 end
 
@@ -157,8 +157,8 @@ This is mainly used for logging purposes.
 """
 
 struct ProblemParams
-    number_of_stages::Int
-    number_of_realizations::Int
+    number_of_stages::Int64
+    number_of_realizations::Int64
     tree_seed::Union{Nothing,Int}
 
     function ProblemParams(
@@ -217,8 +217,8 @@ mutable struct AlgoParams
     stopping_rules::Vector{SDDP.AbstractStoppingRule}
     simulation_regime::LogLinearSDDP.AbstractSimulationRegime
     ############################################################################
-    print_level::Int
-    log_frequency::Int
+    print_level::Int64
+    log_frequency::Int64
     log_file::String
     run_numerical_stability_report::Bool
     numerical_focus::Bool

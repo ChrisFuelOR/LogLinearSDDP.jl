@@ -1,6 +1,6 @@
 """ Analysis and tests of residuals for autocorrelation. """
 function periodic_autocorrelation_tests(
-    month::Int,
+    month::Int64,
     all_residuals::DataFrames.DataFrame,
     monthly_model::MonthlyModelStorage,
     with_plots::Bool
@@ -149,7 +149,7 @@ function model_validation_tests(
 end
 
 """ Fit a monthly model as part of a PAR model, given a month and a lag order."""
-function model_fitting(df::DataFrames.DataFrame, month::Int, lag_order::Int)
+function model_fitting(df::DataFrames.DataFrame, month::Int64, lag_order::Int64)
 
     # Get data for regressand
     Y = copy(df[!, month])
@@ -194,7 +194,7 @@ function model_fitting(df::DataFrames.DataFrame, month::Int, lag_order::Int)
 end
 
 """ Model identification - Compute and plot the periodic ACF for each month and lag."""
-function model_identification_periodic_acf(acv_df::DataFrames.DataFrame, max_lag::Int, years::Int, with_plots::Bool)
+function model_identification_periodic_acf(acv_df::DataFrames.DataFrame, max_lag::Int64, years::Int64, with_plots::Bool)
     
     for month in 1:12
         periodic_acf = Float64[]
@@ -226,7 +226,7 @@ Estimate the periodic PACF and use it for lag order analysis.
 I don't really know how we can estimate the periodic PACF for higher lag orders without fitting extremely many models.
 The StatsBase.pacf function does not seem to help, as it is not clear which data exactly to put as an argument.
 """
-function model_identification_fitting(train_data::DataFrames.DataFrame, max_lag::Int, years::Int, with_plots::Bool)
+function model_identification_fitting(train_data::DataFrames.DataFrame, max_lag::Int64, years::Int64, with_plots::Bool)
 
     best_lag_orders_aic = Float64[]
     best_lag_orders_bic = Float64[]

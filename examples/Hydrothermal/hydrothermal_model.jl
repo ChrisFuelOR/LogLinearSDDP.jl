@@ -21,11 +21,11 @@ struct Generator
     cost::Float64 # in $/MWh
     min_gen::Float64 # in MWmonth
     max_gen::Float64 # in MWmonth
-    system::Int 
+    system::Int64 
 end
 
 struct Reservoir
-    system::Int
+    system::Int64
     name::String
     max_gen::Float64 # in MWmonth
     max_level::Float64 # in MWmonth
@@ -251,7 +251,7 @@ end
 
 """ Get the realization data for a specific stage and system."""
 
-function get_realization_data(eta_df::DataFrames.DataFrame, t::Int, number_of_realizations::Int)
+function get_realization_data(eta_df::DataFrames.DataFrame, t::Int64, number_of_realizations::Int64)
     realizations = Tuple{Float64, Float64, Float64, Float64}[]
 
     for i in 1:number_of_realizations
@@ -272,7 +272,7 @@ function read_history_data()
     return df
 end
 
-function get_ar_process(number_of_stages::Int, number_of_realizations::Int)
+function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
 
     # AUTOREGRESSIVE PROCESS
     ###########################################################################################################
@@ -362,12 +362,11 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 20 #120
+    number_of_stages = 60 #120
     number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
     algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
   
     # CREATE AND RUN MODEL

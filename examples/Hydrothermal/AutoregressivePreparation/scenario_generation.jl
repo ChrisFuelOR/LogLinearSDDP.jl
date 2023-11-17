@@ -25,7 +25,7 @@ end
 of realizations and stages for the stagewise independent term (error term) in the PAR model.
 The scenario data is stored in a txt file. 
 Note that we do not required data for stage 1. """
-function scenario_generation(number_of_realizations::Int, number_of_stages::Int)
+function scenario_generation(number_of_realizations::Int64, number_of_stages::Int64)
 
     file_names = ["model_SE.txt", "model_S.txt", "model_NE.txt", "model_N.txt"]
     output_file_name = "scenarios_nonlinear.txt"
@@ -145,7 +145,7 @@ function history_generation()
 end
 
 
-function scenario_and_history_generation(number_of_realizations::Int, number_of_stages::Int, number_of_historical_stages::Int)
+function scenario_and_history_generation(number_of_realizations::Int64, number_of_stages::Int64, number_of_historical_stages::Int64)
 
     scenario_generation(number_of_realizations, number_of_stages)
     ar_history = history_generation()

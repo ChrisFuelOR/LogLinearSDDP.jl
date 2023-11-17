@@ -150,26 +150,17 @@ function compute_scenario_factors(
     T = problem_params.number_of_stages
     L = LogLinearSDDP.get_max_dimension(ar_process)
     p = ar_process.lag_order
-    scenario_factors = Array{Float64,2}(undef, T, L)
+    scenario_factors = ones(T-(t-1), L)
 
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ 
-            scenario_factor = 1.0
-            
-            for k in t-p:t-1
-                if k <= 1
-                    L_k = get_max_dimension(ar_process)
-                else
-                    L_k = ar_process.parameters[k].dimension
-                end
+    for k in t-p:t-1
+        if k <= 1
+            L_k = get_max_dimension(ar_process)
+        else
+            L_k = ar_process.parameters[k].dimension
+        end
 
-                for m in 1:L_k
-                    scenario_factor = scenario_factor * process_state[k][m] ^ cut_exponents_stage[τ,ℓ,m,t-k] 
-                end
-            end
-
-            scenario_factors[τ,ℓ] = scenario_factor
+        for m in 1:L_k
+            scenario_factors = scenario_factors .* process_state[k][m] .^ cut_exponents_stage[t:T,1:L,m,t-k] 
         end
     end
 
@@ -183,7 +174,7 @@ Compute the value of the cut intercept for the given cut and the given scenario 
 """
 
 function compute_intercept_value(
-    t::Int,
+    t::Int64,
     cut::LogLinearSDDP.Cut,
     scenario_factors::Array{Float64,2},
     problem_params::LogLinearSDDP.ProblemParams,
@@ -197,7 +188,8 @@ function compute_intercept_value(
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
-            intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
+            # intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
+            intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 
@@ -238,7 +230,8 @@ function evaluate_cut_intercept_tight(
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
+            # intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
+            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 

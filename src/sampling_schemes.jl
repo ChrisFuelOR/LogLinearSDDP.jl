@@ -121,7 +121,7 @@ end
 
 function update_process_state(
     graph::SDDP.PolicyGraph{T},
-    node_index::Int,
+    node_index::Int64,
     process_state::Dict{Int64,Any},
     noise_term::Any,
 ) where {T}

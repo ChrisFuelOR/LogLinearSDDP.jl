@@ -45,14 +45,14 @@ At the end, the following things are logged.
 """
 
 # struct Log
-#     iteration::Int
+#     iteration::Int64
 #     bound::Float64
 #     simulation_value::Float64
 #     current_state::Vector{Dict{Symbol,Float64}}
 #     time::Float64
-#     pid::Int
-#     #total_cuts::Int
-#     total_solves::Int
+#     pid::Int64
+#     #total_cuts::Int64
+#     total_solves::Int64
 #     duality_key::String
 #     serious_numerical_issue::Bool
 # end
