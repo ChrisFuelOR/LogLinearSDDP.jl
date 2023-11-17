@@ -366,13 +366,15 @@ function model_and_train()
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)])
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
     ar_process = get_ar_process(number_of_stages, number_of_realizations)
     model = model_definition(ar_process, problem_params, algo_params)
-       
+    
+    Random.seed!(algo_params.seed)
+
     # Train model
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 

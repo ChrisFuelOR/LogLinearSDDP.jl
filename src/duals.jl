@@ -90,16 +90,16 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factor(node::SDDP.Node, t::Int64, τ::Int64, ℓ::Int64)
+function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
 
-    factor = 0
+    factors = zeros(T-(t-1),L)
 
     for cut in node.bellman_function.global_theta.cuts
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factor = factor + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ-t+1,ℓ]
+        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
     end
 
-    return factor
+    return factors
 end
 
 function get_alphas(node::SDDP.Node)
@@ -118,6 +118,13 @@ function get_alphas(node::SDDP.Node)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
 
+    # Get cut constraint duals and compute first factor
+    if t < T
+        TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
+            cut_factors = get_existing_cuts_factors(node, t+1, T, L)
+        end
+    end
+
     for τ in t:T 
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
@@ -132,16 +139,11 @@ function get_alphas(node::SDDP.Node)
             else
                 cut_exponents_required = model.ext[:cut_exponents][t+1]
 
-                # Get cut constraint duals and compute first factor
-                TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-                    factor_1 = get_existing_cuts_factor(node, t+1, τ, ℓ)
-                end
-
                 # Compute second factor
-                factor_2 = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+                factor = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
 
                 # Compute alpha value
-                α[τ-t+1,ℓ] = factor_1 * factor_2
+                α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * factor
             end
         end
     end
