@@ -105,39 +105,26 @@ Simulation means that after training the model we perform a simulation with
 NoSimulation means that we do not perform a simulation after training the model,
     either because we do not want to or because we solve a determinist model.
 Default is NoSimulation.
+
+The simulation_seed determines which scenarios are sampled. That is, for InSampleMonteCarlo
+it determines the scenario path chosen on the in-sample realizations. For OutOfSampleMonteCarlo
+it determines which scenarios are drawn from the underlying distributions. 
 """
-
-# Sampling schemes (similar to the ones in SDDP.jl)
-# abstract type AbstractSamplingScheme end
-
-# mutable struct InSampleMonteCarlo <: AbstractSamplingScheme end
-
-# mutable struct OutOfSampleMonteCarlo <: SDDP.AbstractSamplingScheme
-#     number_of_realizations :: Int
-#     simulation_seed :: Int
-
-#     function OutOfSampleMonteCarlo(;
-#         number_of_realizations = 10,
-#         simulation_seed = 121212,
-#     )
-#         return new(simulation_seed)
-#     end
-# end
-
-# mutable struct HistoricalSample <: SDDP.AbstractSamplingScheme end
 
 # Simulation regimes
 abstract type AbstractSimulationRegime end
 
 mutable struct Simulation <: AbstractSimulationRegime
     sampling_scheme :: SDDP.AbstractSamplingScheme
-    number_of_replications :: Int
+    number_of_replications :: Int64
+    simulation_seed :: Int64
 
     function Simulation(;
         sampling_scheme = SDDP.InSampleMonteCarlo(),
         number_of_replications = 1000,
+        simulation_seed = 11111,
     )
-        return new(sampling_scheme, number_of_replications)
+        return new(sampling_scheme, number_of_replications, simulation_seed)
     end
 end
 
@@ -224,7 +211,7 @@ mutable struct AlgoParams
     numerical_focus::Bool
     silent::Bool
     infiltrate_state::Symbol
-    seed::Union{Nothing,Int}
+    forward_pass_seed::Union{Nothing,Int}
     run_description::String
     solver_approach::Union{LogLinearSDDP.GAMS_Solver,LogLinearSDDP.Direct_Solver} # Direct_Solver ≠ Direct mode for solve
 
@@ -238,7 +225,7 @@ mutable struct AlgoParams
         numerical_focus = false,
         silent = true,
         infiltrate_state = :none,
-        seed = nothing,
+        forward_pass_seed = nothing,
         run_description = "",
         solver_approach = LogLinearSDDP.Direct_Solver(), #TODO
     )
@@ -252,7 +239,7 @@ mutable struct AlgoParams
             numerical_focus,
             silent,
             infiltrate_state,
-            seed,
+            forward_pass_seed,
             run_description,
             solver_approach
         )

@@ -934,7 +934,7 @@ function train(
     training_results = SDDP.TrainingResults(status, log)
     model.most_recent_training_results = training_results
     if print_level > 0
-        SDDP.log_iteration(options; force_if_needed = true)
+        #SDDP.log_iteration(options; force_if_needed = true)
         SDDP.print_helper(SDDP.print_footer, log_file_handle, training_results)
         if print_level > 1
             # SDDP.print_helper(TimerOutputs.print_timer, log_file_handle, model.timer_output)

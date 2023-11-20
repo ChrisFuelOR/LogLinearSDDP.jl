@@ -122,11 +122,11 @@ function print_parameters(io,
     println(io, "Numerical focus: ", algo_params.numerical_focus)
     println(io, "Silent: ", algo_params.silent)
 
-    if !isnothing(algo_params.seed)
+    if !isnothing(algo_params.forward_pass_seed)
         println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
         println(io, "SAMPLING")
         println(io, "Used seed for sampling scenarios (in forward pass): ")
-        print(io, rpad(Printf.@sprintf("%s", algo_params.seed), 10))
+        print(io, rpad(Printf.@sprintf("%s", algo_params.forward_pass_seed), 10))
         println(io)
     end
 

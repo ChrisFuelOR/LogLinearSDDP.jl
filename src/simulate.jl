@@ -180,7 +180,6 @@ function simulate(
 end
 
 
-
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
@@ -209,7 +208,7 @@ function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    sampling_scheme::SDDP.InSampleMonteCarlo,
+    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
 
     # SIMULATE THE MODEL
@@ -232,10 +231,6 @@ function simulate_loglinear(
 
     return
 end
-
-
-# TODO: Simulate with OutOfSampleMonteCarlo sampling scheme
-# TODO: Simulate with HistoricSample sampling scheme
 
 
 function log_simulation_results(
