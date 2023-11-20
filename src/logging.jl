@@ -45,14 +45,14 @@ At the end, the following things are logged.
 """
 
 # struct Log
-#     iteration::Int
+#     iteration::Int64
 #     bound::Float64
 #     simulation_value::Float64
 #     current_state::Vector{Dict{Symbol,Float64}}
 #     time::Float64
-#     pid::Int
-#     #total_cuts::Int
-#     total_solves::Int
+#     pid::Int64
+#     #total_cuts::Int64
+#     total_solves::Int64
 #     duality_key::String
 #     serious_numerical_issue::Bool
 # end
@@ -122,11 +122,11 @@ function print_parameters(io,
     println(io, "Numerical focus: ", algo_params.numerical_focus)
     println(io, "Silent: ", algo_params.silent)
 
-    if !isnothing(algo_params.seed)
+    if !isnothing(algo_params.forward_pass_seed)
         println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
         println(io, "SAMPLING")
         println(io, "Used seed for sampling scenarios (in forward pass): ")
-        print(io, rpad(Printf.@sprintf("%s", algo_params.seed), 10))
+        print(io, rpad(Printf.@sprintf("%s", algo_params.forward_pass_seed), 10))
         println(io)
     end
 

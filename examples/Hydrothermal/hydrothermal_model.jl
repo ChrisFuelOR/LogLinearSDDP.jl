@@ -16,16 +16,19 @@ import DataFramesMeta
 import CSV
 import Random
 
+include("simulation.jl")
+
+
 struct Generator
     name::String
     cost::Float64 # in $/MWh
     min_gen::Float64 # in MWmonth
     max_gen::Float64 # in MWmonth
-    system::Int 
+    system::Int64 
 end
 
 struct Reservoir
-    system::Int
+    system::Int64
     name::String
     max_gen::Float64 # in MWmonth
     max_level::Float64 # in MWmonth
@@ -251,7 +254,7 @@ end
 
 """ Get the realization data for a specific stage and system."""
 
-function get_realization_data(eta_df::DataFrames.DataFrame, t::Int, number_of_realizations::Int)
+function get_realization_data(eta_df::DataFrames.DataFrame, t::Int64, number_of_realizations::Int64)
     realizations = Tuple{Float64, Float64, Float64, Float64}[]
 
     for i in 1:number_of_realizations
@@ -272,7 +275,7 @@ function read_history_data()
     return df
 end
 
-function get_ar_process(number_of_stages::Int, number_of_realizations::Int)
+function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
 
     # AUTOREGRESSIVE PROCESS
     ###########################################################################################################
@@ -322,7 +325,6 @@ function get_ar_process(number_of_stages::Int, number_of_realizations::Int)
         intercept = Float64[]
         coefficients = zeros(dim, dim, lag_order)
         psi = Float64[]
-        eta_data = Vector{Vector{Float64}}(undef, dim)
 
         for ℓ in 1:4
             # Get model data
@@ -362,26 +364,43 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 20 #120
+    number_of_stages = 120 #120
     number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], seed = 11111)
+    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
+
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
     ar_process = get_ar_process(number_of_stages, number_of_realizations)
     model = model_definition(ar_process, problem_params, algo_params)
     
-    Random.seed!(algo_params.seed)
+    Random.seed!(algo_params.forward_pass_seed)
 
     # Train model
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
-    # Simulate model
-    # TODO
+    # SIMULATION
+    ###########################################################################################################
+    # (1) In-sample simulation
+    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, algo_params.simulation_regime)
+
+    # (2) Out-of-sample simulation using the nonlinear process
+    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage)
+    end
+    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
+    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
+
+    # (3) Out-of-sample simulation using the linear process
+    # sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage)
+    # end
+    # simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
 
     return
 end

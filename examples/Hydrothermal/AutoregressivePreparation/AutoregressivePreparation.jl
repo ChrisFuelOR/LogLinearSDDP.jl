@@ -15,7 +15,7 @@ import Infiltrator
 struct MonthlyModelStorage
     detrending_mean::Float64
     detrending_sigma::Float64
-    lag_order::Int
+    lag_order::Int64
     fitted_model::Any
     regressors::Matrix{Float64}
     year_offset::Int64

@@ -12,7 +12,7 @@
 function _simulate(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
-    number_replications::Int,
+    number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
@@ -157,7 +157,7 @@ For more complicated data, the `custom_recorders` keyword argument can be used.
 """
 function simulate(
     model::SDDP.PolicyGraph,
-    number_replications::Int = 1,
+    number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
     custom_recorders = Dict{Symbol,Function}(),
@@ -178,7 +178,6 @@ function simulate(
         incoming_state = Dict(Symbol(k) => v for (k, v) in incoming_state),
     )
 end
-
 
 
 function simulate_loglinear(
@@ -209,7 +208,7 @@ function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    sampling_scheme::SDDP.InSampleMonteCarlo,
+    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
 
     # SIMULATE THE MODEL
@@ -232,10 +231,6 @@ function simulate_loglinear(
 
     return
 end
-
-
-# TODO: Simulate with OutOfSampleMonteCarlo sampling scheme
-# TODO: Simulate with HistoricSample sampling scheme
 
 
 function log_simulation_results(

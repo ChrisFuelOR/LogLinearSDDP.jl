@@ -6,7 +6,7 @@ end
 
 """ Prints the signifance results for a given fitted model.
 For lag order 1, the t-test is used. For lag order > 1, only the F-test is used."""
-function significance_tests(fitted_model::Any, lag_order::Int)
+function significance_tests(fitted_model::Any, lag_order::Int64)
     if lag_order == 1
         # t-test statistics and p-value for 5% significance level
         alpha = 0.05
@@ -107,7 +107,7 @@ function normality_tests(residuals::Vector{Float64}, with_plots::Bool)
 end
 
 """ Execute validation tests, especially for residuals."""
-function full_model_validation_tests(fitted_model::Any, lag_order::Int, residuals::Vector{Float64}, data_for_fitting::DataFrames.DataFrame, with_plots::Bool)
+function full_model_validation_tests(fitted_model::Any, lag_order::Int64, residuals::Vector{Float64}, data_for_fitting::DataFrames.DataFrame, with_plots::Bool)
 
     # (1) Goodness of fit
     println("> GOODNESS OF FIT")

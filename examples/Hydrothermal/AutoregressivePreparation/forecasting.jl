@@ -154,7 +154,7 @@ function generate_full_scenarios(
     df_original::DataFrames.DataFrame,
     all_monthly_models::Vector{MonthlyModelStorage},
     starting_value::Vector{Float64},
-    number_of_scenarios::Int,
+    number_of_scenarios::Int64,
     detrending_with_sigma::Bool,
     with_plots::Bool,
     )

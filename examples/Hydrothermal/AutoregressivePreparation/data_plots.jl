@@ -18,7 +18,7 @@ end
 and used to compute the 95% confidence interval.
 These plots may give a hint on the required lag, even though we use a monthly model.
 A quick decline in PACF for the detrended data indicates stationarity."""
-function pacf_comparison_plot(pacf_1::Vector{Float64}, pacf_2::Vector{Float64}, n::Int)
+function pacf_comparison_plot(pacf_1::Vector{Float64}, pacf_2::Vector{Float64}, n::Int64)
 
     conf_value = 1.96 * 1/sqrt(n)
     p1 = Plots.plot(Plots.bar(pacf_1))
