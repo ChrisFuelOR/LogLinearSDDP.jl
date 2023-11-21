@@ -19,6 +19,33 @@ import Random
 include("simulation.jl")
 
 
+struct AutoregressiveProcessStage
+    dimension::Int64
+    coefficients::Array{Float64,2}
+    eta::Vector{Any}
+    probabilities::Vector{Float64}
+
+    function AutoregressiveProcessStage(
+        dimension,
+        coefficients,
+        eta;
+        probabilities = fill(1 / length(eta), length(eta)),
+    )
+        return new(
+            dimension,
+            coefficients,
+            eta,
+            probabilities,
+        )
+    end
+end
+
+struct AutoregressiveProcess
+    lag_order::Int64
+    parameters::Dict{Int64,AutoregressiveProcessStage}
+    history::Vector{Float64}
+end
+
 struct Generator
     name::String
     cost::Float64 # in $/MWh
@@ -45,7 +72,7 @@ Among others, this model was analyzed in
 The data for this problem was provided by Nils Löhndorf.
 """
 
-function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams)
+function model_definition(ar_process::AutoregressiveProcess, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams)
 
     demand = CSV.read("demand.csv", DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(demand, [:t, Symbol(1), Symbol(2), Symbol(3), Symbol(4), Symbol(5)])
@@ -171,6 +198,9 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
     #exchange penalties for exchange from system k to l in %?
     exchange_pen = [0 0.001 0.001 0.001 0.0005; 0.001 0 0.001 0.001 0.0005; 0.001 0.001 0.0 0.001 0.0005; 0.001 0.001 0.001 0.0 0.0005; 0.0005 0.0005 0.0005 0.0005 0.0]
 
+    # artificial inflow bounds (for state variables)
+    inflow_bounds = [150000, 80000, 60000, 50000]
+
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
         optimizer = Gurobi.Optimizer,
@@ -178,11 +208,13 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         lower_bound = 0.0,
     )  do subproblem, t
 
-        # Subproblem variables    
+        # Subproblem - state variables    
         JuMP.@variable(subproblem, level[k in 1:num_of_res], SDDP.State, lower_bound = 0.0, upper_bound = reservoirs[k].max_level, initial_value = reservoirs[k].init_level)
+        JuMP.@variable(subproblem, inflow[k in 1:num_of_res], SDDP.State, lower_bound = 0.0, initial_value = 0.0) # upper_bound = inflow_bounds[k],
+        
+        # Subproblem - stage variables
         JuMP.@variable(subproblem, hydro_gen[k in 1:num_of_res], lower_bound = 0.0, upper_bound = reservoirs[k].max_gen)
         JuMP.@variable(subproblem, spillage[k in 1:num_of_res], lower_bound = 0.0)
-        JuMP.@variable(subproblem, inflow[k in 1:num_of_res]) # random variable
         JuMP.@variable(subproblem, gen[j in 1:num_of_gen], lower_bound = generators[j].min_gen, upper_bound = generators[j].max_gen)
         JuMP.@variable(subproblem, exchange[k in 1:num_of_sys, l in 1:num_of_sys], lower_bound = 0.0, upper_bound = exchange_cap[k,l])
         JuMP.@variable(subproblem, deficit[k in 1:num_of_sys])
@@ -191,61 +223,71 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         JuMP.@variable(subproblem, deficit_part[k in 1:num_of_sys, i=1:4], lower_bound = 0.0, upper_bound = curtailment_ratio[i] * demand[t,Symbol(k)])        
         JuMP.@constraint(subproblem, deficit_sum[k in 1:num_of_sys], deficit[k] == sum(deficit_part[k,i] for i in 1:4))
     
-        """ The deficit (load curtailment) costs are piecewise linear convex, i.e., they increase with the amount of load curtailment.
-        We model this by splitting the whole deficit variable "deficit" into four parts "deficit_part" with different cost coefficients.
-        Together they sum up to "deficit". Clearly, the system tries to fully allocate the deficit to those variables with the lowest cost.
-        Therefore, naturally deficit_part[k,i] only takes non-negative values if deficit_part_[k,i-1] has reached its upper bound.
-        The upper bounds are specified as percentages of the total load."""
-
         # Hydro balance
-        coupling_ref = JuMP.@constraint(subproblem, hydro_balance[k in 1:num_of_res], level[k].out == level[k].in + inflow[k] - hydro_gen[k] - spillage[k])
+        JuMP.@constraint(subproblem, hydro_balance[k in 1:num_of_res], level[k].out == level[k].in + inflow[k].out - hydro_gen[k] - spillage[k])
 
         # Load balance
         JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + deficit[k] + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
 
         # Objective function
         SDDP.@stageobjective(subproblem, (annual_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) for k in 1:num_of_sys))
-        #SDDP.@stageobjective(subproblem, (annual_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) + sum(exchange_pen[k,l] * exchange[k,l] for l in 1:num_of_sys) for k in 1:num_of_sys))
 
-        # Parameterize inflow and demand
+        # Inflow modeling
         if t == 1
-            realizations = [[0.0, 0.0, 0.0, 0.0]]
+            # Fixed value for first stage
+            JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.history[k])
         else
-            realizations = ar_process.parameters[t].eta
-        end
+            # Expanding the state
+            # This has to be modeled with setting the left-hand-side coefficients using set_normalized_coefficient, as otherwise two variables are multiplied, which leads to a non-convex problem.
+            JuMP.@variable(subproblem, inflow_noise[k in 1:num_of_res]) # random variable
+            JuMP.@variable(subproblem, inflow_aux_var[k in 1:num_of_res])
+            
+            JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.parameters[t].coefficients[k,1] * inflow_aux_var[k] + ar_process.parameters[t].coefficients[k,2] * inflow_noise[k])
+            JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], inflow_aux_var[k] + inflow[k].out == 0)
 
-        # Store coupling constraint reference to access dual multipliers later
-        if t != 1
-            coupling_refs = subproblem.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
-            for i in eachindex(coupling_refs)
-                coupling_refs[i] = coupling_ref[i]
+            # Parameterize inflow and demand
+            realizations = ar_process.parameters[t].eta
+
+            SDDP.parameterize(subproblem, realizations) do ω
+                JuMP.fix(inflow_noise[1], exp(ω[1]))
+                JuMP.fix(inflow_noise[2], exp(ω[2]))
+                JuMP.fix(inflow_noise[3], exp(ω[3]))
+                JuMP.fix(inflow_noise[4], exp(ω[4]))
+
+                JuMP.set_normalized_coefficient(inflow_aux[1], inflow[1].out, - exp(ω[1]))
+                JuMP.set_normalized_coefficient(inflow_aux[2], inflow[2].out, - exp(ω[2]))
+                JuMP.set_normalized_coefficient(inflow_aux[3], inflow[3].out, - exp(ω[3]))
+                JuMP.set_normalized_coefficient(inflow_aux[4], inflow[4].out, - exp(ω[4]))
             end
         end
 
-        SDDP.parameterize(subproblem, realizations) do ω
-            JuMP.fix(inflow[1], ω[1])
-            JuMP.fix(inflow[2], ω[2])
-            JuMP.fix(inflow[3], ω[3])
-            JuMP.fix(inflow[4], ω[4])
+        if algo_params.silent
+            JuMP.set_silent(subproblem)
+        else
+            JuMP.unset_silent(subproblem)
         end
     end
 
     return model
 end
 
-
 """ Reads stored model data."""
 function read_model(file_name)
     f = open(file_name)
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    
+    DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
     close(f)
     return df
 end
 
 """ Read stored realization data."""
-function read_realization_data()
-    f = open("AutoregressivePreparation/scenarios_nonlinear.txt")
+function read_realization_data(data_approach::Symbol)
+    if data_approach == :shapiro
+        f = open("LinearizedAutoregressivePreparation/scenarios_shapiro.txt")
+    elseif data_approach ==:fitted
+        f = open("LinearizedAutoregressivePreparation/scenarios_linear.txt")
+    end
+    
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Stage", "Realization_number", "Probability", "Realization_SE", "Realization_S", "Realization_NE", "Realization_N"])    
     close(f)
@@ -253,7 +295,6 @@ function read_realization_data()
 end
 
 """ Get the realization data for a specific stage and system."""
-
 function get_realization_data(eta_df::DataFrames.DataFrame, t::Int64, number_of_realizations::Int64)
     realizations = Tuple{Float64, Float64, Float64, Float64}[]
 
@@ -268,95 +309,71 @@ end
 
 """ Read stored history data for the process."""
 function read_history_data()
-    f = open("AutoregressivePreparation/history_nonlinear.txt")
+    f = open("LinearizedAutoregressivePreparation/history_linear.txt")
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Stage", "History_SE", "History_S", "History_NE", "History_N"])    
     close(f)
     return df
 end
 
-function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
+function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64, data_approach::Symbol)
 
     # AUTOREGRESSIVE PROCESS
     ###########################################################################################################
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
     # Read AR model data for all four reservoir systems
-    data_SE = read_model("AutoregressivePreparation/model_SE.txt")
-    data_S = read_model("AutoregressivePreparation/model_S.txt")
-    data_NE = read_model("AutoregressivePreparation/model_NE.txt")
-    data_N = read_model("AutoregressivePreparation/model_N.txt")
+    data_SE = read_model("LinearizedAutoregressivePreparation/model_lin_SE.txt")
+    data_S = read_model("LinearizedAutoregressivePreparation/model_lin_S.txt")
+    data_NE = read_model("LinearizedAutoregressivePreparation/model_lin_NE.txt")
+    data_N = read_model("LinearizedAutoregressivePreparation/model_lin_N.txt")
     data = [data_SE, data_S, data_NE, data_N]
-    dim = 4 # number of hydro reservoirs
+    dim = 4
+    lag_order = 1
 
-    # Read realization data
-    eta_df = read_realization_data()
-
-    # Get max lag order (which is used as constant lag order for the process)
-    lag_order = 0
-    for df in data
-        for month in 1:12
-            current_lag_order = df[month, "Lag_order"]
-            if current_lag_order > lag_order
-                lag_order = current_lag_order
-            end
-        end
-    end
+    # Get realization data        
+    eta_df = read_realization_data(data_approach)
 
     # Process history
     # ---------------------------------------------------------------------------------------------------------
-    # define also ξ from -11 to 1
-    ar_history = Dict{Int64,Any}()
-    
+    # define also ξ₁
     # Read history data and store in AR history
     history_data = read_history_data()
-    for t in -11:1
-        row = t+12
-        ar_history[t] = [history_data[row,"History_SE"], history_data[row,"History_S"], history_data[row,"History_NE"], history_data[row,"History_N"]]
-    end
+    ar_history = [history_data[2,"History_SE"], history_data[2,"History_S"], history_data[2,"History_NE"], history_data[2,"History_N"]]
 
     # Process definition
     # ---------------------------------------------------------------------------------------------------------   
-    ar_parameters = Dict{Int64, LogLinearSDDP.AutoregressiveProcessStage}()
+    ar_parameters = Dict{Int64, AutoregressiveProcessStage}()
+
     for t in 2:number_of_stages
         # Get month to stage
         month = mod(t, 12) > 0 ? mod(t,12) : 12
-
-        intercept = Float64[]
-        coefficients = zeros(dim, dim, lag_order)
-        psi = Float64[]
+        coefficients = zeros(dim, 2)
 
         for ℓ in 1:4
             # Get model data
             df = data[ℓ]  
 
-            # Get intercept
-            push!(intercept, df[month, "Intercept"])
-
             # Get coefficients
-            current_coefficients = df[month, "Coefficients"]
+            current_coefficients = df[month, "Corr_coefficients"]
             current_coefficients = strip(current_coefficients, ']')
             current_coefficients = strip(current_coefficients, '[')
             current_coefficients = split(current_coefficients, ",")
-            for k in eachindex(current_coefficients)
-                coefficient = current_coefficients[k]
-                coefficients[ℓ, ℓ, k] = parse(Float64, coefficient)
-            end
 
-            # Get psi
-            push!(psi, df[month, "Psi"])
+            coefficients[ℓ, 1] = parse(Float64, current_coefficients[1])
+            coefficients[ℓ, 2] = parse(Float64, current_coefficients[2])
         end
 
         # Get eta data        
         eta = get_realization_data(eta_df, t, number_of_realizations)
 
-        ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta, psi = psi)
+        ar_parameters[t] = AutoregressiveProcessStage(dim, coefficients, eta)
     end
-    
-    # All stages
-    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+   
+     # All stages
+     ar_process = AutoregressiveProcess(lag_order, ar_parameters, ar_history)
 
-    return ar_process
+     return ar_process
 end
 
 
@@ -371,37 +388,45 @@ function model_and_train()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    ar_process = get_ar_process(number_of_stages, number_of_realizations)
+    ar_process = get_ar_process(number_of_stages, number_of_realizations, :fitted)
     model = model_definition(ar_process, problem_params, algo_params)
     
     Random.seed!(algo_params.forward_pass_seed)
+    Infiltrator.@infiltrate
 
     # Train model
-    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
+    SDDP.train(
+        model,
+        print_level = algo_params.print_level,
+        log_file = algo_params.log_file,
+        log_frequency = algo_params.log_frequency,
+        stopping_rules = algo_params.stopping_rules,
+        run_numerical_stability_report = algo_params.run_numerical_stability_report,
+    )
 
     # SIMULATION
     ###########################################################################################################
-    # (1) In-sample simulation
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, algo_params.simulation_regime)
+    # # (1) In-sample simulation
+    # SDDP.simulate(model, algo_params, problem_params, algo_params.simulation_regime)
 
-    # (2) Out-of-sample simulation using the nonlinear process
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage)
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
+    # # (2) Out-of-sample simulation using the linear process
+    # sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage)
+    # end
+    # simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
 
-    # (3) Out-of-sample simulation using the linear process
-    sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_linear(number_of_realizations, stage)
-    end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
-
+    # # (3) Out-of-sample simulation using the nonlinear process
+    # sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_loglinear(number_of_realizations, stage)
+    # end
+    # simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
+    
     return
 end
 
