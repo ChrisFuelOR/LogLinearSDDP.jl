@@ -2,15 +2,16 @@ import CSV
 import DataFrames
 import Distributions
 import Random
-include("AutoregressivePreparation.jl")
-import .AutoregressivePreparation
+import Infiltrator
+include("LinearizedAutoregressivePreparation.jl")
+import .LinearizedAutoregressivePreparation
 
 
 """ Reads stored model data."""
 function read_model(file_name)
     f = open(file_name)
     df = CSV.read(file_name, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    
+    DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
     close(f)
     return df
 end
@@ -28,7 +29,7 @@ The scenario data is stored in a txt file.
 Note that we do not required data for stage 1. """
 function scenario_generation(number_of_realizations::Int64, number_of_stages::Int64, output_file_name::String)
 
-    file_names = ["model_SE.txt", "model_S.txt", "model_NE.txt", "model_N.txt"]
+    file_names = ["model_lin_SE.txt", "model_lin_S.txt", "model_lin_NE.txt", "model_lin_N.txt"]
     f = open(output_file_name, "w")
 
     # Read and store required standard deviations
@@ -64,86 +65,73 @@ function scenario_generation(number_of_realizations::Int64, number_of_stages::In
 end
 
 """ Method that generates the history of the stochastic process that is/may be required for SDDP due to the lags of the process.
-We use the last 12 months of the true historical data and then use the AR process definition to compute a fixed value
+We use the last 2 months of the true historical data and then use the AR process definition to compute a fixed value
 for stage 1 of the SDDP problem."""
 function history_generation()
     # Get last year of historical data as vector for all four reservoir systems
-    historic_data_SE = AutoregressivePreparation.data_frame_to_vector(last(AutoregressivePreparation.read_raw_data("hist1.csv"), 1))
-    historic_data_S = AutoregressivePreparation.data_frame_to_vector(last(AutoregressivePreparation.read_raw_data("hist2.csv"), 1))
-    historic_data_NE = AutoregressivePreparation.data_frame_to_vector(last(AutoregressivePreparation.read_raw_data("hist3.csv"), 1))
-    historic_data_N = AutoregressivePreparation.data_frame_to_vector(last(AutoregressivePreparation.read_raw_data("hist4.csv"), 1))
+    historic_data_SE = LinearizedAutoregressivePreparation.data_frame_to_vector(last(LinearizedAutoregressivePreparation.read_raw_data("hist1.csv"), 1))
+    historic_data_S = LinearizedAutoregressivePreparation.data_frame_to_vector(last(LinearizedAutoregressivePreparation.read_raw_data("hist2.csv"), 1))
+    historic_data_NE = LinearizedAutoregressivePreparation.data_frame_to_vector(last(LinearizedAutoregressivePreparation.read_raw_data("hist3.csv"), 1))
+    historic_data_N = LinearizedAutoregressivePreparation.data_frame_to_vector(last(LinearizedAutoregressivePreparation.read_raw_data("hist4.csv"), 1))
     historic_data = [historic_data_SE, historic_data_S, historic_data_NE, historic_data_N]
 
     # Read AR model data for all four reservoir systems
-    model_SE = read_model("model_SE.txt")
-    model_S = read_model("model_S.txt")
-    model_NE = read_model("model_NE.txt")
-    model_N = read_model("model_N.txt")
+    model_SE = read_model("model_lin_SE.txt")
+    model_S = read_model("model_lin_S.txt")
+    model_NE = read_model("model_lin_NE.txt")
+    model_N = read_model("model_lin_N.txt")
     models = [model_SE, model_S, model_NE, model_N]
 
-    all_months = [12,11,10,9,8,7,6,5,4,3,2,1]
-
     # Prepare output file
-    output_file_name = "history_nonlinear.txt"
+    output_file_name = "history_linear.txt"
     f = open(output_file_name, "w")
     
     # Prepare storing AR history (in addition to output to file)
     ar_history = Dict{Int64,Any}()
 
-    # Iterate over stages to set
-    for counter in 12:-1:0
+    # Get stage and month
+    for t in 0:1
+        # Iterate over stages to set
         ar_history_stage = Vector{Float64}(undef, 4)
-
-        # Get stage and month
-        t = 1 - counter
-        month_identifier = mod(counter, 12) > 0 ? Int(mod(counter, 12)) : 12
-        month = all_months[month_identifier]
-
+        
+        month = t == 0 ? 12 : 1
         print(f, t)
 
         # Iterate over systems
         for ℓ in 1:4         
-
             if t == 1
                 # Get model data for current month and system
                 lag_order = models[ℓ][month, "Lag_order"]
-                intercept = models[ℓ][month, "Intercept"]
-                current_coefficients = models[ℓ][month, "Coefficients"]
-                psi = models[ℓ][month, "Psi"]
+                current_coefficients = models[ℓ][month, "Corr_coefficients"]
                 sigma = models[ℓ][month, "Sigma"]
 
-                coefficients = zeros(lag_order, 4, 4)
+                coefficients = zeros(2)
                 current_coefficients = strip(current_coefficients, ']')
                 current_coefficients = strip(current_coefficients, '[')
                 current_coefficients = split(current_coefficients, ",")
-                for k in eachindex(current_coefficients)
-                    coefficient = current_coefficients[k]
-                    coefficients[k, ℓ, ℓ] = parse(Float64, coefficient)
-                end
+                coefficients[1] = parse(Float64, current_coefficients[1])
+                coefficients[2] = parse(Float64, current_coefficients[2])
 
                 # Generate a realization for eta
                 d = Distributions.Normal(0.0, sigma)
                 realization = Distributions.rand(d, 1)[1]
 
                 # Compute the required value for eta
-                ar_history_stage[ℓ] = exp(intercept) * exp(psi * realization) * prod(ar_history[t-k][ℓ] ^ coefficients[k, ℓ, ℓ] for k in 1:lag_order)
-                
+                ar_history_stage[ℓ] = coefficients[1] * exp(realization) * ar_history[t-1][ℓ] + exp(realization) * coefficients[2]               
             else
                 # Get historical value 
-                ar_history_stage[ℓ] = historic_data[ℓ][month]               
+                ar_history_stage[ℓ] = historic_data[ℓ][month]       
             end
             # Write to file
             print(f, ";", ar_history_stage[ℓ])
         end
         println(f)
-
         ar_history[t] = ar_history_stage
     end
     close(f)
 
     return ar_history
 end
-
 
 function scenario_and_history_generation(number_of_realizations::Int64, number_of_stages::Int64, scenario_generation_seed::Int64, output_file_name::String)
 
@@ -154,5 +142,4 @@ function scenario_and_history_generation(number_of_realizations::Int64, number_o
     return ar_history
 end
 
-
-scenario_and_history_generation(100, 120, 11111, "scenarios_nonlinear.txt")
+scenario_and_history_generation(100, 120, 11111, "scenarios_linear.txt")

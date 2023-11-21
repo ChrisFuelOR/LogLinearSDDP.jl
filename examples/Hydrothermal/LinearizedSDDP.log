@@ -1,0 +1,140 @@
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [152, 153]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------

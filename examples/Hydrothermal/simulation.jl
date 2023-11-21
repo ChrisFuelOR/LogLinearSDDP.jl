@@ -54,5 +54,5 @@ function get_out_of_sample_realizations_loglinear(number_of_realizations::Int64,
 end
 
 function get_out_of_sample_realizations_linear(number_of_realizations::Int64, t::Int64)
-    return get_out_of_sample_realizations(number_of_realizations, t, ["AutoregressivePreparation/model_SE_linear.txt", "AutoregressivePreparation/model_S_linear.txt", "AutoregressivePreparation/model_NE_linear.txt", "AutoregressivePreparation/model_N_linear.txt"])
+    return get_out_of_sample_realizations(number_of_realizations, t, ["AutoregressivePreparation/model_lin_SE.txt", "AutoregressivePreparation/model_lin_S.txt", "AutoregressivePreparation/model_lin_NE.txt", "AutoregressivePreparation/model_lin_N.txt"])
 end

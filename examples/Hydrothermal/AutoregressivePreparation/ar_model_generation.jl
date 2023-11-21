@@ -1,5 +1,6 @@
 import Distributions
 import DataFrames
+import Random
 
 
 """ Check if coefficients are transformed correctly. """
@@ -68,6 +69,8 @@ end
 
 """ Run analysis, fitting and validation of PAR model."""
 function prepare_ar_model()
+
+    Random.seed!(12345)
 
     # Set parameter configuration
     training_test_split = true
