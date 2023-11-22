@@ -243,7 +243,7 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
             JuMP.@variable(subproblem, inflow_aux_var[k in 1:num_of_res])
             
             JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.parameters[t].coefficients[k,1] * inflow_aux_var[k] + ar_process.parameters[t].coefficients[k,2] * inflow_noise[k])
-            JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], inflow_aux_var[k] + inflow[k].out == 0)
+            JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], - inflow_aux_var[k] + inflow[k].in == 0)
 
             # Parameterize inflow and demand
             realizations = ar_process.parameters[t].eta
@@ -254,10 +254,10 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
                 JuMP.fix(inflow_noise[3], exp(ω[3]))
                 JuMP.fix(inflow_noise[4], exp(ω[4]))
 
-                JuMP.set_normalized_coefficient(inflow_aux[1], inflow[1].out, - exp(ω[1]))
-                JuMP.set_normalized_coefficient(inflow_aux[2], inflow[2].out, - exp(ω[2]))
-                JuMP.set_normalized_coefficient(inflow_aux[3], inflow[3].out, - exp(ω[3]))
-                JuMP.set_normalized_coefficient(inflow_aux[4], inflow[4].out, - exp(ω[4]))
+                JuMP.set_normalized_coefficient(inflow_aux[1], inflow[1].in, exp(ω[1]))
+                JuMP.set_normalized_coefficient(inflow_aux[2], inflow[2].in, exp(ω[2]))
+                JuMP.set_normalized_coefficient(inflow_aux[3], inflow[3].in, exp(ω[3]))
+                JuMP.set_normalized_coefficient(inflow_aux[4], inflow[4].in, exp(ω[4]))
             end
         end
 
@@ -272,10 +272,19 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
 end
 
 """ Reads stored model data."""
-function read_model(file_name)
+function read_model_linear(file_name)
     f = open(file_name)
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
+    close(f)
+    return df
+end
+
+""" Reads stored model data."""
+function read_model(file_name)
+    f = open(file_name)
+    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
+    DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    
     close(f)
     return df
 end
@@ -323,10 +332,10 @@ function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64, 
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
     # Read AR model data for all four reservoir systems
-    data_SE = read_model("LinearizedAutoregressivePreparation/model_lin_SE.txt")
-    data_S = read_model("LinearizedAutoregressivePreparation/model_lin_S.txt")
-    data_NE = read_model("LinearizedAutoregressivePreparation/model_lin_NE.txt")
-    data_N = read_model("LinearizedAutoregressivePreparation/model_lin_N.txt")
+    data_SE = read_model_linear("LinearizedAutoregressivePreparation/model_lin_SE.txt")
+    data_S = read_model_linear("LinearizedAutoregressivePreparation/model_lin_S.txt")
+    data_NE = read_model_linear("LinearizedAutoregressivePreparation/model_lin_NE.txt")
+    data_N = read_model_linear("LinearizedAutoregressivePreparation/model_lin_N.txt")
     data = [data_SE, data_S, data_NE, data_N]
     dim = 4
     lag_order = 1
@@ -381,14 +390,14 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120 #120
-    number_of_realizations = 100 #100
+    number_of_stages = 20 #120
+    number_of_realizations = 10 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -396,7 +405,6 @@ function model_and_train()
     model = model_definition(ar_process, problem_params, algo_params)
     
     Random.seed!(algo_params.forward_pass_seed)
-    Infiltrator.@infiltrate
 
     # Train model
     SDDP.train(
@@ -406,26 +414,27 @@ function model_and_train()
         log_frequency = algo_params.log_frequency,
         stopping_rules = algo_params.stopping_rules,
         run_numerical_stability_report = algo_params.run_numerical_stability_report,
+        log_every_seconds = 0.0
     )
 
     # SIMULATION
     ###########################################################################################################
-    # # (1) In-sample simulation
-    # SDDP.simulate(model, algo_params, problem_params, algo_params.simulation_regime)
+    # (1) In-sample simulation
+    LogLinearSDDP.simulate_linear(model, algo_params, problem_params, algo_params.simulation_regime)
 
-    # # (2) Out-of-sample simulation using the linear process
-    # sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage)
-    # end
-    # simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
-    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
+    # (2) Out-of-sample simulation using the linear process
+    sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+        return get_out_of_sample_realizations_linear(number_of_realizations, stage)
+    end
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    LogLinearSDDP.simulate_linear(model, algo_params, problem_params, simulation_linear)
 
-    # # (3) Out-of-sample simulation using the nonlinear process
+    # (3) Out-of-sample simulation using the nonlinear process
     # sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
     #     return get_out_of_sample_realizations_loglinear(number_of_realizations, stage)
     # end
     # simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
-    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
+    # LogLinearSDDP.simulate_linear(model, algo_params, problem_params, simulation_loglinear)
     
     return
 end

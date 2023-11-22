@@ -138,3 +138,821 @@ subproblem structure
 -------------------------------------------------------------------
  iteration    simulation      bound        time (s)     solves  pid
 -------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 120
+  state variables : 8
+  scenarios       : 1.00000e+238
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   1.779046e+08  2.450951e+05  5.381200e+01     12021   1
+         2   1.082376e+08  2.450951e+05  5.951500e+01     24042   1
+         3   1.605931e+08  2.450951e+05  6.502100e+01     36063   1
+         4   6.053609e+07  4.638442e+05  7.049700e+01     48084   1
+         5   3.507656e+07  5.333890e+05  7.611200e+01     60105   1
+         6   6.140173e+07  7.738372e+05  8.158900e+01     72126   1
+         7   4.338275e+07  8.162432e+05  8.731800e+01     84147   1
+         8   2.755332e+07  8.162432e+05  9.277300e+01     96168   1
+         9   3.791322e+07  9.813672e+05  9.827800e+01    108189   1
+        10   2.809782e+07  1.174873e+06  1.036780e+02    120210   1
+        11   1.739005e+07  1.199904e+06  1.090950e+02    132231   1
+        12   1.795734e+07  1.213900e+06  1.145630e+02    144252   1
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.130001e-01       211   1
+        10   2.067030e+07  1.313618e+06  1.086000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.086000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.61s /  62.8%           83.4MiB /  89.2%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    855ms   84.5%  85.5ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    833ms   82.4%   439μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   32.7ms    3.2%  17.2μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   53.2μs    0.0%  2.66μs   6.41KiB    0.0%     328B
+ forward_pass              10    150ms   14.8%  15.0ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    148ms   14.6%   739μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    536μs    0.1%  2.68μs    109KiB    0.1%     560B
+   sample_scenario         10    376μs    0.0%  37.6μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   7.08ms    0.7%   708μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   27.8μs    0.0%  2.78μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.280002e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.430002e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.530001e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.630002e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.620002e-01      1055   1
+         6   2.928149e+07  9.688634e+05  8.300002e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.410000e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.052000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.161000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.262000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.262000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.32s /  88.7%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    1.00s   85.7%   100ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    975ms   83.4%   513μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   37.3ms    3.2%  19.6μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   61.5μs    0.0%  3.08μs   6.41KiB    0.0%     328B
+ forward_pass              10    160ms   13.7%  16.0ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    157ms   13.5%   787μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    670μs    0.1%  3.35μs    109KiB    0.1%     560B
+   sample_scenario         10    582μs    0.0%  58.2μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   7.15ms    0.6%   715μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   29.3μs    0.0%  2.93μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.150002e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.490002e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.660001e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.810001e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.890001e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.980001e-01      1266   1
+         7   1.905525e+07  1.002868e+06  8.980000e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.021000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.131000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.232000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.232000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.31s /  87.7%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    987ms   85.6%  98.7ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    963ms   83.5%   507μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   37.7ms    3.3%  19.8μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   54.5μs    0.0%  2.73μs   6.41KiB    0.0%     328B
+ forward_pass              10    158ms   13.7%  15.8ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    156ms   13.5%   781μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    564μs    0.0%  2.82μs    109KiB    0.1%     560B
+   sample_scenario         10    608μs    0.1%  60.8μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   7.75ms    0.7%   775μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   33.0μs    0.0%  3.30μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.130001e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.420000e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.489999e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.609999e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.650000e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.909999e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.010000e-01      1477   1
+         8   2.158351e+07  1.108980e+06  9.979999e-01      1688   1
+         9   3.175036e+07  1.140501e+06  1.154000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.263000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.263000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.33s /  87.8%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    1.01s   86.3%   101ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    986ms   84.1%   519μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   44.3ms    3.8%  23.3μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   50.8μs    0.0%  2.54μs   6.41KiB    0.0%     328B
+ forward_pass              10    154ms   13.1%  15.4ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    152ms   12.9%   759μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    529μs    0.0%  2.65μs    109KiB    0.1%     560B
+   sample_scenario         10    564μs    0.0%  56.4μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.21ms    0.5%   621μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   44.4μs    0.0%  4.44μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.140000e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.329999e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.420002e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.469999e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.610000e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.660000e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.130001e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.015000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.137000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.247000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.247000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.30s /  88.2%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    982ms   85.6%  98.2ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    957ms   83.4%   504μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   37.4ms    3.3%  19.7μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   59.6μs    0.0%  2.98μs   6.41KiB    0.0%     328B
+ forward_pass              10    158ms   13.8%  15.8ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    156ms   13.6%   779μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    561μs    0.0%  2.80μs    109KiB    0.1%     560B
+   sample_scenario         10    758μs    0.1%  75.8μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.91ms    0.6%   691μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   33.8μs    0.0%  3.38μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.670000e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.629999e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.829998e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.979998e-01       844   1
+         5   2.499889e+07  8.983114e+05  7.079999e-01      1055   1
+         6   2.928149e+07  9.688634e+05  8.119998e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.119999e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.040000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.148000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.259000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.259000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.39s /  83.4%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    959ms   82.7%  95.9ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    934ms   80.5%   492μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   39.3ms    3.4%  20.7μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   66.1μs    0.0%  3.31μs   6.41KiB    0.0%     328B
+ forward_pass              10    194ms   16.7%  19.4ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    192ms   16.5%   959μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    569μs    0.0%  2.84μs    109KiB    0.1%     560B
+   sample_scenario         10    642μs    0.1%  64.2μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.49ms    0.6%   649μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   26.6μs    0.0%  2.66μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.150002e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.360000e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.330001e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.590000e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.690001e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.800000e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.060001e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.080000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.179000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.282000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.282000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.35s /  88.4%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    1.03s   85.8%   103ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    999ms   83.5%   526μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   40.5ms    3.4%  21.3μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   49.2μs    0.0%  2.46μs   6.41KiB    0.0%     328B
+ forward_pass              10    162ms   13.6%  16.2ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    160ms   13.4%   800μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    679μs    0.1%  3.40μs    109KiB    0.1%     560B
+   sample_scenario         10    503μs    0.0%  50.3μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   7.10ms    0.6%   710μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   30.5μs    0.0%  3.05μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.130001e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.299999e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.380000e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.890000e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.980000e-01      1055   1
+         6   2.928149e+07  9.688634e+05  8.130000e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.219999e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.032000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.141000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.251000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.251000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.32s /  87.8%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    991ms   85.8%  99.1ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    918ms   79.4%   483μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   38.9ms    3.4%  20.5μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   52.1μs    0.0%  2.60μs   6.41KiB    0.0%     328B
+ forward_pass              10    158ms   13.6%  15.8ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    155ms   13.4%   776μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    602μs    0.1%  3.01μs    109KiB    0.1%     560B
+   sample_scenario         10    662μs    0.1%  66.2μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.95ms    0.6%   695μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   46.6μs    0.0%  4.66μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.958457917832492e7 ± 9.684737968788018e6
+Pessimistic upper bound: 2.9269317147112936e7
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.120001e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.270001e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.330001e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.450001e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.540000e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.970002e-01      1266   1
+         7   1.905525e+07  1.002868e+06  9.080000e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.018000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.114000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.239000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.239000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.31s /  87.0%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    975ms   85.6%  97.5ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    951ms   83.5%   500μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   37.2ms    3.3%  19.6μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   52.5μs    0.0%  2.62μs   6.41KiB    0.0%     328B
+ forward_pass              10    157ms   13.8%  15.7ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    155ms   13.6%   774μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    612μs    0.1%  3.06μs    109KiB    0.1%     560B
+   sample_scenario         10    905μs    0.1%  90.5μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.55ms    0.6%   655μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   27.2μs    0.0%  2.72μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.958457917832492e7 ± 9.684737968788018e6
+Pessimistic upper bound: 2.9269317147112936e7
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.6395495371194268e7 ± 6.749192379934958e6
+Pessimistic upper bound: 2.3144687751129225e7
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.300000e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.320000e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.470000e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.490000e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.489999e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.750001e-01      1266   1
+         7   1.905525e+07  1.002868e+06  8.850000e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.028000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.136000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.249000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.249000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.35s /  85.0%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    984ms   85.8%  98.4ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    960ms   83.7%   505μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   75.7ms    6.6%  39.9μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   67.5μs    0.0%  3.38μs   6.41KiB    0.0%     328B
+ forward_pass              10    156ms   13.6%  15.6ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    153ms   13.4%   767μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    616μs    0.1%  3.08μs    109KiB    0.1%     560B
+   sample_scenario         10    580μs    0.1%  58.0μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   6.76ms    0.6%   676μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   27.3μs    0.0%  2.73μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.958457917832492e7 ± 9.684737968788018e6
+Pessimistic upper bound: 2.9269317147112936e7
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.6395495371194268e7 ± 6.749192379934958e6
+Pessimistic upper bound: 2.3144687751129225e7
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 20
+  state variables : 8
+  scenarios       : 1.00000e+19
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [170, 178]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [18, 22]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [157, 157]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 149]
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+         1   6.616244e+07  2.450951e+05  2.119999e-01       211   1
+         2   8.342048e+07  7.086398e+05  3.299999e-01       422   1
+         3   9.319003e+07  2.450951e+05  4.310000e-01       633   1
+         4   4.423978e+07  7.086398e+05  5.480001e-01       844   1
+         5   2.499889e+07  8.983114e+05  6.640000e-01      1055   1
+         6   2.928149e+07  9.688634e+05  7.630000e-01      1266   1
+         7   1.905525e+07  1.002868e+06  8.799999e-01      1477   1
+         8   2.158351e+07  1.108980e+06  1.001000e+00      1688   1
+         9   3.175036e+07  1.140501e+06  1.112000e+00      1899   1
+        10   2.067030e+07  1.313618e+06  1.232000e+00      2110   1
+-------------------------------------------------------------------
+status         : iteration_limit
+total time (s) : 1.232000e+00
+total solves   : 2110
+best bound     :  1.313618e+06
+simulation ci  :  4.343525e+07 ± 1.710988e+07
+numeric issues : 0
+-------------------------------------------------------------------
+
+ ────────────────────────────────────────────────────────────────────────────────
+                                        Time                    Allocations      
+                               ───────────────────────   ────────────────────────
+       Tot / % measured:            1.29s /  87.8%           76.8MiB /  96.9%    
+
+ Section               ncalls     time    %tot     avg     alloc    %tot      avg
+ ────────────────────────────────────────────────────────────────────────────────
+ backward_pass             10    966ms   85.2%  96.6ms   64.3MiB   86.3%  6.43MiB
+   solve_subproblem     1.90k    940ms   83.0%   495μs   61.6MiB   82.7%  33.2KiB
+     get_dual_solution  1.90k   39.4ms    3.5%  20.8μs   4.41MiB    5.9%  2.38KiB
+   prepare_backward...     20   55.4μs    0.0%  2.77μs   6.41KiB    0.0%     328B
+ forward_pass              10    160ms   14.1%  16.0ms   9.83MiB   13.2%  0.98MiB
+   solve_subproblem       200    157ms   13.9%   786μs   9.51MiB   12.8%  48.7KiB
+     get_dual_solution    200    634μs    0.1%  3.17μs    109KiB    0.1%     560B
+   sample_scenario         10    710μs    0.1%  71.0μs   73.6KiB    0.1%  7.36KiB
+ calculate_bound           10   8.01ms    0.7%   801μs    347KiB    0.5%  34.7KiB
+   get_dual_solution       10   40.9μs    0.0%  4.09μs   5.47KiB    0.0%     560B
+ ────────────────────────────────────────────────────────────────────────────────
+
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.958457917832492e7 ± 9.684737968788018e6
+Pessimistic upper bound: 2.9269317147112936e7
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.6395495371194268e7 ± 6.749192379934958e6
+Pessimistic upper bound: 2.3144687751129225e7
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SIMULATION RESULTS
+LogLinearSDDP.Simulation(SDDP.InSampleMonteCarlo(0, false, true, SDDP.var"#155#158"{SDDP.var"#156#159"}(SDDP.var"#156#159"(), Core.Box(0)), nothing), 10, 11111)
+Lower bound: 1.3136183713082082e6
+Statistical upper bound (confidence interval): 1.474302371346594e7 ± 4.8250539286647355e6
+Pessimistic upper bound: 1.9568077642130677e7

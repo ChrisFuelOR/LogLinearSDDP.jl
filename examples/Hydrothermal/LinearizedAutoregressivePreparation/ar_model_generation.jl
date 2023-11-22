@@ -37,7 +37,7 @@ function prepare_ar_model()
 
     # Set parameter configuration
     training_test_split = true
-    with_plots = true
+    with_plots = false
     
     file_names = ["hist1.csv", "hist2.csv", "hist3.csv", "hist4.csv"]
     system_names = ["SE", "S", "NE", "N"]

@@ -396,11 +396,11 @@ function model_and_train()
     LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
 
     # (3) Out-of-sample simulation using the linear process
-    sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_linear(number_of_realizations, stage)
-    end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
+    # sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage)
+    # end
+    # simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)
 
     return
 end
