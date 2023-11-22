@@ -247,3 +247,56 @@ function log_simulation_results(
     return
 end
 
+
+function simulate_linear(
+    model::SDDP.PolicyGraph,
+    algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
+    simulation_regime::LogLinearSDDP.Simulation
+    )
+
+    simulate_linear(model, algo_params, problem_params, simulation_regime.sampling_scheme)
+
+    return
+end
+
+
+function simulate_linear(
+    model::SDDP.PolicyGraph,
+    algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
+    simulation_regime::LogLinearSDDP.NoSimulation,
+    )
+
+    return
+end
+
+
+function simulate_linear(
+    model::SDDP.PolicyGraph,
+    algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
+    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
+    )
+
+    # SIMULATE THE MODEL
+    ############################################################################
+    simulations = SDDP.simulate(model, algo_params.simulation_regime.number_of_replications)
+
+    # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
+    ############################################################################
+    objectives = map(simulations) do simulation
+        return sum(stage[:stage_objective] for stage in simulation)
+    end
+
+    μ, ci = SDDP.confidence_interval(objectives)
+    # get last lower bound again
+    lower_bound = SDDP.calculate_bound(model)
+
+    # LOGGING OF SIMULATION RESULTS
+    ############################################################################
+    log_simulation_results(algo_params, μ, ci, lower_bound)
+
+    return
+end
+

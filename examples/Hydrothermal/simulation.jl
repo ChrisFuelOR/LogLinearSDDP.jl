@@ -1,7 +1,11 @@
 import Distributions
 
 function read_model_std(file_name)
-    df = read_model(file_name)
+    if startswith(file_name, "Linearized")
+        df = read_model_linear(file_name)
+    else
+        df = read_model(file_name)
+    end
     stds = df[:, "Sigma"]
     return stds
 end
@@ -53,6 +57,7 @@ function get_out_of_sample_realizations_loglinear(number_of_realizations::Int64,
     return get_out_of_sample_realizations(number_of_realizations, t, ["AutoregressivePreparation/model_SE.txt", "AutoregressivePreparation/model_S.txt", "AutoregressivePreparation/model_NE.txt", "AutoregressivePreparation/model_N.txt"])
 end
 
+
 function get_out_of_sample_realizations_linear(number_of_realizations::Int64, t::Int64)
-    return get_out_of_sample_realizations(number_of_realizations, t, ["AutoregressivePreparation/model_SE_linear.txt", "AutoregressivePreparation/model_S_linear.txt", "AutoregressivePreparation/model_NE_linear.txt", "AutoregressivePreparation/model_N_linear.txt"])
+    return get_out_of_sample_realizations(number_of_realizations, t, ["LinearizedAutoregressivePreparation/model_lin_SE.txt", "LinearizedAutoregressivePreparation/model_lin_S.txt", "LinearizedAutoregressivePreparation/model_lin_NE.txt", "LinearizedAutoregressivePreparation/model_lin_N.txt"])
 end
