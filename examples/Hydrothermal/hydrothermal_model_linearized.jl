@@ -190,13 +190,14 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
 
     curtailment_ratio = [0.05, 0.05, 0.1, 0.8]
     deficit_cost = [1142.8, 2465.4, 5152.46, 5845.54]
-    annual_discount_rate = 1-0.12
+    # annual_discount_rate = 1-0.12
+    monthly_discount_rate = 0.9906
 
     #exchange capacity from sytem k to l in MWmonth
-    exchange_cap = [99999999.0 7379.0 1000.0 0.0 4000.0; 5625.0 99999999.0 0.0 0.0 0.0; 600.0 0.0 99999999.0 0.0 2236.0; 0.0 0.0 0.0 99999999.0 99999999.0; 3154.0 0.0 3951.0 3053.0 99999999.0]
+    exchange_cap = [0.0 7379.0 1000.0 0.0 4000.0; 5625.0 0.0 0.0 0.0 0.0; 600.0 0.0 0.0 0.0 2236.0; 0.0 0.0 0.0 0.0 99999999.0; 3154.0 0.0 3951.0 3053.0 0.0]
 
     #exchange penalties for exchange from system k to l in %?
-    exchange_pen = [0 0.001 0.001 0.001 0.0005; 0.001 0 0.001 0.001 0.0005; 0.001 0.001 0.0 0.001 0.0005; 0.001 0.001 0.001 0.0 0.0005; 0.0005 0.0005 0.0005 0.0005 0.0]
+    exchange_pen = [0.0 0.001 0.001 0.001 0.0005; 0.001 0.0 0.001 0.001 0.0005; 0.001 0.001 0.0 0.001 0.0005; 0.001 0.001 0.001 0.0 0.0005; 0.0005 0.0005 0.0005 0.0005 0.0]
 
     # artificial inflow bounds (for state variables)
     inflow_bounds = [150000, 80000, 60000, 50000]
@@ -218,19 +219,19 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
         JuMP.@variable(subproblem, gen[j in 1:num_of_gen], lower_bound = generators[j].min_gen, upper_bound = generators[j].max_gen)
         JuMP.@variable(subproblem, exchange[k in 1:num_of_sys, l in 1:num_of_sys], lower_bound = 0.0, upper_bound = exchange_cap[k,l])
         JuMP.@variable(subproblem, deficit[k in 1:num_of_sys])
-
+    
         # Load curtailment modeling
+        JuMP.fix(deficit[5], 0.0) # no curtailment for system 5
         JuMP.@variable(subproblem, deficit_part[k in 1:num_of_sys, i=1:4], lower_bound = 0.0, upper_bound = curtailment_ratio[i] * demand[t,Symbol(k)])        
-        JuMP.@constraint(subproblem, deficit_sum[k in 1:num_of_sys], deficit[k] == sum(deficit_part[k,i] for i in 1:4))
     
         # Hydro balance
         JuMP.@constraint(subproblem, hydro_balance[k in 1:num_of_res], level[k].out == level[k].in + inflow[k].out - hydro_gen[k] - spillage[k])
 
         # Load balance
-        JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + deficit[k] + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
+        JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_part[k,i] for i in 1:4) + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
 
         # Objective function
-        SDDP.@stageobjective(subproblem, (annual_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) for k in 1:num_of_sys))
+        SDDP.@stageobjective(subproblem, (monthly_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) + sum(exchange_pen[k,l] * exchange[k,l] for l in 1:num_of_sys) for k in 1:num_of_sys))
 
         # Inflow modeling
         if t == 1
@@ -240,24 +241,32 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
             # Expanding the state
             # This has to be modeled with setting the left-hand-side coefficients using set_normalized_coefficient, as otherwise two variables are multiplied, which leads to a non-convex problem.
             JuMP.@variable(subproblem, inflow_noise[k in 1:num_of_res]) # random variable
-            JuMP.@variable(subproblem, inflow_aux_var[k in 1:num_of_res])
+            # JuMP.@variable(subproblem, inflow_aux_var[k in 1:num_of_res])
             
-            JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.parameters[t].coefficients[k,1] * inflow_aux_var[k] + ar_process.parameters[t].coefficients[k,2] * inflow_noise[k])
-            JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], - inflow_aux_var[k] + inflow[k].in == 0)
+            JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == inflow[k].in + inflow_noise[k])
+            # JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == inflow_aux_var[k] + inflow_noise[k])
+            # JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], - inflow_aux_var[k] + inflow[k].in == 0)
 
             # Parameterize inflow and demand
             realizations = ar_process.parameters[t].eta
 
             SDDP.parameterize(subproblem, realizations) do ω
-                JuMP.fix(inflow_noise[1], exp(ω[1]))
-                JuMP.fix(inflow_noise[2], exp(ω[2]))
-                JuMP.fix(inflow_noise[3], exp(ω[3]))
-                JuMP.fix(inflow_noise[4], exp(ω[4]))
+                JuMP.fix(inflow_noise[1], ar_process.parameters[t].coefficients[1,2] * exp(ω[1]))
+                JuMP.fix(inflow_noise[2], ar_process.parameters[t].coefficients[2,2] * exp(ω[2]))
+                JuMP.fix(inflow_noise[3], ar_process.parameters[t].coefficients[3,2] * exp(ω[3]))
+                JuMP.fix(inflow_noise[4], ar_process.parameters[t].coefficients[4,2] * exp(ω[4]))
 
-                JuMP.set_normalized_coefficient(inflow_aux[1], inflow[1].in, exp(ω[1]))
-                JuMP.set_normalized_coefficient(inflow_aux[2], inflow[2].in, exp(ω[2]))
-                JuMP.set_normalized_coefficient(inflow_aux[3], inflow[3].in, exp(ω[3]))
-                JuMP.set_normalized_coefficient(inflow_aux[4], inflow[4].in, exp(ω[4]))
+                JuMP.set_normalized_coefficient(inflow_model[1], inflow[1].in, -ar_process.parameters[t].coefficients[1,1] * exp(ω[1]))
+                JuMP.set_normalized_coefficient(inflow_model[2], inflow[2].in, -ar_process.parameters[t].coefficients[2,1] * exp(ω[2]))
+                JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process.parameters[t].coefficients[3,1] * exp(ω[3]))
+                JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process.parameters[t].coefficients[4,1] * exp(ω[4]))
+
+                #print(t, ",")
+                #print(ar_process.parameters[t].coefficients[1,1] * exp(ω[1]) * JuMP.fix_value(inflow[1].in) + ar_process.parameters[t].coefficients[1,2] * exp(ω[1]), ",")
+                #print(ar_process.parameters[t].coefficients[2,1] * exp(ω[2]) * JuMP.fix_value(inflow[2].in) + ar_process.parameters[t].coefficients[2,2] * exp(ω[2]), ",")
+                #print(ar_process.parameters[t].coefficients[3,1] * exp(ω[3]) * JuMP.fix_value(inflow[3].in) + ar_process.parameters[t].coefficients[3,2] * exp(ω[3]), ",")
+                #print(ar_process.parameters[t].coefficients[4,1] * exp(ω[4]) * JuMP.fix_value(inflow[4].in) + ar_process.parameters[t].coefficients[4,2] * exp(ω[4]), ",")
+                #println()
             end
         end
 
@@ -390,14 +399,14 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 20 #120
-    number_of_realizations = 10 #100
+    number_of_stages = 120 #120
+    number_of_realizations = 100 #100
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################

@@ -1,0 +1,60 @@
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 11901
+  state variables : 4
+  scenarios       : 6.68857e+229
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                             : [142, 142]
+  AffExpr in MOI.EqualTo{Float64}         : [13, 13]
+  VariableRef in MOI.GreaterThan{Float64} : [138, 138]
+  VariableRef in MOI.LessThan{Float64}    : [129, 130]
+numerical stability report
+  matrix range     [1e+00, 1e+00]
+  objective range  [2e-04, 6e+03]
+  bounds range     [7e-01, 1e+08]
+  rhs range        [1e+03, 2e+05]
+WARNING: numerical stability issues detected
+  - bounds range contains large coefficients
+Very large or small absolute values of coefficients
+can cause numerical stability issues. Consider
+reformulating the model.
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+         SDDP.jl (c) Oscar Dowson and contributors, 2017-23
+-------------------------------------------------------------------
+problem
+  nodes           : 11901
+  state variables : 4
+  scenarios       : 6.68857e+229
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                             : [142, 142]
+  AffExpr in MOI.EqualTo{Float64}         : [13, 13]
+  VariableRef in MOI.GreaterThan{Float64} : [138, 138]
+  VariableRef in MOI.LessThan{Float64}    : [129, 130]
+numerical stability report
+  matrix range     [1e+00, 1e+00]
+  objective range  [2e-04, 6e+03]
+  bounds range     [7e-01, 1e+08]
+  rhs range        [1e+03, 2e+05]
+WARNING: numerical stability issues detected
+  - bounds range contains large coefficients
+Very large or small absolute values of coefficients
+can cause numerical stability issues. Consider
+reformulating the model.
+-------------------------------------------------------------------
+ iteration    simulation      bound        time (s)     solves  pid
+-------------------------------------------------------------------

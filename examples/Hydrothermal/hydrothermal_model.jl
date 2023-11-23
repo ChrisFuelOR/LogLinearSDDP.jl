@@ -163,13 +163,14 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
     curtailment_ratio = [0.05, 0.05, 0.1, 0.8]
     deficit_cost = [1142.8, 2465.4, 5152.46, 5845.54]
-    annual_discount_rate = 1-0.12
+    # annual_discount_rate = 1-0.12
+    monthly_discount_rate = 0.9906
 
     #exchange capacity from sytem k to l in MWmonth
-    exchange_cap = [99999999.0 7379.0 1000.0 0.0 4000.0; 5625.0 99999999.0 0.0 0.0 0.0; 600.0 0.0 99999999.0 0.0 2236.0; 0.0 0.0 0.0 99999999.0 99999999.0; 3154.0 0.0 3951.0 3053.0 99999999.0]
+    exchange_cap = [0.0 7379.0 1000.0 0.0 4000.0; 5625.0 0.0 0.0 0.0 0.0; 600.0 0.0 0.0 0.0 2236.0; 0.0 0.0 0.0 0.0 99999999.0; 3154.0 0.0 3951.0 3053.0 0.0]
 
     #exchange penalties for exchange from system k to l in %?
-    exchange_pen = [0 0.001 0.001 0.001 0.0005; 0.001 0 0.001 0.001 0.0005; 0.001 0.001 0.0 0.001 0.0005; 0.001 0.001 0.001 0.0 0.0005; 0.0005 0.0005 0.0005 0.0005 0.0]
+    exchange_pen = [0.0 0.001 0.001 0.001 0.0005; 0.001 0.0 0.001 0.001 0.0005; 0.001 0.001 0.0 0.001 0.0005; 0.001 0.001 0.001 0.0 0.0005; 0.0005 0.0005 0.0005 0.0005 0.0]
 
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
@@ -186,10 +187,10 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         JuMP.@variable(subproblem, gen[j in 1:num_of_gen], lower_bound = generators[j].min_gen, upper_bound = generators[j].max_gen)
         JuMP.@variable(subproblem, exchange[k in 1:num_of_sys, l in 1:num_of_sys], lower_bound = 0.0, upper_bound = exchange_cap[k,l])
         JuMP.@variable(subproblem, deficit[k in 1:num_of_sys])
-
+       
         # Load curtailment modeling
+        JuMP.fix(deficit[5], 0.0) # no curtailment for system 5
         JuMP.@variable(subproblem, deficit_part[k in 1:num_of_sys, i=1:4], lower_bound = 0.0, upper_bound = curtailment_ratio[i] * demand[t,Symbol(k)])        
-        JuMP.@constraint(subproblem, deficit_sum[k in 1:num_of_sys], deficit[k] == sum(deficit_part[k,i] for i in 1:4))
     
         """ The deficit (load curtailment) costs are piecewise linear convex, i.e., they increase with the amount of load curtailment.
         We model this by splitting the whole deficit variable "deficit" into four parts "deficit_part" with different cost coefficients.
@@ -201,11 +202,10 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         coupling_ref = JuMP.@constraint(subproblem, hydro_balance[k in 1:num_of_res], level[k].out == level[k].in + inflow[k] - hydro_gen[k] - spillage[k])
 
         # Load balance
-        JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + deficit[k] + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
+        JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_part[k,i] for i in 1:4) + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
 
         # Objective function
-        SDDP.@stageobjective(subproblem, (annual_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) for k in 1:num_of_sys))
-        #SDDP.@stageobjective(subproblem, (annual_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) + sum(exchange_pen[k,l] * exchange[k,l] for l in 1:num_of_sys) for k in 1:num_of_sys))
+        SDDP.@stageobjective(subproblem, (monthly_discount_rate)^(t-1) * sum(sum(generators[j].cost * gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_cost[i] * deficit_part[k,i] for i in 1:4) + sum(exchange_pen[k,l] * exchange[k,l] for l in 1:num_of_sys) for k in 1:num_of_sys))
 
         # Parameterize inflow and demand
         if t == 1
@@ -227,6 +227,8 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             JuMP.fix(inflow[2], ω[2])
             JuMP.fix(inflow[3], ω[3])
             JuMP.fix(inflow[4], ω[4])
+
+            #println(ω[1], ",", ω[2], ",", ω[3], ",", ω[4])
         end
     end
 
