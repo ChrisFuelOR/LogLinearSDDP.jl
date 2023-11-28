@@ -124,7 +124,7 @@ end
 
 
 function _add_average_cut(
-    node::SDDP.Node,
+    node::SDDP.Node{T},
     outgoing_state::Dict{Symbol,Float64},
     risk_adjusted_probability::Vector{Float64},
     objective_realizations::Vector{Float64}, #actually not required
@@ -132,7 +132,8 @@ function _add_average_cut(
     offset::Float64,
     intercept_factors::Vector{Array{Float64,2}},
     stochastic_intercepts_tight::Vector{Float64},
-)
+) where{T}
+
     N = length(risk_adjusted_probability)
     @assert N == length(objective_realizations) == length(dual_variables) == length(intercept_factors)
 

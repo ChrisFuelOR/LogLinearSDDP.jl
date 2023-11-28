@@ -281,7 +281,7 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
 end
 
 """ Reads stored model data."""
-function read_model_linear(file_name)
+function read_model_linear(file_name::String)
     f = open(file_name)
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
@@ -290,7 +290,7 @@ function read_model_linear(file_name)
 end
 
 """ Reads stored model data."""
-function read_model(file_name)
+function read_model(file_name::String)
     f = open(file_name)
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    

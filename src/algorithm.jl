@@ -44,9 +44,9 @@ For log-linear AR processes, this includes the adaptation of
 the existing cuts to the scenario at hand.
 """
 function parameterize(
-    node::SDDP.Node, 
+    node::SDDP.Node{T} 
     noise_term
-)
+) where {T}
     node.parameterize(noise_term)
     set_objective(node)
     

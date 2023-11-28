@@ -237,7 +237,7 @@ end
 
 
 """ Reads stored model data."""
-function read_model(file_name)
+function read_model(file_name::String)
     f = open(file_name)
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    

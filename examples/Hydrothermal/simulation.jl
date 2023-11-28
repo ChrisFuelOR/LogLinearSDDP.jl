@@ -1,6 +1,6 @@
 import Distributions
 
-function read_model_std(file_name)
+function read_model_std(file_name::String)
     if startswith(file_name, "Linearized")
         df = read_model_linear(file_name)
     else

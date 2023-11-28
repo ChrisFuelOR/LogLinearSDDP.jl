@@ -77,7 +77,7 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 end
 
 
-function _relax_integrality(node::SDDP.Node)
+function _relax_integrality(node::SDDP.Node{T}) where{T}
     if !node.has_integrality
         return () -> nothing
     end
@@ -92,17 +92,20 @@ end
 
 function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
 
-    factors = zeros(T-(t-1),L)
+    cut_factors = Array{Float64,2}(undef, T-(t-1), L)
+
+    #zeros(T-(t-1),L)
 
     for cut in node.bellman_function.global_theta.cuts
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
+        cut_factors += JuMP.dual(cut.constraint_ref) * cut.intercept_factors
     end
 
-    return factors
+    return cut_factors
 end
 
-function get_alphas(node::SDDP.Node)
+
+function get_alphas(node::SDDP.Node{T}) where{T}
 
     # We also need the dual variables for all coupling constraints.
     # In order to identify the coupling constraints, we should specify them in the problem definition.
@@ -114,9 +117,9 @@ function get_alphas(node::SDDP.Node)
     ar_process_stage = ar_process.parameters[t]    
     L = get_max_dimension(ar_process)
     L_t = ar_process_stage.dimension
-    α = Array{Float64,2}(undef, T-t+1, L)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
+    α = Array{Float64,2}(undef, T-t+1, L)
 
     # Get cut constraint duals and compute first factor
     if t < T

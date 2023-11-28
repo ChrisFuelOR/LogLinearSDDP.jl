@@ -146,7 +146,7 @@ This is mainly used for logging purposes.
 struct ProblemParams
     number_of_stages::Int64
     number_of_realizations::Int64
-    tree_seed::Union{Nothing,Int}
+    tree_seed::Union{Nothing,Int64}
 
     function ProblemParams(
         number_of_stages,
@@ -211,7 +211,7 @@ mutable struct AlgoParams
     numerical_focus::Bool
     silent::Bool
     infiltrate_state::Symbol
-    forward_pass_seed::Union{Nothing,Int}
+    forward_pass_seed::Union{Nothing,Int64}
     run_description::String
     solver_approach::Union{LogLinearSDDP.GAMS_Solver,LogLinearSDDP.Direct_Solver} # Direct_Solver ≠ Direct mode for solve
 
@@ -279,7 +279,7 @@ struct AutoregressiveProcessStage
     dimension::Int64
     intercept::Vector{Float64}
     coefficients::Array{Float64,3}
-    psi::Vector{Any}
+    psi::Vector{Float64}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 
