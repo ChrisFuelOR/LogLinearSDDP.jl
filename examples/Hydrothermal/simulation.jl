@@ -53,11 +53,23 @@ function get_out_of_sample_realizations(number_of_realizations::Int64, t::Int64,
 end
 
 
-function get_out_of_sample_realizations_loglinear(number_of_realizations::Int64, t::Int64)
-    return get_out_of_sample_realizations(number_of_realizations, t, ["AutoregressivePreparation/model_SE.txt", "AutoregressivePreparation/model_S.txt", "AutoregressivePreparation/model_NE.txt", "AutoregressivePreparation/model_N.txt"])
+function get_out_of_sample_realizations_loglinear(number_of_realizations::Int64, t::Int64, model_directory::String)
+    model_directory = "AutoregressivePreparation" * model_directory
+
+    return get_out_of_sample_realizations(
+        number_of_realizations, 
+        t, 
+        [model_directory * "/model_SE.txt", model_directory * "/model_S.txt", model_directory * "/model_NE.txt", model_directory * "/model_N.txt"]
+    )
 end
 
 
-function get_out_of_sample_realizations_linear(number_of_realizations::Int64, t::Int64)
-    return get_out_of_sample_realizations(number_of_realizations, t, ["LinearizedAutoregressivePreparation/model_lin_SE.txt", "LinearizedAutoregressivePreparation/model_lin_S.txt", "LinearizedAutoregressivePreparation/model_lin_NE.txt", "LinearizedAutoregressivePreparation/model_lin_N.txt"])
+function get_out_of_sample_realizations_linear(number_of_realizations::Int64, t::Int64, model_directory::String)
+    model_directory = "LinearizedAutoregressivePreparation" * model_directory
+
+    return get_out_of_sample_realizations(
+        number_of_realizations, 
+        t, 
+        [model_directory * "/model_lin_SE.txt", model_directory * "/model_lin_S.txt", model_directory * "/model_lin_NE.txt", model_directory * "/model_lin_N.txt"]
+    )
 end

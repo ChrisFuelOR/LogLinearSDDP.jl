@@ -141,6 +141,7 @@ function print_parameters(io,
 
     println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
     println(io, "AUTOREGRESSIVE PROCESS DESCRIPTION")
+    println(io, "Model approach: ", algo_params.model_approach)
     println(io, "Lag order: ", ar_process.lag_order)
     println(io, "Max dimension of noises: ", LogLinearSDDP.get_max_dimension(ar_process))
     println(io)

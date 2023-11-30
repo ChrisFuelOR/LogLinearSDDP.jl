@@ -246,8 +246,8 @@ function read_model(file_name)
 end
 
 """ Read stored realization data."""
-function read_realization_data()
-    f = open("AutoregressivePreparation/scenarios_nonlinear.txt")
+function read_realization_data(model_directory::String)
+    f = open("AutoregressivePreparation/" * model_directory * "/scenarios_nonlinear.txt")
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Stage", "Realization_number", "Probability", "Realization_SE", "Realization_S", "Realization_NE", "Realization_N"])    
     close(f)
@@ -269,30 +269,30 @@ function get_realization_data(eta_df::DataFrames.DataFrame, t::Int64, number_of_
 end
 
 """ Read stored history data for the process."""
-function read_history_data()
-    f = open("AutoregressivePreparation/history_nonlinear.txt")
+function read_history_data(model_directory::String)
+    f = open("AutoregressivePreparation/" * model_directory * "/history_nonlinear.txt")
     df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(df, ["Stage", "History_SE", "History_S", "History_NE", "History_N"])    
     close(f)
     return df
 end
 
-function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
+function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String)
 
     # AUTOREGRESSIVE PROCESS
     ###########################################################################################################
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
     # Read AR model data for all four reservoir systems
-    data_SE = read_model("AutoregressivePreparation/model_SE.txt")
-    data_S = read_model("AutoregressivePreparation/model_S.txt")
-    data_NE = read_model("AutoregressivePreparation/model_NE.txt")
-    data_N = read_model("AutoregressivePreparation/model_N.txt")
+    data_SE = read_model("AutoregressivePreparation/" * model_directory * "/model_SE.txt")
+    data_S = read_model("AutoregressivePreparation/" * model_directory * "/model_S.txt")
+    data_NE = read_model("AutoregressivePreparation/" * model_directory * "/model_NE.txt")
+    data_N = read_model("AutoregressivePreparation/" * model_directory * "/model_N.txt")
     data = [data_SE, data_S, data_NE, data_N]
     dim = 4 # number of hydro reservoirs
 
     # Read realization data
-    eta_df = read_realization_data()
+    eta_df = read_realization_data(model_directory)
 
     # Get max lag order (which is used as constant lag order for the process)
     lag_order = 0
@@ -311,7 +311,7 @@ function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
     ar_history = Dict{Int64,Any}()
     
     # Read history data and store in AR history
-    history_data = read_history_data()
+    history_data = read_history_data(model_directory)
     for t in -11:1
         row = t+12
         ar_history[t] = [history_data[row,"History_SE"], history_data[row,"History_S"], history_data[row,"History_NE"], history_data[row,"History_N"]]
@@ -357,6 +357,7 @@ function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64)
     
     # All stages
     ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+    Infiltrator.@infiltrate
 
     return ar_process
 end
@@ -368,21 +369,21 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120 #120
     number_of_realizations = 100 #100
+    model_approach = :bic_model
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(30)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    ar_process = get_ar_process(number_of_stages, number_of_realizations)
+    ar_process = get_ar_process(number_of_stages, number_of_realizations, String(model_approach))
     model = model_definition(ar_process, problem_params, algo_params)
     
-    Random.seed!(algo_params.forward_pass_seed)
-
     # Train model
+    Random.seed!(algo_params.forward_pass_seed)
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
     # SIMULATION
@@ -392,14 +393,15 @@ function model_and_train()
 
     # (2) Out-of-sample simulation using the nonlinear process
     sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage)
+        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
     end
     simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
     LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
 
     # (3) Out-of-sample simulation using the linear process
+    # model_approach_lin = :TODO
     # sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage)
+    #     return get_out_of_sample_realizations_linear(number_of_realizations, stage, String(model_approach_lin))
     # end
     # simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
     # LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_linear)

@@ -214,6 +214,7 @@ mutable struct AlgoParams
     forward_pass_seed::Union{Nothing,Int}
     run_description::String
     solver_approach::Union{LogLinearSDDP.GAMS_Solver,LogLinearSDDP.Direct_Solver} # Direct_Solver ≠ Direct mode for solve
+    model_approach::Symbol
 
     function AlgoParams(;
         stopping_rules = [SDDP.IterationLimit(100)],
@@ -228,6 +229,7 @@ mutable struct AlgoParams
         forward_pass_seed = nothing,
         run_description = "",
         solver_approach = LogLinearSDDP.Direct_Solver(), #TODO
+        model_approach = :fitted_model,
     )
         return new(
             stopping_rules,
@@ -241,7 +243,8 @@ mutable struct AlgoParams
             infiltrate_state,
             forward_pass_seed,
             run_description,
-            solver_approach
+            solver_approach,
+            model_approach,
         )
     end
 end

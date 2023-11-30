@@ -150,31 +150,6 @@ function get_alphas(node::SDDP.Node)
 
     return α
 
-    # α_alt = ones(T-t+1, L)
-
-    # L_t = ar_process.parameters[t].dimension
-    # for ℓ in 1:L_t
-    #     # Get coupling constraint reference
-    #     coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
-    #     μ = JuMP.dual(coupling_ref)
-
-    #     # Compute alpha value
-    #     α_alt[1,ℓ] = α_alt[1,ℓ] * μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
-    # end
-
-    # if t < T
-    #     TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-    #         cut_factors = get_existing_cuts_factors(node, t+1, T, L)
-    #     end
-
-    #     cut_exponents_required = model.ext[:cut_exponents][t+1]
-
-    #     # Compute alpha value
-    #     α_alt[2:T-t+1,:] = cut_factors .* transpose(.*([exp.(ar_process_stage.intercept[ν] * transpose(cut_exponents_required[t+1:T,:,ν,1])) .* exp.(current_independent_noise_term .* transpose(cut_exponents_required[t+1:T,:,ν,1]) .* ar_process_stage.psi) for ν in 1:L_t]...))
-
-    # end
-
-    # return α_alt
 end
 
 duality_log_key(::ContinuousConicDuality) = " "
