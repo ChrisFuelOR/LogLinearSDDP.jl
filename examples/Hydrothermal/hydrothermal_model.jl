@@ -347,17 +347,17 @@ function get_ar_process(number_of_stages::Int64, number_of_realizations::Int64, 
 
             # Get psi
             push!(psi, df[month, "Psi"])
+
+            # Get eta data        
+            eta = get_realization_data(eta_df, t, number_of_realizations)
+
+            ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta, psi = psi)
+
         end
-
-        # Get eta data        
-        eta = get_realization_data(eta_df, t, number_of_realizations)
-
-        ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta, psi = psi)
     end
     
     # All stages
     ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
-    Infiltrator.@infiltrate
 
     return ar_process
 end
@@ -375,7 +375,7 @@ function model_and_train()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(30)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################

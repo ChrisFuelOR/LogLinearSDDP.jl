@@ -138,7 +138,7 @@ function prepare_ar_model()
     # PARAMETER CONFIGURATION
     training_test_split = true
     detrending_with_sigma = true
-    identification_method = :custom
+    identification_method = :bic
     with_plots = false
 
     # FILE PATH COMPONENTS
@@ -205,7 +205,7 @@ function prepare_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios(df, all_monthly_models, [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]], 200, detrending_with_sigma, with_plots)
+        generate_full_scenarios(system_number, df, all_monthly_models, [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]], 200, detrending_with_sigma, with_plots)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################

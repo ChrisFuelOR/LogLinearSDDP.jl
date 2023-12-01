@@ -6,10 +6,12 @@ function detrending_plots(df::DataFrames.DataFrame, residuals::DataFrames.DataFr
     Plots.display(ts_plot)
     
     # Compare distribution of monthly data before and after deseasonalization (box-plots)
-    bx_plot_1 = StatsPlots.@df df StatsPlots.boxplot(cols(), legend=false, xticks=1:12)
-    bx_plot_2 = StatsPlots.@df residuals StatsPlots.boxplot(cols(), legend=false, xticks=1:12)
+    bx_plot_1 = StatsPlots.@df df StatsPlots.boxplot(cols(), legend=false, xticks=1:12, tickfont = (11, :black))
+    bx_plot_2 = StatsPlots.@df residuals StatsPlots.boxplot(cols(), legend=false, xticks=1:12, tickfont = (11, :black))
     Plots.display(bx_plot_1)
     Plots.display(bx_plot_2)
+    Plots.savefig(bx_plot_1, "Box_plot_bf_detrend.pdf")
+    Plots.savefig(bx_plot_2, "Box_plot_af_detrend.pdf")
 
     return
 end
@@ -73,34 +75,39 @@ function plot_forecasts(df::DataFrames.DataFrame)
 
     plot_fc_3 = Plots.plot(df[:,:orig],legend=false, color=:blue)
     Plots.plot!(df[:,:fc_orig],color=:red, lw=2)
-    Plots.plot!(df[:,:fc_orig_corr],color=:green, lw=2)
+    # Plots.plot!(df[:,:fc_orig_corr],color=:green, lw=2)
     Plots.display(plot_fc_3)
 
     return
 end
 
+
 """ Making box-plot and scatter diagrams for the mean and std of the original historical data
 vs the artificial scenario data on a monthly level."""
 function plot_scenario_statistics(
+    system_number::Int64,
     all_means::DataFrames.DataFrame,
     all_stds::DataFrames.DataFrame,
     df::DataFrames.DataFrame
     )
 
-    bx_plot_mean = StatsPlots.@df all_means StatsPlots.boxplot(cols(), legend=false, xticks=1:12)
+    bx_plot_mean = StatsPlots.@df all_means StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,80000))
     for col_name in names(df)
         Plots.scatter!([parse(Int, col_name)], [Statistics.mean(df[:,col_name])], color = "black", label = "", markersize = 5, markershape = :x)
     end
     Plots.display(bx_plot_mean)
+    Plots.savefig(bx_plot_mean, "Box_plot_mean_" * string(system_number) * ".pdf")
 
-    bx_plot_std = StatsPlots.@df all_stds StatsPlots.boxplot(cols(), legend=false, xticks=1:12)
+    bx_plot_std = StatsPlots.@df all_stds StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,30000))
     for col_name in names(df)
         Plots.scatter!([parse(Int, col_name)], [Statistics.std(df[:,col_name])], color = "black", label = "", markersize = 5, markershape = :x)
     end
     Plots.display(bx_plot_std)
+    Plots.savefig(bx_plot_std, "Box_plot_std_" * string(system_number) * ".pdf")
 
     return
 end
+
 
 """ Making a q-q-plot for comparison of the yearly means in the original historical time series
 and the artificially generated scenario data."""

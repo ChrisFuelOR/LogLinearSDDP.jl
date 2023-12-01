@@ -260,13 +260,6 @@ function model_definition(ar_process::AutoregressiveProcess, problem_params::Log
                 JuMP.set_normalized_coefficient(inflow_model[2], inflow[2].in, -ar_process.parameters[t].coefficients[2,1] * exp(ω[2]))
                 JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process.parameters[t].coefficients[3,1] * exp(ω[3]))
                 JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process.parameters[t].coefficients[4,1] * exp(ω[4]))
-
-                #print(t, ",")
-                #print(ar_process.parameters[t].coefficients[1,1] * exp(ω[1]) * JuMP.fix_value(inflow[1].in) + ar_process.parameters[t].coefficients[1,2] * exp(ω[1]), ",")
-                #print(ar_process.parameters[t].coefficients[2,1] * exp(ω[2]) * JuMP.fix_value(inflow[2].in) + ar_process.parameters[t].coefficients[2,2] * exp(ω[2]), ",")
-                #print(ar_process.parameters[t].coefficients[3,1] * exp(ω[3]) * JuMP.fix_value(inflow[3].in) + ar_process.parameters[t].coefficients[3,2] * exp(ω[3]), ",")
-                #print(ar_process.parameters[t].coefficients[4,1] * exp(ω[4]) * JuMP.fix_value(inflow[4].in) + ar_process.parameters[t].coefficients[4,2] * exp(ω[4]), ",")
-                #println()
             end
         end
 
@@ -401,6 +394,7 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120 #120
     number_of_realizations = 100 #100
+    model_approach = :fitted_model
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
@@ -410,7 +404,7 @@ function model_and_train()
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    ar_process = get_ar_process(number_of_stages, number_of_realizations, :fitted)
+    ar_process = get_ar_process(number_of_stages, number_of_realizations, model_approach)
     model = model_definition(ar_process, problem_params, algo_params)
     
     Random.seed!(algo_params.forward_pass_seed)
