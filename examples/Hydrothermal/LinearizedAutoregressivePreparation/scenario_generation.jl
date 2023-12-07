@@ -102,7 +102,6 @@ function history_generation(model_directory::String)
         for ℓ in 1:4         
             if t == 1
                 # Get model data for current month and system
-                lag_order = models[ℓ][month, "Lag_order"]
                 current_coefficients = models[ℓ][month, "Corr_coefficients"]
                 sigma = models[ℓ][month, "Sigma"]
 
@@ -143,4 +142,4 @@ function scenario_and_history_generation(number_of_realizations::Int64, number_o
     return ar_history
 end
 
-scenario_and_history_generation(100, 120, 11111, "fitted_model.txt")
+scenario_and_history_generation(100, 120, 11111, "fitted_model")

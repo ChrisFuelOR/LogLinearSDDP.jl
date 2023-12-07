@@ -156,4 +156,4 @@ function scenario_and_history_generation(number_of_realizations::Int64, number_o
 end
 
 
-scenario_and_history_generation(100, 120, 11111, "custom_model")
+scenario_and_history_generation(100, 120, 11111, "bic_model")

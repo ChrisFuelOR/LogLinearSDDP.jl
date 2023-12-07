@@ -45,7 +45,7 @@ Among others, this model was analyzed in
 The data for this problem was provided by Nils Löhndorf.
 """
 
-function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams)
+function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, problem_params::LogLinearSDDP.ProblemParams, algo_params::LogLinearSDDP.AlgoParams, f::Any)
 
     demand = CSV.read("demand.csv", DataFrames.DataFrame, header=false, delim=";")
     DataFrames.rename!(demand, [:t, Symbol(1), Symbol(2), Symbol(3), Symbol(4), Symbol(5)])
@@ -228,7 +228,11 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             JuMP.fix(inflow[3], ω[3])
             JuMP.fix(inflow[4], ω[4])
 
-            #println(ω[1], ",", ω[2], ",", ω[3], ",", ω[4])
+            print(f, t, "; ")
+            for i in 1:4
+                print(f, round(ω[i], digits = 2), ";")
+            end
+            println(f)
         end
     end
 
@@ -379,8 +383,9 @@ function model_and_train()
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
+    f = open("inflows.txt", "w")
     ar_process = get_ar_process(number_of_stages, number_of_realizations, String(model_approach))
-    model = model_definition(ar_process, problem_params, algo_params)
+    model = model_definition(ar_process, problem_params, algo_params, f)
     
     # Train model
     Random.seed!(algo_params.forward_pass_seed)
@@ -389,14 +394,14 @@ function model_and_train()
     # SIMULATION
     ###########################################################################################################
     # (1) In-sample simulation
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, algo_params.simulation_regime)
+    #LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, algo_params.simulation_regime)
 
     # (2) Out-of-sample simulation using the nonlinear process
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
+    #sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #    return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
+    #end
+    #simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
+    #LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, simulation_loglinear)
 
     # (3) Out-of-sample simulation using the linear process
     # model_approach_lin = :TODO

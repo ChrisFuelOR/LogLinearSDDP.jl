@@ -115,7 +115,7 @@ function model_output_given_model(
         println()  
 
         # Output to file
-        println(f, month, ";", lag_order, ";", coefficient, ";", coefficient_corrected, ";", sigma_matrix)
+        println(f, month, ";", lag_order, ";", coefficient, ";", coefficient_corrected, ";", Inf)
 
     end
 
@@ -237,7 +237,7 @@ function generate_full_scenarios_given_model(
 
             # Compute predicted value using the AR model
             if row <= length(starting_value)
-                prediction = starting_value[row] * Random.rand()
+                prediction = starting_value[row] #* Random.rand()
             else
                 prediction = exp(μ) + coef * exp(μ - μ_lag) * (df[row-lag_order, :fc_orig] - exp(μ_lag))
             end
@@ -285,7 +285,7 @@ function validate_ar_model()
 
     # PARAMETER CONFIGURATION
     training_test_split = true
-    with_plots = true
+    with_plots = false
     
     # FILE PATH COMPONENTS
     directory_name = "historical_data"
