@@ -266,9 +266,9 @@ function model_and_train()
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
+    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(5)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -302,7 +302,7 @@ function model_and_train()
             return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory)
         end
     end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
     LogLinearSDDP.simulate_linear(model, algo_params, simulation_linear)
 
     # SIMULATION USING A LOGLINEAR PROCESS
@@ -315,7 +315,7 @@ function model_and_train()
     sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
         return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_directory_loglin))
     end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
     
     # Using the sample data and the process data perform a simulation
     cross_simulate_loglinear(model, algo_params, loglin_ar_process, simulation_linear)

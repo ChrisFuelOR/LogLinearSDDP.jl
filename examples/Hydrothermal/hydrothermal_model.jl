@@ -247,13 +247,13 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120 #120
     number_of_realizations = 100 #100
-    model_approach = :bic_model
+    model_approach = :custom_model
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 10)
+    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(2)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -274,7 +274,7 @@ function model_and_train()
     sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
         return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
     end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 10)
+    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
     LogLinearSDDP.simulate_loglinear(model, algo_params, simulation_loglinear)
 
     # SIMULATION USING A LINEAR PROCESS
@@ -291,7 +291,7 @@ function model_and_train()
             return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_lin)
         end
     end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 10)
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
     
     # Using the sample data and the process data perform a simulation
     cross_simulate_linear(model, algo_params, lin_ar_process, simulation_linear)
