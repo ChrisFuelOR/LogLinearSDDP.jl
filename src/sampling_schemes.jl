@@ -157,8 +157,8 @@ struct CompleteSampler <: SDDP.AbstractBackwardSamplingScheme end
 
 function sample_backward_noise_terms(
     ::CompleteSampler, 
-    node::SDDP.Node,
-    ) 
+    node::SDDP.Node{T},
+    ) where{T}
 
     # CHANGES TO SDDP.jl
     ####################################################################################

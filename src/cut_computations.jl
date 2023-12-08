@@ -93,9 +93,9 @@ Evaluation of all cut intrcepts for a given problem and the given scenario (proc
 """
 
 function evaluate_cut_intercepts(
-    node::SDDP.Node,
+    node::SDDP.Node{T},
     noise_term::Union{Float64,Any},
-)
+) where{T}
 
     # Preparation steps
     subproblem = node.subproblem
@@ -203,9 +203,9 @@ Evaluation the cut intercept for the about to be created cut at the state of con
 """
 
 function evaluate_cut_intercept_tight(
-    node::SDDP.Node,
+    node::SDDP.Node{T},
     intercept_factors::Array{Float64,2},
-)
+) where{T}
 
     # Preparation steps
     subproblem = node.subproblem
