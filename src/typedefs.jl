@@ -39,6 +39,8 @@ Importantly, this package does not require the user to model an explicit state
 expansion for the given problem to take the history of the AR process into account.
 Instead, specific nonlinear cut formulas are used to adapt the cut intercept to 
 a scenario at hand.
+
+TODO: Update this later
 """
 
 ################################################################################
