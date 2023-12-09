@@ -151,6 +151,7 @@ end
 """ Generates number_of_scenarios different scenarios/sample paths given the fitted model
 by sampling from Normal distributed error terms."""
 function generate_full_scenarios(
+    system_number::Int64,
     df_original::DataFrames.DataFrame,
     all_monthly_models::Vector{MonthlyModelStorage},
     starting_value::Vector{Float64},
@@ -249,7 +250,7 @@ function generate_full_scenarios(
 
     # Plots if required
     if with_plots
-        plot_scenario_statistics(all_means, all_stds, df_original)
+        plot_scenario_statistics(system_number, all_means, all_stds, df_original)
         plot_yearly_qq(yearly_means, df_original)
     end
 

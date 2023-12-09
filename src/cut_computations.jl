@@ -119,12 +119,13 @@ function evaluate_cut_intercepts(
         end
 
         # Iterate over all cuts and adapt intercept
-        for cut in node.bellman_function.global_theta.cuts
-            intercept_variable = cut.cut_intercept_variable
-            TimerOutputs.@timeit model.timer_output "intercept_value" begin    
-                intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+        TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
+            for cut in node.bellman_function.global_theta.cuts
+                TimerOutputs.@timeit model.timer_output "intercept_value" begin    
+                    intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
+                end
+                JuMP.fix(cut.cut_intercept_variable, intercept_value)
             end
-            JuMP.fix(intercept_variable, intercept_value)
         end
     end
 

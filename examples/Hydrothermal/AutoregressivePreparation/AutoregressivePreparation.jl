@@ -6,11 +6,12 @@ import DataFrames
 import Distributions
 using GLM
 import HypothesisTests
-using Plots; gr()#; pgfplotsx()
+using Plots; gr()#; pgfplotsx() gr()
 import Statistics
 import StatsBase
 import StatsPlots
 import Infiltrator
+import Printf
 
 struct MonthlyModelStorage
     detrending_mean::Float64

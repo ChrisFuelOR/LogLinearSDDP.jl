@@ -6,11 +6,12 @@ import DataFrames
 import Distributions
 using GLM
 import HypothesisTests
-using Plots; gr()#; pgfplotsx()
+using Plots; pgfplotsx()#; pgfplotsx() gr()
 import Statistics
 import StatsBase
 import StatsPlots
 import Infiltrator
+import Printf
 
 struct MonthlyModelStorage
     detrending_mean::Float64
@@ -43,5 +44,6 @@ include("box_jenkins.jl")
 include("periodic_box_jenkins.jl")
 include("forecasting.jl")
 include("ar_model_generation.jl")
+include("validation_given_models.jl")
 
 end

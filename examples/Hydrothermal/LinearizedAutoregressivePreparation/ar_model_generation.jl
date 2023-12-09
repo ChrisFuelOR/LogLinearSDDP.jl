@@ -2,6 +2,52 @@ import Distributions
 import DataFrames
 import Random
 
+""" Writes the output of the model to the REPL and to a txt file.
+Corrects the coefficients so that they fit SDDP before."""
+function model_output(
+    all_monthly_models::Vector{MonthlyModelStorage},
+    std_errors::Vector{Float64},
+    output_file_name::String,
+)
+
+    f = open(output_file_name, "w")
+
+    for month in 1:12
+        # Get model parameters (note that we ignore the very small intercepts here, to stay in accordance with Shapiro et al.)
+        lag_order = all_monthly_models[month].lag_order
+        coefficient = GLM.coef(all_monthly_models[month].fitted_model)[2]
+        std_error = std_errors[month]
+        monthly_mean = all_monthly_models[month].detrending_mean
+
+        # Get lag month and corresponding max_gen
+        lag_month = month - 1 > 0 ? month - 1 : Int(12 - mod((1 - month), 12))
+        lag_mean = all_monthly_models[lag_month].detrending_mean 
+
+        # Compute corrected coefficients for SDDP
+        coefficient_corrected = Vector{Float64}(undef, 2)
+        coefficient_corrected[1] = coefficient * exp(monthly_mean - lag_mean)
+        coefficient_corrected[2] = (1-coefficient) * exp(monthly_mean)
+
+        # Output to console
+        println("Month: ", month)
+        println("Lag order: ", lag_order)
+        println("AR(1) coefficients: ", coefficient)
+        println("Residual standard error: ", std_error)
+        println("-----------------------------------------")  
+        println("Corrected coefficients: ", coefficient_corrected)
+        println()  
+
+        # Output to file
+        println(f, month, ";", lag_order, ";", coefficient, ";", coefficient_corrected, ";", std_error)
+
+    end
+
+    println("#############################################")     
+    close(f)   
+
+end
+
+
 """ Analysis, fitting and validation of the linearized PAR model (with respect to the original data).
 This approach goes back to a paper by Shapiro et al. (2013). The idea is to approximate the true
 nonlinear AR(1) process with a first-order Taylor approximation to obtain a linear AR(1) model,
@@ -35,17 +81,21 @@ function prepare_ar_model()
 
     Random.seed!(12345)
 
-    # Set parameter configuration
+    # PARAMETER CONFIGURATION
     training_test_split = true
     with_plots = false
     
+    # FILE PATH COMPONENTS
+    directory_name = "historical_data"
     file_names = ["hist1.csv", "hist2.csv", "hist3.csv", "hist4.csv"]
     system_names = ["SE", "S", "NE", "N"]
+    output_directory = "fitted_model"
 
+    # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
     for system_number in 1:4
         system_name = system_names[system_number]
-        file_name = file_names[system_number] 
-        output_file_name = "model_lin_" * String(system_name) * ".txt"   
+        file_name = directory_name * "/" * file_names[system_number]
+        output_file_name = output_directory * "/model_lin_" * String(system_name) * ".txt"   
 
         println()
         println("##############################################################################")
@@ -96,51 +146,18 @@ function prepare_ar_model()
         #######################################################################################
         println()
         # In-sample forecasts (on full data, training data, test data)
-        static_point_forecast(all_monthly_models, data_frame_to_vector(train_data_orig), std_errors, with_plots)
-        static_point_forecast(all_monthly_models, data_frame_to_vector(test_data_orig), std_errors, with_plots)
+        static_point_forecast(all_monthly_models, data_frame_to_vector(train_data_orig), with_plots)
+        static_point_forecast(all_monthly_models, data_frame_to_vector(test_data_orig), with_plots)
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios(df, all_monthly_models, [df[1,1], df[1,2], df[1,3], df[1,4], df[1,5], df[1,6], df[1,7], df[1,8], df[1,9], df[1,10]], std_errors, 200, with_plots)
+        generate_full_scenarios(system_number, df, all_monthly_models, [df[1,1]], std_errors, 200, with_plots)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################
         println("Model output for ", file_name)
-        f = open(output_file_name, "w")
+        model_output(all_monthly_models, std_errors, output_file_name)
 
-        for month in 1:12
-            # Get model parameters (note that we ignore the very small intercepts here, to stay in accordance with Shapiro et al.)
-            lag_order = all_monthly_models[month].lag_order
-            coefficient = GLM.coef(all_monthly_models[month].fitted_model)[2]
-            std_error = std_errors[month]
-            monthly_mean = all_monthly_models[month].detrending_mean
-
-            # Get lag month and corresponding max_gen
-            lag_month = month - 1 > 0 ? month - 1 : Int(12 - mod((1 - month), 12))
-            lag_mean = all_monthly_models[lag_month].detrending_mean 
-
-            # Compute corrected coefficients for SDDP
-            coefficient_corrected = Vector{Float64}(undef, 2)
-            coefficient_corrected[1] = coefficient * exp(monthly_mean - lag_mean)
-            coefficient_corrected[2] = (1-coefficient) * exp(monthly_mean)
-    
-            # Output to console
-            println("Month: ", month)
-            println("Lag order: ", lag_order)
-            println("AR(1) coefficients: ", coefficient)
-            println("Residual standard error: ", std_error)
-            println("-----------------------------------------")  
-            println("Corrected coefficients: ", coefficient_corrected)
-            println()  
-
-            # Output to file
-            println(f, month, ";", lag_order, ";", coefficient, ";", coefficient_corrected, ";", std_error)
-
-        end
-
-        println("#############################################")     
-        close(f)   
     end
-
 end
 

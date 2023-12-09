@@ -183,11 +183,10 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_loglinear(model, algo_params, problem_params, simulation_regime.sampling_scheme)
+    simulate_loglinear(model, algo_params, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -196,7 +195,6 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -207,13 +205,13 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
+    number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = simulate(model, algo_params.simulation_regime.number_of_replications)
+    simulations = simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################
@@ -251,11 +249,10 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_linear(model, algo_params, problem_params, simulation_regime.sampling_scheme)
+    simulate_linear(model, algo_params, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -264,7 +261,6 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -275,13 +271,13 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
+    number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = SDDP.simulate(model, algo_params.simulation_regime.number_of_replications)
+    simulations = SDDP.simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################

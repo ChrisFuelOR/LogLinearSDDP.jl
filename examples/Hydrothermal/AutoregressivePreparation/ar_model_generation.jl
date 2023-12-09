@@ -67,24 +67,96 @@ function check_model(
 end
 
 
+""" Writes the output of the model to the REPL and to a txt file.
+Corrects the coefficients so that they fit our SDDP version before.
+
+Note that we use (1) the exponential form of the log-linear process in our version of SDDP and (2) the non-detrended form,
+meaning that the model is formulated with respect to the original dependent variable.
+To apply our fitted model in SDDP, we therefore have to adapt the coefficients appropriately."""
+function model_output(
+    all_monthly_models::Vector{MonthlyModelStorage},
+    df::DataFrames.DataFrame,
+    log_df::DataFrames.DataFrame,
+    detrended_log_df::DataFrames.DataFrame,
+    output_file_name::String,
+)
+ 
+    f = open(output_file_name, "w")
+
+    for month in 1:12
+        # Get model parameters
+        lag_order = all_monthly_models[month].lag_order
+        coefficients = GLM.coef(all_monthly_models[month].fitted_model)
+        residuals = GLM.residuals(all_monthly_models[month].fitted_model)
+        std_error = sqrt(sum(residuals .^2) / (length(residuals) - 2)) 
+        monthly_mean = all_monthly_models[month].detrending_mean
+        monthly_std = all_monthly_models[month].detrending_sigma
+
+        # Compute corrected coefficients for SDDP
+        coefficient_corrected = Vector{Float64}(undef, length(coefficients)-1)
+        for k in 1:lag_order
+            lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
+            coefficient_corrected[k] = coefficients[k+1] * monthly_std / all_monthly_models[lag_month].detrending_sigma
+        end
+
+        intercept_corrected =  monthly_mean + coefficients[1] * monthly_std
+        for k in 1:lag_order
+            lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
+            intercept_corrected -= coefficient_corrected[k] * all_monthly_models[lag_month].detrending_mean
+        end
+        
+        error_factor = all_monthly_models[month].detrending_sigma
+   
+        # Check formulas for intercept, coefficients etc. by comparing model output before and after transformation
+        check_model(df, log_df, detrended_log_df, month, lag_order, coefficients, coefficient_corrected, intercept_corrected, error_factor, monthly_mean, monthly_std, std_error)
+
+        # Output to console
+        println("Month: ", month)
+        println("Lag order: ", lag_order)
+        println("Coefficients: ", coefficients)
+        println("Residual standard error: ", std_error)
+        println("-----------------------------------------")  
+        println("Corrected intercept: ", intercept_corrected)
+        println("Corrected coefficients: ", coefficient_corrected)
+        println("Error term factor: ", error_factor)
+        println()  
+
+        # Output to file
+        println(f, month, ";", lag_order, ";", intercept_corrected, ";", coefficient_corrected, ";", error_factor, ";", std_error)
+    end
+
+    println("#############################################")     
+    close(f)   
+end
+
+
 """ Run analysis, fitting and validation of PAR model."""
 function prepare_ar_model()
 
     Random.seed!(12345)
 
-    # Set parameter configuration
+    # PARAMETER CONFIGURATION
     training_test_split = true
     detrending_with_sigma = true
     identification_method = :bic
     with_plots = false
 
+    # FILE PATH COMPONENTS
+    directory_name = "historical_data"
     file_names = ["hist1.csv", "hist2.csv", "hist3.csv", "hist4.csv"]
     system_names = ["SE", "S", "NE", "N"]
 
+    if identification_method == :bic
+        output_directory = "bic_model"
+    elseif identification_method == :custom
+        output_directory = "custom_model"
+    end
+    
+    # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
     for system_number in 1:4
         system_name = system_names[system_number]
-        file_name = file_names[system_number] 
-        output_file_name = "model_" * String(system_name) * ".txt"   
+        file_name = directory_name * "/" * file_names[system_number] 
+        output_file_name = output_directory * "/model_" * String(system_name) * ".txt"   
 
         println()
         println("##############################################################################")
@@ -133,62 +205,13 @@ function prepare_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios(df, all_monthly_models, [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]], 200, detrending_with_sigma, with_plots)
+        generate_full_scenarios(system_number, df, all_monthly_models, [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]], 200, detrending_with_sigma, with_plots)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################
-        """ Note that we use (1) the exponential form of the log-linear process in our version of SDDP and (2) the non-detrended form,
-        meaning that the model is formulated with respect to the original dependent variable.
-        To apply our fitted model in SDDP, we therefore have to adapt the coefficients appropriately."""
-
         println("Model output for ", file_name)
-        f = open(output_file_name, "w")
+        model_output(all_monthly_models, df, log_df, detrended_log_df, output_file_name)
 
-        for month in 1:12
-            # Get model parameters
-            lag_order = all_monthly_models[month].lag_order
-            coefficients = GLM.coef(all_monthly_models[month].fitted_model)
-            residuals = GLM.residuals(all_monthly_models[month].fitted_model)
-            std_error = sqrt(sum(residuals .^2) / (length(residuals) - 2)) 
-            monthly_mean = all_monthly_models[month].detrending_mean
-            monthly_std = all_monthly_models[month].detrending_sigma
-    
-            # Compute corrected coefficients for SDDP
-            coefficient_corrected = Vector{Float64}(undef, length(coefficients)-1)
-            for k in 1:lag_order
-                lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
-                coefficient_corrected[k] = coefficients[k+1] * monthly_std / all_monthly_models[lag_month].detrending_sigma
-            end
-
-            intercept_corrected =  monthly_mean + coefficients[1] * monthly_std
-            for k in 1:lag_order
-                lag_month = month - k > 0 ? month - k : Int(12 - mod((k - month), 12))
-                intercept_corrected -= coefficient_corrected[k] * all_monthly_models[lag_month].detrending_mean
-            end
-            
-            error_factor = all_monthly_models[month].detrending_sigma
- 
-            # Check formulas for intercept, coefficients etc. by comparing model output before and after transformation
-            check_model(df, log_df, detrended_log_df, month, lag_order, coefficients, coefficient_corrected, intercept_corrected, error_factor, monthly_mean, monthly_std, std_error)
-
-            # Output to console
-            println("Month: ", month)
-            println("Lag order: ", lag_order)
-            println("Coefficients: ", coefficients)
-            println("Residual standard error: ", std_error)
-            println("-----------------------------------------")  
-            println("Corrected intercept: ", intercept_corrected)
-            println("Corrected coefficients: ", coefficient_corrected)
-            println("Error term factor: ", error_factor)
-            println()  
-
-            # Output to file
-            println(f, month, ";", lag_order, ";", intercept_corrected, ";", coefficient_corrected, ";", error_factor, ";", std_error)
-        end
-
-        println("#############################################")     
-        close(f)   
     end
-
 end
 
