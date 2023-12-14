@@ -90,17 +90,114 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
+function compute_factors(dual_value::Float64, intercept_factors::Array{Float64,2})
+
+    return dual_value * intercept_factors
+end
+
 function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
 
     factors = zeros(T-(t-1),L)
 
-    for cut in node.bellman_function.global_theta.cuts
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
-    end
-
+    TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+        for cut in node.bellman_function.global_theta.cuts
+            # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+            TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+                factors = factors + compute_factors(JuMP.dual(cut.constraint_ref), cut.intercept_factors)
+            end
+        end
+    end 
     return factors
 end
+
+
+# function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+#     factors = zeros(T-(t-1),L)
+
+#     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+#         for cut in node.bellman_function.global_theta.cuts
+#             # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#             TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+#                 factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
+#             end
+#         end
+#     end 
+#     return factors
+# end
+
+# function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+#     factors = zeros(T-(t-1),L)
+
+#     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+#         for cut in node.bellman_function.global_theta.cuts
+#             # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#             TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+#                 factors = factors .+ JuMP.dual(cut.constraint_ref) * cut.intercept_factors
+#             end
+#         end
+#     end 
+#     return factors
+# end
+
+# function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+#     factors = zeros(T-(t-1),L)
+
+#     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+#         for cut in node.bellman_function.global_theta.cuts
+#             for ℓ in 1:L
+#                 for τ in 1:T-(t-1)
+#                     # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#                     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+#                         factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ,ℓ]
+#                     end
+#                 end
+#             end
+#         end
+#     end 
+#     return factors
+# end
+
+# function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+#     factors = zeros(T-(t-1),L)
+
+#     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+#         for cut in node.bellman_function.global_theta.cuts
+#             for τ in 1:T-(t-1)
+#                 for ℓ in 1:L
+#                     # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#                     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+#                         factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ,ℓ]
+#                     end
+#                 end
+#             end
+#         end
+#     end 
+#     return factors
+# end
+
+# function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+#     factors = zeros(T-(t-1),L)
+#     cut_refs = JuMP.all_constraints(node.subproblem, JuMP.AffExpr, MOI.GreaterThan{Float64})
+#     cuts = node.bellman_function.global_theta.cuts
+#     dual_values = JuMP.dual.(cut_refs)
+
+#     TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_out" begin
+#         for cut_index in eachindex(node.bellman_function.global_theta.cuts)
+#             # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#             TimerOutputs.@timeit SDDP.get_policy_graph(node.subproblem).timer_output "ecf_step_in" begin
+#                 factors = factors + dual_values[cut_index] * cuts[cut_index].intercept_factors
+#             end
+#         end
+#     end 
+#     return factors
+# end
+
+
 
 function get_alphas(node::SDDP.Node)
 

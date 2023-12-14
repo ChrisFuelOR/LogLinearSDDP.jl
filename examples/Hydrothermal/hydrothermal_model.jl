@@ -245,7 +245,7 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120 #120
+    number_of_stages = 10 #120
     number_of_realizations = 100 #100
     model_approach = :custom_model
     model_approach_alt = :bic_model
@@ -255,7 +255,7 @@ function model_and_train()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -267,47 +267,47 @@ function model_and_train()
     Random.seed!(algo_params.forward_pass_seed)
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
 
-    # SIMULATION USING THE LOG LINEAR PROCESS
-    ###########################################################################################################
-    # In-sample simulation
-    LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach), algo_params.simulation_regime)
+    # # SIMULATION USING THE LOG LINEAR PROCESS
+    # ###########################################################################################################
+    # # In-sample simulation
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach), algo_params.simulation_regime)
 
-    #----------------------------------------------------------------------------------------------------------
-    # Out-of-sample simulation
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach), simulation_loglinear)
+    # #----------------------------------------------------------------------------------------------------------
+    # # Out-of-sample simulation
+    # sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
+    # end
+    # simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach), simulation_loglinear)
 
-    #----------------------------------------------------------------------------------------------------------
-    # Out-of-sample simulation (alternative log-linear model)
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach_alt))
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach_alt), simulation_loglinear)
+    # #----------------------------------------------------------------------------------------------------------
+    # # Out-of-sample simulation (alternative log-linear model)
+    # sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #     return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach_alt))
+    # end
+    # simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
+    # LogLinearSDDP.simulate_loglinear(model, algo_params, String(model_approach_alt), simulation_loglinear)
 
 
-    # SIMULATION USING A LINEAR PROCESS
-    ###########################################################################################################
-    # Get the corresponding process data
-    for model_directory_lin in model_directories_lin
-        lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_lin, "AutoregressivePreparation/" * String(model_approach) * "/history_nonlinear.txt")
+    # # SIMULATION USING A LINEAR PROCESS
+    # ###########################################################################################################
+    # # Get the corresponding process data
+    # for model_directory_lin in model_directories_lin
+    #     lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_lin, "AutoregressivePreparation/" * String(model_approach) * "/history_nonlinear.txt")
 
-        # Create the stagewise independent sample data (realizations) for the simulation
-        sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-            if model_directory_lin in ["msppy_model", "shapiro_model"]
-                return get_out_of_sample_realizations_multivariate_linear(number_of_realizations, stage, model_directory_lin)
-            else
-                return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_lin)
-            end
-        end
-        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
+    #     # Create the stagewise independent sample data (realizations) for the simulation
+    #     sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
+    #         if model_directory_lin in ["msppy_model", "shapiro_model"]
+    #             return get_out_of_sample_realizations_multivariate_linear(number_of_realizations, stage, model_directory_lin)
+    #         else
+    #             return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_lin)
+    #         end
+    #     end
+    #     simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
 
-        # Using the sample data and the process data perform a simulation
-        cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
-    end
+    #     # Using the sample data and the process data perform a simulation
+    #     cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
+    # end
 
     return
 end
