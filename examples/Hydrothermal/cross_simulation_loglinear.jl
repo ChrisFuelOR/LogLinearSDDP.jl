@@ -343,10 +343,11 @@ function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    cross_simulate_loglinear(model, algo_params, loglin_ar_process, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    cross_simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -356,6 +357,7 @@ function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -367,6 +369,7 @@ function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
@@ -387,7 +390,7 @@ function cross_simulate_loglinear(
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound)
+    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     return
 end

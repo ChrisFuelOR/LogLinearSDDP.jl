@@ -183,10 +183,11 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_loglinear(model, algo_params, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    simulate_loglinear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -195,6 +196,7 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -205,6 +207,7 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
@@ -225,7 +228,7 @@ function simulate_loglinear(
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound)
+    log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     return
 end
@@ -235,11 +238,12 @@ function log_simulation_results(
     algo_params::LogLinearSDDP.AlgoParams,
     μ::Float64,
     ci::Float64,
-    lower_bound::Float64
+    lower_bound::Float64,
+    description::String,
 )
 
     log_file_handle = open(algo_params.log_file, "a")
-    LogLinearSDDP.print_helper(LogLinearSDDP.print_simulation, log_file_handle, algo_params, μ, ci, lower_bound)
+    LogLinearSDDP.print_helper(LogLinearSDDP.print_simulation, log_file_handle, algo_params, μ, ci, lower_bound, description)
     close(log_file_handle)
 
     return
@@ -249,10 +253,11 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_linear(model, algo_params, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    simulate_linear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -261,6 +266,7 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -271,6 +277,7 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
@@ -291,7 +298,7 @@ function simulate_linear(
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound)
+    log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     return
 end

@@ -282,10 +282,11 @@ function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     lin_ar_process::LinearAutoregressiveProcess,
+    description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    cross_simulate_linear(model, algo_params, lin_ar_process, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    cross_simulate_linear(model, algo_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -295,6 +296,7 @@ function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     lin_ar_process::LinearAutoregressiveProcess,
+    description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
 
@@ -306,6 +308,7 @@ function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     lin_ar_process::LinearAutoregressiveProcess,
+    description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
     )
@@ -326,7 +329,7 @@ function cross_simulate_linear(
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound)
+    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     return
 end

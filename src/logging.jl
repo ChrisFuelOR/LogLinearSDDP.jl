@@ -255,12 +255,13 @@ function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::A
 end
 
 
-function print_simulation(io, algo_params::LogLinearSDDP.AlgoParams, μ::Float64, ci::Float64, lower_bound::Float64)
+function print_simulation(io, algo_params::LogLinearSDDP.AlgoParams, μ::Float64, ci::Float64, lower_bound::Float64, description::String)
 
     println(io)
     println(io, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
     println(io, "SIMULATION RESULTS")
     println(io, algo_params.simulation_regime)
+    println(io, description)
     println(io, "Lower bound: ", lower_bound)
     println(io, "Statistical upper bound (confidence interval): ", μ, " ± ", ci )
     println(io, "Pessimistic upper bound: ", μ + ci )
