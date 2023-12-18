@@ -25408,3 +25408,60 @@ It.#               LB           Sim.       Gap           Time        It_Time
 18       1.814475e+06   2.029810e+06    0.1061   4.246827e+03   2.424980e+02      828      1     
 19       1.818006e+06   2.107799e+06    0.1375   7.741167e+03   3.494340e+03      874      1     
 20       1.827141e+06   1.782973e+06    0.0242   8.029497e+03   2.883300e+02      920      1     
+
+
+#########################################################################################################################################
+#########################################################################################################################################
+LogLinearSDDP.jl (c) Christian Füllner, 2023
+re-uses code from SDDP.jl (c) Oscar Dowson, 2017-2023
+problem
+  nodes           : 5
+  state variables : 4
+  scenarios       : 1.00000e+04
+  existing cuts   : false
+options
+  solver          : serial mode
+  risk measure    : SDDP.Expectation()
+  sampling scheme : SDDP.InSampleMonteCarlo
+subproblem structure
+  VariableRef                                  : [167, 167]
+  JuMP.AffExpr in MOI.EqualTo{Float64}         : [9, 9]
+  JuMP.VariableRef in MOI.EqualTo{Float64}     : [1, 1]
+  JuMP.VariableRef in MOI.GreaterThan{Float64} : [154, 154]
+  JuMP.VariableRef in MOI.LessThan{Float64}    : [148, 150]
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PATH
+calling 
+c:\Users\cg4102\.julia\dev\LogLinearSDDP\src
+C:\Users\cg4102\.julia\dev\LogLinearSDDP\examples\Hydrothermal\hydrothermal_model.jl
+DATETIME
+2023-12-18T17:21:45.753
+RUN DESCRIPTION
+
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+STOPPING RULES
+SDDP.IterationLimit(100)
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+APPLIED SOLVER
+LogLinearSDDP.AppliedSolver("Gurobi", 0.0001, 300)
+LogLinearSDDP.Direct_Solver()
+Numerical focus: false
+Silent: true
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+SAMPLING
+Used seed for sampling scenarios (in forward pass): 
+11111     
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+PROBLEM DESCRIPTION
+Number of stages: 5
+Number of realizations per stage: 10
+||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+AUTOREGRESSIVE PROCESS DESCRIPTION
+Model approach: custom_model
+Lag order: 1
+Max dimension of noises: 4
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+It.#               LB           Sim.       Gap           Time        It_Time  
+                                                          [%]            [s]          Total        pid  
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
