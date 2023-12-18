@@ -245,8 +245,8 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 10 #120
-    number_of_realizations = 100 #100
+    number_of_stages = 5 #120
+    number_of_realizations = 10 #100
     model_approach = :custom_model
     model_approach_alt = :bic_model
     model_directories_lin = ["fitted_model", "shapiro_model", "msppy_model"]
@@ -255,7 +255,7 @@ function model_and_train()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################

@@ -18,6 +18,7 @@ import Printf
 import Infiltrator
 import Dates
 import Distributed
+import BenchmarkTools
 
 const MOI = MathOptInterface #TODO
 
