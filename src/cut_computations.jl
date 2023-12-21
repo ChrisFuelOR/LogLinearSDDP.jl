@@ -21,30 +21,27 @@ function compute_cut_exponents(
     p = ar_process.lag_order
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
-    
-    #println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
+
     for t in T:-1:2
-        cut_exponents_stage = zeros(T, L, L, p)
+        cut_exponents_stage = zeros(L, L, T, p)
         ar_process_stage = ar_process.parameters[t]
         L_t = ar_process_stage.dimension
 
-        for τ in t:T
+        for k in t-p:t-1
+            if k <= 1
+                L_k = get_max_dimension(ar_process)
+            else
+                L_k = ar_process.parameters[k].dimension
+            end 
 
-            if τ == t
-                for ℓ in 1:L_t
-                    for k in t-p:t-1
-                        if k <= 1
-                            L_k = get_max_dimension(ar_process)
-                        else
-                            L_k = ar_process.parameters[k].dimension
-                        end 
+            for τ in t:T
+                if τ == t
+                    for ℓ in 1:L_t                  
                         for m in 1:L_k
-                            cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
-                            #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
+                            cut_exponents_stage[m,ℓ,τ,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
                         end
                     end
-                end
-                
+                end              
             else
                 L_τ = ar_process.parameters[τ].dimension 
                 for ℓ in 1:L_τ
@@ -61,14 +58,12 @@ function compute_cut_exponents(
                                     value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,p] = value
-                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             else
                                 value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
                                 for ν in 1:L_t
                                     value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,t-k] = value
-                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             end
                         end
                     end
@@ -84,8 +79,6 @@ function compute_cut_exponents(
 
     return cut_exponents
 end
-
-#TODO: If we sum about more values than that, what happens? Are the added values guaranteed to be 0? Does that match the description in the paper?
 
 
 """ 

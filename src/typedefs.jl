@@ -49,14 +49,14 @@ TODO: Update this later
 """
 Struct for storing information related to a cut.
 
-    The argument "coefficients" is the cut slope vector β. It can be computed as the dual vector corresponding
+The argument "coefficients" is the cut slope vector β. It can be computed as the dual vector corresponding
     to copy constraints.
 
 The argument "stochastic_intercept_tight" is the value of the full intercept at the state of construction,
     i.e. where the cut is tight. This is used for checks and to compute other values.
 
 The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
-    but a matrix of intercept factors for each τ=t,...  ,T and each component ℓ of the autoregressive process. 
+    but a matrix of intercept factors for each component ℓ of the autoregressive process and each τ=t,...  ,T. 
     These factors are used to compute (adapt) the intercept of a cut to the scenario at hand.
     This is done by fixing the corresponding cut_intercept_variable.
 
@@ -264,7 +264,7 @@ intercept:      Vector containing the intercepts of the log-linear AR process;
                 one-dimensional with component ℓ;
                 denoted by γ in the paper
 coefficients:   Array containing the coefficients of the log-linear AR process;
-                three-dimensional with components ℓ, m and lag k;
+                three-dimensional with lag k and components m and ℓ;
                 denoted by ϕ in the paper
 psi:            Vector containing the pre-factor for eta in the log-linear AR process;
                 one-dimensional with component ℓ; 

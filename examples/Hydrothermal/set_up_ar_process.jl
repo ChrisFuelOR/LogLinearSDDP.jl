@@ -1,3 +1,5 @@
+import LogLinearSDDP
+
 struct LinearAutoregressiveProcessStage
     dimension::Int64
     coefficients::Array{Float64,2}
@@ -24,6 +26,7 @@ struct LinearAutoregressiveProcess
     parameters::Dict{Int64,LinearAutoregressiveProcessStage}
     history::Vector{Float64}
 end
+
 
 """ Reads stored model data."""
 function read_model(file_name)
@@ -126,7 +129,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
         month = mod(t, 12) > 0 ? mod(t,12) : 12
 
         intercept = Float64[]
-        coefficients = zeros(dim, dim, lag_order)
+        coefficients = zeros(lag_order, dim, dim)
         psi = Float64[]
 
         for ℓ in 1:4
@@ -143,7 +146,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
             current_coefficients = split(current_coefficients, ",")
             for k in eachindex(current_coefficients)
                 coefficient = current_coefficients[k]
-                coefficients[ℓ, ℓ, k] = parse(Float64, coefficient)
+                coefficients[k, ℓ, ℓ] = parse(Float64, coefficient)
             end
 
             # Get psi
