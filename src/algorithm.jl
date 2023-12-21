@@ -157,8 +157,12 @@ function solve_subproblem(
     # Parameterize the model. First, fix the value of the incoming state
     # variables. Then parameterize the model depending on `noise`. Finally,
     # set the objective.
-    SDDP.set_incoming_state(node, state)
-    LogLinearSDDP.parameterize(node, noise_term)
+
+    TimerOutputs.@timeit model.timer_output "problem set-up" begin
+        SDDP.set_incoming_state(node, state)
+        LogLinearSDDP.parameterize(node, noise_term)
+    end
+
     pre_optimize_ret = if node.pre_optimize_hook !== nothing
         node.pre_optimize_hook(
             model,
@@ -192,6 +196,7 @@ function solve_subproblem(
     if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
         SDDP.attempt_numerical_recovery(model, node)
     end
+
     state = SDDP.get_outgoing_state(node)
     stage_objective = SDDP.stage_objective_value(node.stage_objective)
 
@@ -370,19 +375,22 @@ function backward_pass(
                 for (idx, belief) in belief_state
                     current_belief.belief[idx] = belief
                 end
-                new_cuts = refine_bellman_function(
-                    model,
-                    node,
-                    node.bellman_function,
-                    options.risk_measures[node_index],
-                    outgoing_state,
-                    items.duals,
-                    items.supports,
-                    items.probability .* items.belief,
-                    items.objectives,
-                    items.intercept_factors,
-                    items.stochastic_intercepts_tight,
-                )
+
+                TimerOutputs.@timeit model.timer_output "bellman_update" begin
+                    new_cuts = refine_bellman_function(
+                        model,
+                        node,
+                        node.bellman_function,
+                        options.risk_measures[node_index],
+                        outgoing_state,
+                        items.duals,
+                        items.supports,
+                        items.probability .* items.belief,
+                        items.objectives,
+                        items.intercept_factors,
+                        items.stochastic_intercepts_tight,
+                    )
+                end
                 push!(cuts[node_index], new_cuts)
             end
         else

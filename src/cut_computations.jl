@@ -105,6 +105,8 @@ function evaluate_cut_intercepts(
     process_state = node.ext[:process_state]
     autoregressive_data = model.ext[:ar_process]
     t = node.index
+    T = problem_params.number_of_stages  
+    L = LogLinearSDDP.get_max_dimension(autoregressive_data)
 
     if !isempty(node.bellman_function.global_theta.cuts)
         # Get exponents for the considered cut
@@ -114,8 +116,9 @@ function evaluate_cut_intercepts(
         process_state_after_realization = update_process_state(model, t+1, process_state, noise_term)
 
         # First compute scenario-specific factors
+        scenario_factors = ones(T-t, L)
         TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-            scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+            compute_scenario_factors!(t+1, L, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data, scenario_factors)
         end
 
         # Iterate over all cuts and adapt intercept
@@ -140,18 +143,18 @@ Note that this value is the same for all cuts of a given problem for a given sce
 once instead of being included in the _evaluate_cut_intercept function call for each scenario.
 """
 
-function compute_scenario_factors(
+function compute_scenario_factors!(
     t::Int64,
+    L::Int64,
     process_state::Dict{Int64, Any},
     problem_params::LogLinearSDDP.ProblemParams,
     cut_exponents_stage::Array{Float64,4},
     ar_process::LogLinearSDDP.AutoregressiveProcess,
+    scenario_factors::Array{Float64,2},
 )
 
-    T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    T = problem_params.number_of_stages  
     p = ar_process.lag_order
-    scenario_factors = ones(T-(t-1), L)
 
     for k in t-p:t-1
         if k <= 1
@@ -198,6 +201,27 @@ function compute_intercept_value(
 
 end
 
+function compute_intercept_value_tight(
+    t::Int64,
+    T::Int64,
+    scenario_factors::Array{Float64,2},
+    intercept_factors::Array{Float64,2},
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+)
+
+    intercept_value = 0.0
+    for τ in t:T
+        L_τ = ar_process.parameters[τ].dimension
+        for ℓ in 1:L_τ
+            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+        end
+    end
+
+    return intercept_value
+
+end
+
+
 """ 
 Evaluation the cut intercept for the about to be created cut at the state of construction (point of tightness)
 """
@@ -216,6 +240,7 @@ function evaluate_cut_intercept_tight(
     ar_process = model.ext[:ar_process]
     t = node.index
     T = problem_params.number_of_stages
+    L = LogLinearSDDP.get_max_dimension(ar_process)
 
     # Get exponents for the considered cut
     cut_exponents_stage = cut_exponents[t]
@@ -224,17 +249,13 @@ function evaluate_cut_intercept_tight(
     process_state = node.ext[:process_state]
 
     # First compute scenario-specific factors
-    scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+    scenario_factors = ones(T-(t-1), L)
+    TimerOutputs.@timeit model.timer_output "scenario_factors" begin
+        scenario_factors = compute_scenario_factors!(t, L, process_state, problem_params, cut_exponents_stage, ar_process, scenario_factors)
+    end
 
     #Evaluate the stochastic part of the intercept
-    intercept_value = 0.0
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            # intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
-        end
-    end
+    intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
 
     return intercept_value
 end

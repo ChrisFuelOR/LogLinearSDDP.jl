@@ -245,7 +245,7 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120 #120
+    number_of_stages = 100 #120
     number_of_realizations = 100 #100
     model_approach = :custom_model
     model_approach_alt = :bic_model
@@ -258,7 +258,7 @@ function model_and_train()
     log_file = file_path * "LogLinearSDDP.log"
     run_description = ""
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(200)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################

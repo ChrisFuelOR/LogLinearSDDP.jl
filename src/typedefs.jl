@@ -49,10 +49,10 @@ TODO: Update this later
 """
 Struct for storing information related to a cut.
 
-The argument "gradient" is the cut slope vector β. It can be computed as the dual vector corresponding
+    The argument "coefficients" is the cut slope vector β. It can be computed as the dual vector corresponding
     to copy constraints.
 
-The argument "intercept_tight" is the value of the full intercept at the state of construction,
+The argument "stochastic_intercept_tight" is the value of the full intercept at the state of construction,
     i.e. where the cut is tight. This is used for checks and to compute other values.
 
 The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 

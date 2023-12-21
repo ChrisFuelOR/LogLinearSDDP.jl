@@ -71,7 +71,9 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
     end
 
     # Evaluate the "stochastic" part of the intercept for the current noise in the backward pass
-    stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+    TimerOutputs.@timeit model.timer_output "cut_intercept_tight" begin
+        stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+    end
 
     return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight
 end
@@ -90,16 +92,34 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+function get_existing_cuts_factors!(cuts::Vector{LogLinearSDDP.Cut}, factors::Array{Float64,2})
 
-    factors = zeros(T-(t-1),L)
-
-    for cut in node.bellman_function.global_theta.cuts
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
+    for cut in cuts
+        for ℓ in size(factors, 2)
+            for τ in size(factors, 1)
+                # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+                factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ,ℓ]
+            end
+        end
     end
+end
 
-    return factors
+function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    for ℓ in 1:L
+        μ = JuMP.dual(coupling_constraints[ℓ])
+        α[1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
+function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+        end
+    end
 end
 
 function get_alphas(node::SDDP.Node)
@@ -118,36 +138,27 @@ function get_alphas(node::SDDP.Node)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
 
+    # Case τ = t 
+    TimerOutputs.@timeit model.timer_output "alpha_t_new" begin
+        compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+    end     
+
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors(node, t+1, T, L)
+            cut_factors = zeros(T-t,L)
+
+            get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
         end
+        
+        # Case τ > t
+        TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+            compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        end
+        
     end
 
-    for τ in t:T 
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            if τ == t
-                # Get coupling constraint reference
-                coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
-                μ = JuMP.dual(coupling_ref)
-
-                # Compute alpha value
-                α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
-
-            else
-                cut_exponents_required = model.ext[:cut_exponents][t+1]
-
-                # Compute second factor
-                factor = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
-
-                # Compute alpha value
-                α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * factor
-            end
-        end
-    end
-
+    println(α)
     return α
 
 end
