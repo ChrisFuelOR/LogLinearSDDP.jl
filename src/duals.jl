@@ -104,6 +104,17 @@ function get_existing_cuts_factors!(cuts::Vector{LogLinearSDDP.Cut}, factors::Ar
     end
 end
 
+function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
+
+    factors = zeros(T-(t-1),L)
+ 
+    for cut in node.bellman_function.global_theta.cuts
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
+    end
+    return factors
+end
+
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
     for ℓ in 1:L
@@ -146,9 +157,9 @@ function get_alphas(node::SDDP.Node)
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = zeros(T-t,L)
-
-            get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
+            #cut_factors = zeros(T-t,L)
+            # get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
+            cut_factors = get_existing_cuts_factors(node, t, T, L)
         end
         
         # Case τ > t
