@@ -158,7 +158,6 @@ function get_alphas(node::SDDP.Node)
         
     end
 
-    println(α)
     return α
 
 end
