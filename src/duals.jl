@@ -92,17 +92,18 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factors!(cuts::Vector{LogLinearSDDP.Cut}, factors::Array{Float64,2})
+# function get_existing_cuts_factors!(cuts::Vector{LogLinearSDDP.Cut}, factors::Array{Float64,2})
 
-    for cut in cuts
-        for ℓ in size(factors, 2)
-            for τ in size(factors, 1)
-                # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-                factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cut.constraint_ref) * cut.intercept_factors[τ,ℓ]
-            end
-        end
-    end
-end
+#     for cut in cuts
+#         dual_value = JuMP.dual(cut.constraint_ref)
+#         for ℓ in axes(factors, 2)
+#             for τ in axes(factors, 1)
+#                 # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+#                 factors[τ,ℓ] = factors[τ,ℓ] + dual_value * cut.intercept_factors[τ,ℓ]
+#             end
+#         end
+#     end
+# end
 
 function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
 
@@ -114,6 +115,19 @@ function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64
     end
     return factors
 end
+
+function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
 
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
@@ -158,8 +172,9 @@ function get_alphas(node::SDDP.Node)
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
             #cut_factors = zeros(T-t,L)
-            # get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
-            cut_factors = get_existing_cuts_factors(node, t, T, L)
+            #get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
+            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            # cut_factors = get_existing_cuts_factors(node, t+1, T, L)
         end
         
         # Case τ > t
