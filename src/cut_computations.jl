@@ -35,43 +35,34 @@ function compute_cut_exponents(
             end 
 
             for τ in t:T
-                if τ == t
-                    for ℓ in 1:L_t                  
-                        for m in 1:L_k
-                            cut_exponents_stage[m,ℓ,τ,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
+                if τ == T
+                    for m in 1:L_k
+                        for ℓ in 1:L_t
+                            cut_exponents_stage[ℓ,m,τ,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
                         end
                     end
-                end              
-            else
-                L_τ = ar_process.parameters[τ].dimension 
-                for ℓ in 1:L_τ
-                    for k in t-p:t-1
-                        if k <= 1
-                            L_k = get_max_dimension(ar_process)
-                        else
-                            L_k = ar_process.parameters[k].dimension
-                        end
-                        for m in 1:L_k
+                else
+                    L_τ = ar_process.parameters[τ].dimension 
+                    for m in 1:L_k
+                        for ℓ in 1:L_τ
                             if k == t-p
                                 value = 0.0
                                 for ν in 1:L_t
-                                    value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
+                                    value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][ℓ,ν,τ,(t+1)-t]  # ORDER
                                 end
-                                cut_exponents_stage[τ,ℓ,m,p] = value
+                                cut_exponents_stage[ℓ,m,τ,p] = value # ORDER
                             else
-                                value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
+                                value = cut_exponents[t+1][ℓ,m,τ,t+1-k] # ORDER 
                                 for ν in 1:L_t
-                                    value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
+                                    value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][ℓ,ν,τ,(t+1)-t] # ORDER
                                 end
-                                cut_exponents_stage[τ,ℓ,m,t-k] = value
+                                cut_exponents_stage[ℓ,m,τ,t-k] = value
                             end
                         end
                     end
                 end
-                
             end
         end
-
         cut_exponents[t] = cut_exponents_stage
     end
 
