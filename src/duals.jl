@@ -9,6 +9,7 @@
 # Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
+
 struct ContinuousConicDuality <: SDDP.AbstractDualityHandler end
 
 function get_dual_solution(node::SDDP.Node, Nothing)
@@ -128,6 +129,104 @@ function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
     return sum(cut_array)
 end
 
+function get_existing_cuts_factors2b(subproblem::JuMP.Model, cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = MOI.get(JuMP.backend(subproblem), MOI.ConstraintDual(), JuMP.index(cuts[cut_index].constraint_ref)) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors2c(subproblem::JuMP.Model, cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+    dual_values = MOI.get(JuMP.backend(subproblem), MOI.ConstraintDual(), JuMP.index.([cuts[cut_index].constraint_ref for cut_index in eachindex(cuts)]))
+    #JuMP.dual.([cuts[cut_index].constraint_ref for cut_index in eachindex(cuts)])
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = dual_values[cut_index] * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors2d(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+    range_obj = eachindex(cuts)
+
+    LoopVectorization.@turbo for cut_index in range_obj
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors5a(cuts::Vector{LogLinearSDDP.Cut}, t::Int64, T::Int64, L::Int64)
+
+    factors = zeros(T-(t-1),L)
+
+    for i in eachindex(cuts)
+        LoopVectorization.@turbo for ℓ in 1:L
+            for τ in 1:T-(t-1)
+                # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+                factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cuts[i].constraint_ref) * cuts[i].intercept_factors[τ,ℓ]
+            end
+        end
+    end
+    return factors
+end
+
+function get_existing_cuts_factors3!(cuts::Vector{LogLinearSDDP.Cut}, cut_array::Vector{Array{Float64,2}})
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+end
+
+function get_existing_cuts_factorsT1(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    @batch per=thread for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factorsT2(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    @batch per=core for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factorsT3(cuts::Vector{LogLinearSDDP.Cut}, num::Int64)
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    @batch minbatch=num for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
 
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
@@ -172,9 +271,32 @@ function get_alphas(node::SDDP.Node)
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
             #cut_factors = zeros(T-t,L)
+            #cut_array = Vector{Array{Float64,2}}(undef, length(node.bellman_function.global_theta.cuts))
             #get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
-            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            
+            #get_existing_cuts_factors3!(node.bellman_function.global_theta.cuts, cut_array)
             # cut_factors = get_existing_cuts_factors(node, t+1, T, L)
+
+            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            #cut_factors = get_existing_cuts_factors5a(node.bellman_function.global_theta.cuts, t+1, T, L)
+            # cut_factors = get_existing_cuts_factors2b(node.subproblem, node.bellman_function.global_theta.cuts)
+            # cut_factors = get_existing_cuts_factorsT3(node.bellman_function.global_theta.cuts, 30)
+
+            #@time get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            #@time get_existing_cuts_factors4(node.bellman_function.global_theta.cuts)
+                
+            # Infiltrator.@infiltrate
+            #@time get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            #@time get_existing_cuts_factors2b(node.subproblem, node.bellman_function.global_theta.cuts)
+            # @time get_existing_cuts_factors2c(node.subproblem, node.bellman_function.global_theta.cuts)
+            # @time get_existing_cuts_factors2c(node.bellman_function.global_theta.cuts)
+            #@time get_existing_cuts_factorsT1(node.bellman_function.global_theta.cuts)
+            #@time get_existing_cuts_factorsT2(node.bellman_function.global_theta.cuts)
+            #@time get_existing_cuts_factorsT3(node.bellman_function.global_theta.cuts)
+            #BenchmarkTools.@benchmark get_existing_cuts_factors2($node.bellman_function.global_theta.cuts)
+            #BenchmarkTools.@benchmark get_existing_cuts_factorsT1($node.bellman_function.global_theta.cuts)
+            #BenchmarkTools.@benchmark get_existing_cuts_factorsT2($node.bellman_function.global_theta.cuts)
+            #BenchmarkTools.@benchmark get_existing_cuts_factorsT3($node.bellman_function.global_theta.cuts)
         end
         
         # Case τ > t
@@ -187,6 +309,8 @@ function get_alphas(node::SDDP.Node)
     return α
 
 end
+
+
 
 duality_log_key(::ContinuousConicDuality) = " "
 
