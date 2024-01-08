@@ -91,8 +91,6 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
     return _relax_integrality(node)
 end
 
-
-
 # function get_existing_cuts_factors!(cuts::Vector{LogLinearSDDP.Cut}, factors::Array{Float64,2})
 
 #     for cut in cuts
@@ -108,7 +106,7 @@ end
 
 function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
 
-    factors = zeros(T-(t-1),L)
+    factors = zeros(L,T-(t-1))
  
     for cut in node.bellman_function.global_theta.cuts
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
@@ -134,7 +132,7 @@ function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.
 
     for ℓ in 1:L
         μ = JuMP.dual(coupling_constraints[ℓ])
-        α[1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+        α[ℓ,1] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
     end
 end
 
@@ -143,7 +141,7 @@ function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2},
     for τ in t+1:T 
         L_τ = ar_parameters[τ].dimension
         for ℓ in 1:L_τ
-            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+            α[ℓ,τ-t+1] = cut_factors[ℓ,τ-t] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[ν,1,ℓ,τ]) * exp(current_independent_noise_term[ℓ] * cut_exponents[ν,1,ℓ,τ] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
         end
     end
 end
@@ -160,7 +158,7 @@ function get_alphas(node::SDDP.Node)
     ar_process_stage = ar_process.parameters[t]    
     L = get_max_dimension(ar_process)
     L_t = ar_process_stage.dimension
-    α = Array{Float64,2}(undef, T-t+1, L)
+    α = Array{Float64,2}(undef, L, T-t+1)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
 

@@ -264,7 +264,7 @@ intercept:      Vector containing the intercepts of the log-linear AR process;
                 one-dimensional with component ℓ;
                 denoted by γ in the paper
 coefficients:   Array containing the coefficients of the log-linear AR process;
-                three-dimensional with lag k and components m and ℓ;
+                three-dimensional with lag k and components m and ℓ (order m, k, ℓ);
                 denoted by ϕ in the paper
 psi:            Vector containing the pre-factor for eta in the log-linear AR process;
                 one-dimensional with component ℓ; 

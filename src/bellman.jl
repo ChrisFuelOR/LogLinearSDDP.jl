@@ -142,7 +142,7 @@ function _add_average_cut(
     t = node.index+1
     T = model.ext[:problem_params].number_of_stages
     L = model.ext[:ar_process].parameters[t].dimension
-    αᵏ = zeros(T-t+1, L)    
+    αᵏ = zeros(L,T-t+1)    
     
     # Calculate the expected intercept and dual variables with respect to the
     # risk-adjusted probability distribution.
@@ -161,7 +161,7 @@ function _add_average_cut(
         for τ in t:T
             L_τ = model.ext[:ar_process].parameters[τ].dimension
             for ℓ in 1:L_τ
-                αᵏ[τ-t+1,ℓ] += p * intercept_factors[i][τ-t+1,ℓ]
+                αᵏ[ℓ,τ-t+1] += p * intercept_factors[i][ℓ,τ-t+1]
             end
         end
     end

@@ -21,52 +21,66 @@ function compute_cut_exponents(
     p = ar_process.lag_order
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
-
+    
+    #println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
     for t in T:-1:2
-        cut_exponents_stage = zeros(L, L, T, p)
+        cut_exponents_stage = zeros(L, p, L, T)
         ar_process_stage = ar_process.parameters[t]
         L_t = ar_process_stage.dimension
 
-        for k in t-p:t-1
-            if k <= 1
-                L_k = get_max_dimension(ar_process)
-            else
-                L_k = ar_process.parameters[k].dimension
-            end 
+        for τ in t:T
 
-            for τ in t:T
-                if τ == T
-                    for m in 1:L_k
-                        for ℓ in 1:L_t
-                            cut_exponents_stage[ℓ,m,τ,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
+            if τ == t
+                for ℓ in 1:L_t
+                    for k in t-p:t-1
+                        if k <= 1
+                            L_k = get_max_dimension(ar_process)
+                        else
+                            L_k = ar_process.parameters[k].dimension
+                        end 
+                        for m in 1:L_k
+                            cut_exponents_stage[m,t-k,ℓ,τ] = ar_process_stage.coefficients[m,t-k,ℓ]
+                            #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[m,t-k,ℓ,τ])
                         end
                     end
-                else
-                    L_τ = ar_process.parameters[τ].dimension 
-                    for m in 1:L_k
-                        for ℓ in 1:L_τ
+                end
+                
+            else
+                L_τ = ar_process.parameters[τ].dimension 
+                for ℓ in 1:L_τ
+                    for k in t-p:t-1
+                        if k <= 1
+                            L_k = get_max_dimension(ar_process)
+                        else
+                            L_k = ar_process.parameters[k].dimension
+                        end
+                        for m in 1:L_k
                             if k == t-p
                                 value = 0.0
                                 for ν in 1:L_t
-                                    value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][ℓ,ν,τ,(t+1)-t]  # ORDER
+                                    value = value + ar_process_stage.coefficients[m,p,ν] * cut_exponents[t+1][ν,(t+1)-t,ℓ,τ] 
                                 end
-                                cut_exponents_stage[ℓ,m,τ,p] = value # ORDER
+                                cut_exponents_stage[m,p,ℓ,τ] = value
+                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[ν,(t+1)-t,ℓ,τ])
                             else
-                                value = cut_exponents[t+1][ℓ,m,τ,t+1-k] # ORDER 
+                                value = cut_exponents[t+1][m,t+1-k,ℓ,τ]  
                                 for ν in 1:L_t
-                                    value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][ℓ,ν,τ,(t+1)-t] # ORDER
+                                    value = value + ar_process_stage.coefficients[m,t-k,ν] * cut_exponents[t+1][ν,(t+1)-t,ℓ,τ] 
                                 end
-                                cut_exponents_stage[ℓ,m,τ,t-k] = value
+                                cut_exponents_stage[m,t-k,ℓ,τ] = value
+                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[ν,(t+1)-t,ℓ,τ])
                             end
                         end
                     end
                 end
+                
             end
         end
+
         cut_exponents[t] = cut_exponents_stage
     end
 
-    cut_exponents[1] = zeros(T, L, L, p)
+    cut_exponents[1] = zeros(L, p, L, T)
 
     return cut_exponents
 end
@@ -135,7 +149,7 @@ function compute_scenario_factors(
     T = problem_params.number_of_stages
     L = LogLinearSDDP.get_max_dimension(ar_process)
     p = ar_process.lag_order
-    scenario_factors = ones(T-(t-1), L)
+    scenario_factors = ones(L,T-(t-1))
 
     for k in t-p:t-1
         if k <= 1
@@ -145,7 +159,7 @@ function compute_scenario_factors(
         end
 
         for m in 1:L_k
-            scenario_factors = scenario_factors .* process_state[k][m] .^ cut_exponents_stage[t:T,1:L,m,t-k] 
+            scenario_factors = scenario_factors .* process_state[k][m] .^ cut_exponents_stage[m,t-k,1:L,t:T] 
         end
     end
 
@@ -200,8 +214,8 @@ function compute_intercept_value(
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
-            # intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
-            intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+            # intercept_value = intercept_value + cut.intercept_factors[ℓ,τ-t+1] * scenario_factors[ℓ,τ]
+            intercept_value = intercept_value + cut.intercept_factors[ℓ,τ-t+1] * scenario_factors[ℓ,τ-t+1]
         end
     end
 
@@ -221,7 +235,7 @@ function compute_intercept_value_tight(
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+            intercept_value = intercept_value + intercept_factors[ℓ,τ-t+1] * scenario_factors[ℓ,τ-t+1]
         end
     end
 

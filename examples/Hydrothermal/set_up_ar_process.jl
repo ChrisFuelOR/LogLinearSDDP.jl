@@ -129,7 +129,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
         month = mod(t, 12) > 0 ? mod(t,12) : 12
 
         intercept = Float64[]
-        coefficients = zeros(lag_order, dim, dim)
+        coefficients = zeros(dim, lag_order, dim)
         psi = Float64[]
 
         for ℓ in 1:4
@@ -146,7 +146,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
             current_coefficients = split(current_coefficients, ",")
             for k in eachindex(current_coefficients)
                 coefficient = current_coefficients[k]
-                coefficients[k, ℓ, ℓ] = parse(Float64, coefficient)
+                coefficients[ℓ, k, ℓ] = parse(Float64, coefficient)
             end
 
             # Get psi
