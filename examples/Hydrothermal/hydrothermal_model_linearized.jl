@@ -264,13 +264,14 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120
     number_of_realizations = 100
+    simulation_replications = 2000
     model_directory = "fitted_model"
     model_directories_alt = ["shapiro_model", "msppy_model"]
     model_directories_loglin = ["custom_model", "bic_model"]
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 5)
+    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
     file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
     log_file = file_path * "LinearizedSDDP.log"
 
@@ -310,7 +311,7 @@ function model_and_train()
             return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory)
         end
     end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 5)
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
     LogLinearSDDP.simulate_linear(model, algo_params, model_directory, simulation_linear)
 
     #----------------------------------------------------------------------------------------------------------
@@ -331,7 +332,7 @@ function model_and_train()
                 return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_alt)
             end
         end
-        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 5)
+        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
         LogLinearSDDP.simulate_linear(model, algo_params, model_directory_alt, simulation_linear)
     end
 
@@ -348,7 +349,7 @@ function model_and_train()
         sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
             return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, model_directory_loglin)
         end
-        simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 5)
+        simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
 
         # Using the sample data and the process data perform a simulation
         cross_simulate_loglinear(model, algo_params, loglin_ar_process, model_directory_loglin, simulation_loglinear)
