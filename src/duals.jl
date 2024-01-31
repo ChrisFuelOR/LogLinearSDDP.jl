@@ -116,6 +116,23 @@ function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
     return sum(cut_array)
 end
 
+function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    for ℓ in 1:L
+        μ = JuMP.dual(coupling_constraints[ℓ])
+        α[1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
+function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+        end
+    end
+end
 
 function get_alphas(node::SDDP.Node)
 
@@ -133,37 +150,27 @@ function get_alphas(node::SDDP.Node)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
 
-    # Get cut constraint duals and compute first factor
-    if t < T
-        TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-        cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
-        end
-    end
+    # Case τ = t 
+    TimerOutputs.@timeit model.timer_output "alpha_t_new" begin
+       compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+    end     
 
-    for τ in t:T 
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            if τ == t
-                # Get coupling constraint reference
-                coupling_ref = node.subproblem.ext[:coupling_constraints][ℓ]
-                μ = JuMP.dual(coupling_ref)
+   # Get cut constraint duals and compute first factor
+   if t < T
+       TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
+           cut_factors = zeros(T-t,L)
 
-                # Compute alpha value
-                α[τ-t+1,ℓ] = μ * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+           get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
+       end
+       
+       # Case τ > t
+       TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+           compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+       end
+       
+   end
 
-            else
-                cut_exponents_required = model.ext[:cut_exponents][t+1]
-
-                # Compute second factor
-                factor = prod(exp(ar_process_stage.intercept[ν] * cut_exponents_required[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents_required[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
-
-                # Compute alpha value
-                α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * factor
-            end
-        end
-    end
-
-    return α
+   return α
 
 end
 
