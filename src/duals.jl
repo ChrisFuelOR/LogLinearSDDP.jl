@@ -74,7 +74,7 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
     TimerOutputs.@timeit model.timer_output "cut_intercept_tight" begin
         stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
     end
-    
+
     return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight
 end
 
@@ -104,6 +104,18 @@ function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64
     return factors
 end
 
+function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
 function get_alphas(node::SDDP.Node)
 
     # We also need the dual variables for all coupling constraints.
@@ -123,7 +135,7 @@ function get_alphas(node::SDDP.Node)
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors(node, t+1, T, L)
+        cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
         end
     end
 
