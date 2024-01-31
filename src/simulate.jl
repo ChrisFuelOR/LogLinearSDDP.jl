@@ -192,9 +192,7 @@ function simulate_loglinear(
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
-
-    return
+    return simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 end
 
 
@@ -221,7 +219,11 @@ function simulate_loglinear(
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = simulate(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+    if haskey(model.ext, :simulation_attributes)
+        simulations = simulate(model, loglin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+    else
+        simulations = simulate(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+    end  
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################
@@ -237,7 +239,7 @@ function simulate_loglinear(
     ############################################################################
     log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
-    return
+    return simulations
 end
 
 
@@ -264,9 +266,7 @@ function simulate_linear(
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_linear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
-
-    return
+    return simulate_linear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 end
 
 
@@ -291,7 +291,11 @@ function simulate_linear(
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = SDDP.simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
+    if haskey(model.ext, :simulation_attributes)
+        simulations = SDDP.simulate(model, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+    else
+        simulations = SDDP.simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
+    end
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################
@@ -307,6 +311,6 @@ function simulate_linear(
     ############################################################################
     log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
-    return
+    return simulations
 end
 

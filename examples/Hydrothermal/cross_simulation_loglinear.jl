@@ -255,9 +255,8 @@ function cross_simulate_loglinear(
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    cross_simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return cross_simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
-    return
 end
 
 
@@ -284,7 +283,11 @@ function cross_simulate_loglinear(
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = cross_simulate_ll(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+    if haskey(model.ext, :simulation_attributes)
+        simulations = cross_simulate_ll(model, loglin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+    else
+        simulations = cross_simulate_ll(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+    end  
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################
@@ -300,5 +303,5 @@ function cross_simulate_loglinear(
     ############################################################################
     LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
-    return
+    return simulations
 end

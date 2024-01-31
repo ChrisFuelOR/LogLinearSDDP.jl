@@ -259,7 +259,7 @@ function model_and_train()
     log_file = file_path * "LogLinearSDDP.log"
     run_description = ""
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -273,8 +273,11 @@ function model_and_train()
 
     # SIMULATION USING THE LOG LINEAR PROCESS
     ###########################################################################################################
+    model.ext[:simulation_attributes] = [:level]
+    
     # In-sample simulation
-    LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), algo_params.simulation_regime)
+    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), algo_params.simulation_regime)
+    extended_simulation_analysis(simulation_results, file_path, String(model_approach), "_in_sample")
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation
@@ -282,9 +285,9 @@ function model_and_train()
     sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
         return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
     end
-    Infiltrator.@infiltrate
     simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), simulation_loglinear)
+    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), simulation_loglinear)
+    extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach))
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation (alternative log-linear model)
@@ -296,7 +299,8 @@ function model_and_train()
         return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach_alt))
     end
     simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-    LogLinearSDDP.simulate_loglinear(model, algo_params, loglin_ar_process, String(model_approach_alt), simulation_loglinear)
+    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, loglin_ar_process, String(model_approach_alt), simulation_loglinear)
+    extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach_alt))
 
     # SIMULATION USING A LINEAR PROCESS
     # ###########################################################################################################
@@ -316,7 +320,8 @@ function model_and_train()
         simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
 
         # Using the sample data and the process data perform a simulation
-        cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
+        simulation_results = cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
+        extended_simulation_analysis(simulation_results, file_path, String(model_approach), model_directory_lin)
     end
 
     return

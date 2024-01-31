@@ -276,7 +276,7 @@ function model_and_train()
     file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
     log_file = file_path * "LinearizedSDDP.log"
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
     # ADDITIONAL LOGGING TO SDDP.jl
     ###########################################################################################################
@@ -317,10 +317,13 @@ function model_and_train()
 
     # SIMULATION USING THE LINEARIZED PROCESS
     ###########################################################################################################
+    model.ext[:simulation_attributes] = [:level]
+    
     # In-sample simulation
-    LogLinearSDDP.simulate_linear(model, algo_params, model_directory, algo_params.simulation_regime)
+    simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, model_directory, algo_params.simulation_regime)
+    extended_simulation_analysis(simulation_results, file_path, model_directory, "_in_sample")
 
-    #----------------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation
     Random.seed!(12345+algo_params.forward_pass_seed)
     sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
@@ -331,9 +334,10 @@ function model_and_train()
         end
     end
     simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
-    LogLinearSDDP.simulate_linear(model, algo_params, model_directory, simulation_linear)
+    simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, model_directory, simulation_linear)
+    extended_simulation_analysis(simulation_results, file_path, model_directory, model_directory)
 
-    #----------------------------------------------------------------------------------------------------------
+    # ----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation (alternative linear models)
     for model_directory_alt in model_directories_alt
         lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_alt, "bic_model")
@@ -352,11 +356,12 @@ function model_and_train()
             end
         end
         simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
-        LogLinearSDDP.simulate_linear(model, algo_params, model_directory_alt, simulation_linear)
+        simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, model_directory_alt, simulation_linear)
+        extended_simulation_analysis(simulation_results, file_path, model_directory, model_directory_alt)
     end
 
-    # # SIMULATION USING A LOGLINEAR PROCESS
-    # ###########################################################################################################
+    # SIMULATION USING A LOGLINEAR PROCESS
+    ###########################################################################################################
     # Get the corresponding process data
     for model_directory_loglin in model_directories_loglin
         loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, model_directory_loglin, model_directory_loglin)
@@ -371,7 +376,8 @@ function model_and_train()
         simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
 
         # Using the sample data and the process data perform a simulation
-        cross_simulate_loglinear(model, algo_params, loglin_ar_process, model_directory_loglin, simulation_loglinear)
+        simulation_results = cross_simulate_loglinear(model, algo_params, loglin_ar_process, model_directory_loglin, simulation_loglinear)
+        extended_simulation_analysis(simulation_results, file_path, model_directory, model_directory_loglin)
     end
 
     return
