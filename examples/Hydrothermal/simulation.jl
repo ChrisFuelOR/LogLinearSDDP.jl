@@ -1,6 +1,8 @@
 import Distributions
 import DataFrames
 import SDDP
+import Statistics
+import StatsBase
 
 function read_model_std(file_name)
     if startswith(file_name, "Linearized")
@@ -135,4 +137,67 @@ function get_out_of_sample_realizations_multivariate_linear(number_of_realizatio
         t, 
         model_directory,
     )
+end
+
+function extended_simulation_analysis(simulation_results::Any, file_path::String, policy_approach::String, simulation_approach::String)
+
+    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS
+    ############################################################################
+    # Declare file name
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_cum_distrib.txt"
+    f = open(file_name, "w")
+
+    objectives = map(simulation_results) do simulation
+        return sum(stage[:stage_objective] for stage in simulation)
+    end
+
+    distrib = StatsBase.ecdf(objectives)
+    stepsize = round((maximum(objectives)-minimum(objectives))/100, digits=0)
+    for x in minimum(objectives)-stepsize:stepsize:maximum(objectives)+stepsize
+        y = distrib(x)
+        println(f, "(", round(x, digits = 0), ",", round(y, digits = 2), ")")
+    end
+    close(f)
+
+    # OBTAINING HYDRO RESERVOIR LEVELS
+    ############################################################################
+    reservoir_names = ["SE", "S", "NE", "N"]
+
+    for k in 1:4
+        # Declare file name
+        file_name = file_path * policy_approach * "_" * simulation_approach * "_volumes_" * reservoir_names[k] * ".txt"
+        f = open(file_name, "w")
+
+        # Get volume data for given reservoir
+        column_names = [Symbol(i) for i in 1:120]
+        volume_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
+        for i in eachindex(simulation_results)
+            outgoing_volume = map(simulation_results[i]) do node
+                return node[:level][k].out
+            end    
+            push!(volume_df, outgoing_volume)
+        end
+
+        # mean
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.mean(volume_df[!, Symbol(stage)]), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.05 quantile
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.05), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.95 quantile
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.95), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        close(f)
+    end
+
+    return
 end
