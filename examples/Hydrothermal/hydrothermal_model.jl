@@ -254,12 +254,14 @@ function model_and_train()
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
+    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
+    log_file = file_path * "LogLinearSDDP.log"
 
     algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    f = open("inflows.txt", "w")
+    f = open(file_path * "inflows.txt", "w")
     ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach), "AutoregressivePreparation/" * String(model_approach) * "/history_nonlinear.txt")
     model = model_definition(ar_process, problem_params, algo_params, f)
     
