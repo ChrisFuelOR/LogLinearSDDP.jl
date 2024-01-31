@@ -120,12 +120,7 @@ function evaluate_cut_intercepts(
 
         # Iterate over all cuts and adapt intercept
         TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
-            for cut in node.bellman_function.global_theta.cuts
-                TimerOutputs.@timeit model.timer_output "intercept_value" begin    
-                    intercept_value = compute_intercept_value(t+1, cut, scenario_factors, problem_params, autoregressive_data)
-                end
-                JuMP.fix(cut.cut_intercept_variable, intercept_value)
-            end
+            set_intercepts(node.bellman_function.global_theta.cuts, t+1, scenario_factors, problem_params, autoregressive_data, model.timer_output)
         end
     end
 
@@ -133,6 +128,22 @@ function evaluate_cut_intercepts(
 
 end
 
+function set_intercepts(
+    cuts::Vector{LogLinearSDDP.Cut},
+    t::Int64,
+    scenario_factors::Array{Float64,2},
+    problem_params::LogLinearSDDP.ProblemParams,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    timer_output::Any,
+    )
+
+    for cut in cuts
+        TimerOutputs.@timeit timer_output "intercept_value" begin    
+            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params, ar_process)
+        end
+        JuMP.fix(cut.cut_intercept_variable, intercept_value)
+    end
+end
 
 """ 
 Pre-computation of the scenario-dependent cut intercept factors (scenario factors) for a given problem and a scenario at hand.
@@ -189,8 +200,27 @@ function compute_intercept_value(
     for τ in t:T
         L_τ = ar_process.parameters[τ].dimension
         for ℓ in 1:L_τ
-            # intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
             intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+        end
+    end
+
+    return intercept_value
+
+end
+
+function compute_intercept_value_tight(
+    t::Int64,
+    T::Int64,
+    scenario_factors::Array{Float64,2},
+    intercept_factors::Array{Float64,2},
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+)
+
+    intercept_value = 0.0
+    for τ in t:T
+        L_τ = ar_process.parameters[τ].dimension
+        for ℓ in 1:L_τ
+            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 
@@ -216,6 +246,7 @@ function evaluate_cut_intercept_tight(
     ar_process = model.ext[:ar_process]
     t = node.index
     T = problem_params.number_of_stages
+    L = LogLinearSDDP.get_max_dimension(ar_process)
 
     # Get exponents for the considered cut
     cut_exponents_stage = cut_exponents[t]
@@ -224,17 +255,12 @@ function evaluate_cut_intercept_tight(
     process_state = node.ext[:process_state]
 
     # First compute scenario-specific factors
-    scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+    TimerOutputs.@timeit model.timer_output "scenario_factors" begin
+        scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+    end
 
     #Evaluate the stochastic part of the intercept
-    intercept_value = 0.0
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            # intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ,ℓ]
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
-        end
-    end
+    intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
 
     return intercept_value
 end
