@@ -157,11 +157,9 @@ function get_alphas(node::SDDP.Node)
 
    # Get cut constraint duals and compute first factor
    if t < T
-       TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-           cut_factors = zeros(T-t,L)
-
-           get_existing_cuts_factors!(node.bellman_function.global_theta.cuts, cut_factors)
-       end
+        TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
+            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+        end
        
        # Case τ > t
        TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
