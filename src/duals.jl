@@ -92,19 +92,7 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factors(node::SDDP.Node, t::Int64, T::Int64, L::Int64)
-
-    factors = zeros(T-(t-1),L)
-
-    for cut in node.bellman_function.global_theta.cuts
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        factors = factors + JuMP.dual(cut.constraint_ref) * cut.intercept_factors
-    end
-
-    return factors
-end
-
-function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
+function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
 
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
 
@@ -135,7 +123,7 @@ function get_alphas(node::SDDP.Node)
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-        cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+        cut_factors = get_existing_cuts_factors(node.bellman_function.global_theta.cuts)
         end
     end
 
