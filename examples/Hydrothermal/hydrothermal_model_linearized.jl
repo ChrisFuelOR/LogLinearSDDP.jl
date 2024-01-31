@@ -15,6 +15,7 @@ import DataFrames
 import DataFramesMeta
 import CSV
 import Random
+import Dates
 
 include("set_up_ar_process.jl")
 include("simulation.jl")
@@ -277,6 +278,24 @@ function model_and_train()
 
     algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
+    # ADDITIONAL LOGGING TO SDDP.jl
+    ###########################################################################################################
+    log_f = open(log_file, "a")
+    println(log_f, "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+    println(log_f, "PATH")
+    println(log_f, "calling ")
+    println(log_f, @__DIR__)
+    println(log_f, Base.source_path())
+
+    # Printing the time
+    println(log_f, "DATETIME")
+    println(log_f, Dates.now())
+
+    # Printing the algo params
+    println(log_f, "RUN DESCRIPTION")
+    println(log_f, algo_params)
+    close(log_f)
+
     # CREATE AND RUN MODEL
     ###########################################################################################################
     f = open(file_path * "inflows_lin.txt", "w")
