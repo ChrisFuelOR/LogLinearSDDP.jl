@@ -155,20 +155,20 @@ function get_alphas(node::SDDP.Node)
         compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
     end     
 
-   # Get cut constraint duals and compute first factor
-   if t < T
+    # Get cut constraint duals and compute first factor
+    if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
             cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
         end
        
-       # Case τ > t
+        # Case τ > t
         TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
             compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
         end
        
-   end
+    end
 
-   return α
+    return α
 
 end
 
