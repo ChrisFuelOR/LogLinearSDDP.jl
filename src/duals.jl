@@ -104,6 +104,19 @@ function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
     return sum(cut_array)
 end
 
+function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    @batch minbatch=100 for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+
 function get_alphas(node::SDDP.Node)
 
     # We also need the dual variables for all coupling constraints.
@@ -123,7 +136,7 @@ function get_alphas(node::SDDP.Node)
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-        cut_factors = get_existing_cuts_factors(node.bellman_function.global_theta.cuts)
+        cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
         end
     end
 

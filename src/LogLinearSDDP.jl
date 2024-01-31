@@ -19,6 +19,7 @@ import Infiltrator
 import Dates
 import Distributed
 import BenchmarkTools
+using Polyester: @batch
 
 const MOI = MathOptInterface #TODO
 
