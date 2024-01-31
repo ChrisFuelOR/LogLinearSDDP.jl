@@ -77,7 +77,7 @@ function read_history_data(file_name::String)
 end
 
 
-function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String, history_file_name::String)
+function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String, history_dir_name::String)
 
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
     ar_history = Dict{Int64,Any}()
     
     # Read history data and store in AR history
-    history_data = read_history_data(history_file_name)
+    history_data = read_history_data("AutoregressivePreparation/" * history_dir_name * "/history_nonlinear.txt")
     for t in -11:1
         row = t+12
         ar_history[t] = [history_data[row,"History_SE"], history_data[row,"History_S"], history_data[row,"History_NE"], history_data[row,"History_N"]]
@@ -164,7 +164,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
 end
 
 
-function set_up_ar_process_linear(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String, history_file_name::String)
+function set_up_ar_process_linear(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String, history_dir_name::String)
 
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
     # ---------------------------------------------------------------------------------------------------------
     # define also ξ₁
     # Read history data and store in AR history
-    history_data = read_history_data(history_file_name)
+    history_data = read_history_data("AutoregressivePreparation/" * history_dir_name * "/history_nonlinear.txt")
     ar_history = [last(history_data)["History_SE"], last(history_data)["History_S"], last(history_data)["History_NE"], last(history_data)["History_N"]]
 
     # Process definition

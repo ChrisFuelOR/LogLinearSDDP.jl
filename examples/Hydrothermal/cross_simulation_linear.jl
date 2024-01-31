@@ -92,7 +92,7 @@ function cross_sample_scenario(
         # CHANGES TO SDDP.jl
         ####################################################################################
         # Store the updated dict as the process state for the following stage (node)
-        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, node_index, process_state, noise_term)
+        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, lin_ar_process.lag_order, node_index, process_state, noise_term)
         ####################################################################################
 
     end

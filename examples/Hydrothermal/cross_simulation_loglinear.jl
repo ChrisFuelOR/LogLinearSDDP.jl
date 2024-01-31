@@ -16,100 +16,6 @@ import SDDP
 include("set_up_ar_process.jl")
 include("simulation.jl")
 
-function cross_sample_scenario_ll(
-    graph::SDDP.PolicyGraph{T},
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo{T}},
-) where {T}
-    max_depth = min(sampling_scheme.max_depth, sampling_scheme.rollout_limit())
-    # Storage for our scenario. Each tuple is (node_index, noise.term).
-    scenario_path = Tuple{T,Any}[]
-    # We only use visited_nodes if terminate_on_cycle=true. Just initialize anyway.
-    visited_nodes = Set{T}()
-    # Begin by sampling a node from the children of the root node.
-    node_index = something(
-        sampling_scheme.initial_node,
-        SDDP.sample_noise(SDDP.get_root_children(sampling_scheme, graph)),
-    )::T
-    while true
-        
-        node = graph[node_index]
-
-        # CHANGES TO SDDP.jl
-        ####################################################################################
-        # Get the realizations for the stagewise independent term η
-        all_independent_noises = SDDP.get_noise_terms(sampling_scheme, node, node_index)
-        children = SDDP.get_children(sampling_scheme, node, node_index)
-
-        # Sample an independent noise term (vector/tuple of index ℓ or a single AbstractFloat)
-        independent_noise_terms = SDDP.sample_noise(all_independent_noises)
-
-        # Get the current process state
-        process_state = node.ext[:process_state]
-
-        # First stage is deterministic
-        if node_index == 1
-            noise_term = zeros(length(independent_noise_terms))
-            for ℓ in eachindex(noise_term)    
-                noise_term[ℓ] = loglin_ar_process.history[1][ℓ]
-            end
-        else      
-            ar_process_stage = loglin_ar_process.parameters[node_index]
-            # Compute the actual noise ξ using the formula for the log-linear AR process
-            # Note: No matter how the noises are defined in parameterize in the model description, noise_term here is always 
-            # a vector with component index ℓ (or an AbstractFloat).
-            noise_term = zeros(length(independent_noise_terms))
-            for ℓ in eachindex(noise_term)
-                t = node_index
-                intercept = ar_process_stage.intercept[ℓ]
-                independent_term = independent_noise_terms[ℓ]
-                error_term_factor = ar_process_stage.psi[ℓ]
-                coefficients = ar_process_stage.coefficients
-                lag_order = loglin_ar_process.lag_order
-                lag_dimensions = LogLinearSDDP.get_lag_dimensions(loglin_ar_process, t)
-                noise_term[ℓ] = exp(intercept) * exp(independent_term * error_term_factor) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
-            end
-        end
-        ####################################################################################
-
-        push!(scenario_path, (node_index, noise_term))
-        # Termination conditions:
-        if length(children) == 0
-            # 1. Our node has no children, i.e., we are at a leaf node.
-            return scenario_path, false
-        elseif sampling_scheme.terminate_on_cycle && node_index in visited_nodes
-            # 2. terminate_on_cycle = true and we have detected a cycle.
-            return scenario_path, true
-        elseif 0 < sampling_scheme.max_depth <= length(scenario_path)
-            # 3. max_depth > 0 and we have explored max_depth number of nodes.
-            return scenario_path, false
-        elseif sampling_scheme.terminate_on_dummy_leaf &&
-               rand() < 1 - sum(child.probability for child in children)
-            # 4. we sample a "dummy" leaf node in the next step due to the
-            # probability of the child nodes summing to less than one.
-            return scenario_path, false
-        end
-        # We only need to store a list of visited nodes if we want to terminate
-        # due to the presence of a cycle.
-        if sampling_scheme.terminate_on_cycle
-            push!(visited_nodes, node_index)
-        end
-        # Sample a new node to transition to.
-        node_index = SDDP.sample_noise(children)::T
-
-        # CHANGES TO SDDP.jl
-        ####################################################################################
-        # Store the updated dict as the process state for the following stage (node)
-        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, node_index, process_state, noise_term)
-        ####################################################################################
-
-    end
-    # Throw an error because we should never end up here.
-    return error(
-        "Internal SDDP error: something went wrong sampling a scenario.",
-    )
-end
-
 function solve_subproblem_cross(
     model::SDDP.PolicyGraph{T},
     node::SDDP.Node{T},
@@ -132,6 +38,7 @@ function solve_subproblem_cross(
             JuMP.unfix(node.subproblem[:inflow_noise][ℓ])
         end
     end
+
     SDDP.set_objective(node)
   
     JuMP.optimize!(node.subproblem)
@@ -194,7 +101,7 @@ function _cross_simulate_ll(
     model.ext[:ar_process] = loglin_ar_process
 
     # Sample a scenario path.
-    scenario_path, _ = cross_sample_scenario_ll(model, loglin_ar_process, sampling_scheme)
+    scenario_path, _ = LogLinearSDDP.sample_scenario(model, loglin_ar_process, sampling_scheme)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
@@ -285,6 +192,7 @@ function _cross_simulate_ll(
         # Set outgoing state as the incoming state for the next node.
         incoming_state = copy(subproblem_results.state)
     end
+
     return simulation
 end
 

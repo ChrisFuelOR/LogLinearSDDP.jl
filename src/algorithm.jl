@@ -562,7 +562,7 @@ function forward_pass(
     # return the cycle node as well.
     TimerOutputs.@timeit model.timer_output "sample_scenario" begin
         scenario_path, terminated_due_to_cycle =
-            sample_scenario(model, options.sampling_scheme)
+        sample_scenario(model, model.ext[:ar_process], options.sampling_scheme)
     end
     final_node = scenario_path[end]
     if terminated_due_to_cycle && !pass.include_last_node

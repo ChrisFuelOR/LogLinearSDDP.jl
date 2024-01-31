@@ -11,6 +11,7 @@
 
 function sample_scenario(
     graph::SDDP.PolicyGraph{T},
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo{T}},
 ) where {T}
     max_depth = min(sampling_scheme.max_depth, sampling_scheme.rollout_limit())
@@ -35,8 +36,6 @@ function sample_scenario(
         # Sample an independent noise term (vector/tuple of index ℓ or a single AbstractFloat)
         independent_noise_terms = SDDP.sample_noise(all_independent_noises)
 
-        # Get autoregressive data
-        ar_process = graph.ext[:ar_process]
         # Get the current process state
         process_state = node.ext[:process_state]
 
@@ -108,7 +107,7 @@ function sample_scenario(
         # CHANGES TO SDDP.jl
         ####################################################################################
         # Store the updated dict as the process state for the following stage (node)
-        graph[node_index].ext[:process_state] = update_process_state(graph, node_index, process_state, noise_term)
+        graph[node_index].ext[:process_state] = update_process_state(graph, ar_process.lag_order, node_index, process_state, noise_term)
         ####################################################################################
 
     end
@@ -121,6 +120,7 @@ end
 
 function update_process_state(
     graph::SDDP.PolicyGraph{T},
+    lag_order::Int,
     node_index::Int64,
     process_state::Dict{Int64,Any},
     noise_term::Any,
@@ -129,7 +129,7 @@ function update_process_state(
     new_process_state = Dict{Int64,Any}()
 
     # Get lowest required index
-    min_time_index = 1 - graph.ext[:ar_process].lag_order
+    min_time_index = 1 - lag_order
     
     # Determine new process state
     for k in min_time_index:node_index-1
