@@ -223,21 +223,23 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
 
             # Parameterize inflow and demand
             realizations = ar_process.parameters[t].eta
+            subproblem.ext[:ar_process_stage] = ar_process.parameters[t]
 
             SDDP.parameterize(subproblem, realizations) do ω
-                JuMP.fix(inflow_noise[1], ar_process.parameters[t].coefficients[1,2] * exp(ω[1]))
-                JuMP.fix(inflow_noise[2], ar_process.parameters[t].coefficients[2,2] * exp(ω[2]))
-                JuMP.fix(inflow_noise[3], ar_process.parameters[t].coefficients[3,2] * exp(ω[3]))
-                JuMP.fix(inflow_noise[4], ar_process.parameters[t].coefficients[4,2] * exp(ω[4]))
+                ar_process_stage = subproblem.ext[:ar_process_stage]
+                JuMP.fix(inflow_noise[1], ar_process_stage.coefficients[1,2] * exp(ω[1]))
+                JuMP.fix(inflow_noise[2], ar_process_stage.coefficients[2,2] * exp(ω[2]))
+                JuMP.fix(inflow_noise[3], ar_process_stage.coefficients[3,2] * exp(ω[3]))
+                JuMP.fix(inflow_noise[4], ar_process_stage.coefficients[4,2] * exp(ω[4]))
 
-                JuMP.set_normalized_coefficient(inflow_model[1], inflow[1].in, -ar_process.parameters[t].coefficients[1,1] * exp(ω[1]))
-                JuMP.set_normalized_coefficient(inflow_model[2], inflow[2].in, -ar_process.parameters[t].coefficients[2,1] * exp(ω[2]))
-                JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process.parameters[t].coefficients[3,1] * exp(ω[3]))
-                JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process.parameters[t].coefficients[4,1] * exp(ω[4]))
+                JuMP.set_normalized_coefficient(inflow_model[1], inflow[1].in, -ar_process_stage.coefficients[1,1] * exp(ω[1]))
+                JuMP.set_normalized_coefficient(inflow_model[2], inflow[2].in, -ar_process_stage.coefficients[2,1] * exp(ω[2]))
+                JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process_stage.coefficients[3,1] * exp(ω[3]))
+                JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process_stage.coefficients[4,1] * exp(ω[4]))
 
                 print(f, t, "; ")
                 for i in 1:4
-                    print(f, round(JuMP.fix_value(inflow[i].in) * ar_process.parameters[t].coefficients[i,1] * exp(ω[i]) + ar_process.parameters[t].coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                    print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
                 end
                 println(f)
             end
@@ -260,25 +262,25 @@ function model_and_train()
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120 #120
-    number_of_realizations = 100 #100
+    number_of_stages = 120
+    number_of_realizations = 100
+    simulation_replications = 2000
     model_directory = "fitted_model"
     model_directories_alt = ["shapiro_model", "msppy_model"]
-    model_directories_loglin = ["bic_model", "custom_model"]
+    model_directories_loglin = ["custom_model", "bic_model"]
 
     applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = 2000)
+    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
     file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
     log_file = file_path * "LinearizedSDDP.log"
-    run_description = ""
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = "LinearizedSDDP.log", silent = false, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
     f = open(file_path * "inflows_lin.txt", "w")
-    ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory, "AutoregressivePreparation/bic_model/history_nonlinear.txt")
+    ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory, "bic_model")
     model = model_definition(ar_process, problem_params, algo_params, f)  
     Random.seed!(algo_params.forward_pass_seed)
 
@@ -297,10 +299,11 @@ function model_and_train()
     # SIMULATION USING THE LINEARIZED PROCESS
     ###########################################################################################################
     # In-sample simulation
-    LogLinearSDDP.simulate_linear(model, algo_params, String(model_approach), algo_params.simulation_regime)
+    LogLinearSDDP.simulate_linear(model, algo_params, model_directory, algo_params.simulation_regime)
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation
+    Random.seed!(12345+algo_params.forward_pass_seed)
     sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
         if model_directory in ["msppy_model", "shapiro_model"]
             return get_out_of_sample_realizations_multivariate_linear(number_of_realizations, stage, model_directory)
@@ -308,12 +311,20 @@ function model_and_train()
             return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory)
         end
     end
-    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
+    simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
     LogLinearSDDP.simulate_linear(model, algo_params, model_directory, simulation_linear)
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation (alternative linear models)
     for model_directory_alt in model_directories_alt
+        lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_alt, "bic_model")
+        for (node_index, node) in model.nodes
+            if node_index > 1
+               node.subproblem.ext[:ar_process_stage] = lin_ar_process.parameters[node_index]
+            end
+        end
+    
+        Random.seed!(12345+algo_params.forward_pass_seed)
         sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
             if model_directory_alt in ["msppy_model", "shapiro_model"]
                 return get_out_of_sample_realizations_multivariate_linear(number_of_realizations, stage, model_directory_alt)
@@ -321,24 +332,27 @@ function model_and_train()
                 return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_alt)
             end
         end
-        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = 2000)
+        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
         LogLinearSDDP.simulate_linear(model, algo_params, model_directory_alt, simulation_linear)
     end
 
-    # SIMULATION USING A LOGLINEAR PROCESS
-    ###########################################################################################################
+    # # SIMULATION USING A LOGLINEAR PROCESS
+    # ###########################################################################################################
     # Get the corresponding process data
     for model_directory_loglin in model_directories_loglin
-        lin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, model_directory_loglin, "AutoregressivePreparation/bic_model/history_nonlinear.txt")
+        loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, model_directory_loglin, model_directory_loglin)
+        LogLinearSDDP.initialize_process_state(model, loglin_ar_process)
 
         # Create the stagewise independent sample data (realizations) for the simulation
+        Random.seed!(12345+algo_params.forward_pass_seed)
+
         sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
             return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, model_directory_loglin)
         end
-        simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = 2000)
+        simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
 
         # Using the sample data and the process data perform a simulation
-        cross_simulate_loglinear(model, algo_params, lin_ar_process, model_directory_loglin, simulation_loglinear)
+        cross_simulate_loglinear(model, algo_params, loglin_ar_process, model_directory_loglin, simulation_loglinear)
     end
 
     return
