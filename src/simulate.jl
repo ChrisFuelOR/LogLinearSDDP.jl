@@ -12,13 +12,14 @@
 function _simulate(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
 SDDP._initialize_solver(model; throw_error = false)
     return map(
-        i -> _simulate(model, variables; kwargs...),
+        i -> _simulate(model, loglin_ar_process, variables; kwargs...),
         1:number_replications,
     )
 end
@@ -28,6 +29,7 @@ end
 # documented, user-facing function SDDP.simulate instead.
 function _simulate(
     model::SDDP.PolicyGraph{T},
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     variables::Vector{Symbol};
     sampling_scheme::SDDP.AbstractSamplingScheme,
     custom_recorders::Dict{Symbol,Function},
@@ -37,7 +39,7 @@ function _simulate(
 ) where {T}
 
     # Sample a scenario path.
-    scenario_path, _ = sample_scenario(model, sampling_scheme)
+    scenario_path, _ = sample_scenario(model, loglin_ar_process, sampling_scheme)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
@@ -157,6 +159,7 @@ For more complicated data, the `custom_recorders` keyword argument can be used.
 """
 function simulate(
     model::SDDP.PolicyGraph,
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
@@ -169,6 +172,7 @@ function simulate(
     return _simulate(
         model,
         parallel_scheme,
+        loglin_ar_process,
         number_replications,
         variables;
         sampling_scheme = sampling_scheme,
@@ -183,11 +187,12 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    simulate_loglinear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
     return
 end
@@ -196,6 +201,7 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
@@ -207,6 +213,7 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
@@ -214,7 +221,7 @@ function simulate_loglinear(
 
     # SIMULATE THE MODEL
     ############################################################################
-    simulations = simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
+    simulations = simulate(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
     ############################################################################

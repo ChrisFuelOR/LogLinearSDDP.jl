@@ -160,7 +160,7 @@ function get_existing_cuts_factors2d(cuts::Vector{LogLinearSDDP.Cut})
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
     range_obj = eachindex(cuts)
 
-    LoopVectorization.@turbo for cut_index in range_obj
+    for cut_index in range_obj
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
         cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
     end
@@ -173,7 +173,7 @@ function get_existing_cuts_factors5a(cuts::Vector{LogLinearSDDP.Cut}, t::Int64, 
     factors = zeros(T-(t-1),L)
 
     for i in eachindex(cuts)
-        LoopVectorization.@turbo for ℓ in 1:L
+        for ℓ in 1:L
             for τ in 1:T-(t-1)
                 # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
                 factors[τ,ℓ] = factors[τ,ℓ] + JuMP.dual(cuts[i].constraint_ref) * cuts[i].intercept_factors[τ,ℓ]
@@ -196,7 +196,7 @@ function get_existing_cuts_factorsT1(cuts::Vector{LogLinearSDDP.Cut})
 
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
 
-    @batch per=thread for cut_index in eachindex(cuts)
+    for cut_index in eachindex(cuts)
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
         cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
     end
@@ -208,7 +208,7 @@ function get_existing_cuts_factorsT2(cuts::Vector{LogLinearSDDP.Cut})
 
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
 
-    @batch per=core for cut_index in eachindex(cuts)
+    for cut_index in eachindex(cuts)
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
         cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
     end
@@ -220,7 +220,7 @@ function get_existing_cuts_factorsT3(cuts::Vector{LogLinearSDDP.Cut}, num::Int64
 
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
 
-    @batch minbatch=num for cut_index in eachindex(cuts)
+    for cut_index in eachindex(cuts)
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
         cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
     end
