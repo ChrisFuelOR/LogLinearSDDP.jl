@@ -39,7 +39,7 @@ function _simulate(
 ) where {T}
 
     # Sample a scenario path.
-    scenario_path, _ = sample_scenario(model, loglin_ar_process, sampling_scheme)
+    scenario_path, _ = sample_scenario(model, loglin_ar_process, sampling_scheme, true)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]

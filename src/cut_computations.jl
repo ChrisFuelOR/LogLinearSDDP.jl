@@ -111,7 +111,7 @@ function evaluate_cut_intercepts(
         cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
         # Get process state for the considered cut
-        process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term)
+        process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
 
         # First compute scenario-specific factors
         TimerOutputs.@timeit model.timer_output "scenario_factors" begin

@@ -291,7 +291,7 @@ function model_and_train()
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation (alternative log-linear model)
-    loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach_alt), String(model_approach_alt))
+    loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach_alt), "bic_model")
     LogLinearSDDP.initialize_process_state(model, loglin_ar_process)
 
     Random.seed!(12345+algo_params.forward_pass_seed)  

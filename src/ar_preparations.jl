@@ -18,7 +18,7 @@ function initialize_process_state(
     ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
-    min_time_index = 1 - ar_process.lag_order
+    min_time_index = minimum(collect(keys(ar_process.history)))
     max_dimension = get_max_dimension(ar_process)
     process_state = Dict{Int64,Any}()
 

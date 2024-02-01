@@ -19,6 +19,7 @@ function cross_sample_scenario(
     graph::SDDP.PolicyGraph{T},
     lin_ar_process::LinearAutoregressiveProcess,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo{T}},
+    keep_full_history::Bool = false,
 ) where {T}
     max_depth = min(sampling_scheme.max_depth, sampling_scheme.rollout_limit())
     # Storage for our scenario. Each tuple is (node_index, noise.term).
@@ -92,7 +93,7 @@ function cross_sample_scenario(
         # CHANGES TO SDDP.jl
         ####################################################################################
         # Store the updated dict as the process state for the following stage (node)
-        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, lin_ar_process.lag_order, node_index, process_state, noise_term)
+        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, lin_ar_process.lag_order, node_index, process_state, noise_term, keep_full_history)
         ####################################################################################
 
     end
@@ -133,7 +134,7 @@ function _cross_simulate(
 ) where {T}
 
     # Sample a scenario path.
-    scenario_path, _ = cross_sample_scenario(model, lin_ar_process, sampling_scheme)
+    scenario_path, _ = cross_sample_scenario(model, lin_ar_process, sampling_scheme, true)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
