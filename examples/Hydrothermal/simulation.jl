@@ -199,5 +199,49 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         close(f)
     end
 
+    # OBTAINING INFLOW VALUES
+    ############################################################################
+    reservoir_names = ["SE", "S", "NE", "N"]
+
+    for k in 1:4
+        # Declare file name
+        file_name = file_path * policy_approach * "_" * simulation_approach * "_inflows_" * reservoir_names[k] * ".txt"
+        f = open(file_name, "w")
+
+        # Get volume data for given reservoir
+        column_names = [Symbol(i) for i in 1:120]
+        inflow_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
+        for i in eachindex(simulation_results)
+            inflow = map(simulation_results[i]) do node
+                if isa(node[:inflow][k], SDDP.State)
+                    return node[:inflow][k].out
+                else
+                    return node[:inflow][k]
+                end
+            end    
+            push!(inflow_df, inflow)
+        end
+
+        # mean
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.mean(inflow_df[!, Symbol(stage)]), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.05 quantile
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.quantile(inflow_df[!, Symbol(stage)], 0.05), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.95 quantile
+        for stage in 1:120
+            println(f, "(", stage, ",", round(Statistics.quantile(inflow_df[!, Symbol(stage)], 0.95), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        close(f)
+    end
+
     return
 end

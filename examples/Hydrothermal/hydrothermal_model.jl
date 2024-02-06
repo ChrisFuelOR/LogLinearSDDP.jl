@@ -247,7 +247,7 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120
     number_of_realizations = 100
-    simulation_replications = 2000
+    simulation_replications = 200
     model_approach = :custom_model
     model_approach_alt = :bic_model
     model_directories_lin = ["fitted_model", "shapiro_model", "msppy_model"]
@@ -259,7 +259,7 @@ function model_and_train()
     log_file = file_path * "LogLinearSDDP.log"
     run_description = ""
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
   
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -273,7 +273,7 @@ function model_and_train()
 
     # SIMULATION USING THE LOG LINEAR PROCESS
     ###########################################################################################################
-    model.ext[:simulation_attributes] = [:level]
+    model.ext[:simulation_attributes] = [:level, :inflow]
     
     # In-sample simulation
     simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), algo_params.simulation_regime)
