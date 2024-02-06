@@ -202,6 +202,12 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
         # Hydro balance
         coupling_ref = JuMP.@constraint(subproblem, hydro_balance[k in 1:num_of_res], level[k].out == level[k].in + inflow[k] - hydro_gen[k] - spillage[k])
 
+        # Inflow scaling for log-linear models
+        JuMP.set_normalized_coefficient(hydro_balance[1], inflow[1], -1.04)
+        JuMP.set_normalized_coefficient(hydro_balance[2], inflow[2], -1.04)
+        JuMP.set_normalized_coefficient(hydro_balance[3], inflow[3], -1.04)
+        JuMP.set_normalized_coefficient(hydro_balance[4], inflow[4], -1.04)
+
         # Load balance
         JuMP.@constraint(subproblem, load_balance[k in 1:num_of_sys], sum(hydro_gen[l] for l in 1:num_of_res if reservoirs[l].system == k) + sum(gen[j] for j in 1:num_of_gen if generators[j].system == k) + sum(deficit_part[k,i] for i in 1:4) + sum(exchange[l,k] - exchange[k,l] for l in 1:num_of_sys) == demand[t,Symbol(k)])
 
@@ -304,6 +310,16 @@ function model_and_train()
 
     # SIMULATION USING A LINEAR PROCESS
     # ###########################################################################################################
+    # Remove inflow scaling for linear processes
+    for (_, node) in model.nodes
+        hydro_balance = node.subproblem[:hydro_balance]
+        inflow = node.subproblem[:inflow]
+        JuMP.set_normalized_coefficient(hydro_balance[1], inflow[1], -1.0)
+        JuMP.set_normalized_coefficient(hydro_balance[2], inflow[2], -1.0)
+        JuMP.set_normalized_coefficient(hydro_balance[3], inflow[3], -1.0)
+        JuMP.set_normalized_coefficient(hydro_balance[4], inflow[4], -1.0)
+    end
+
     # Get the corresponding process data
     for model_directory_lin in model_directories_lin
         lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_lin, String(model_approach))
