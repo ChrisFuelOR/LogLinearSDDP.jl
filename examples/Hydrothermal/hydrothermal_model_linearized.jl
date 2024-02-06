@@ -363,13 +363,15 @@ function model_and_train()
     # SIMULATION USING A LOGLINEAR PROCESS
     ###########################################################################################################
     # Add inflow scaling for log-linear processes
-    for (_, node) in model.nodes
-        hydro_balance = node.subproblem[:hydro_balance]
-        inflow = node.subproblem[:inflow]
-        JuMP.set_normalized_coefficient(hydro_balance[1], inflow[1].out, -1.04)
-        JuMP.set_normalized_coefficient(hydro_balance[2], inflow[2].out, -1.04)
-        JuMP.set_normalized_coefficient(hydro_balance[3], inflow[3].out, -1.04)
-        JuMP.set_normalized_coefficient(hydro_balance[4], inflow[4].out, -1.04)
+    for (node_index, node) in model.nodes
+        if node_index > 1
+            hydro_balance = node.subproblem[:hydro_balance]
+            inflow = node.subproblem[:inflow]
+            JuMP.set_normalized_coefficient(hydro_balance[1], inflow[1].out, -1.04)
+            JuMP.set_normalized_coefficient(hydro_balance[2], inflow[2].out, -1.04)
+            JuMP.set_normalized_coefficient(hydro_balance[3], inflow[3].out, -1.04)
+            JuMP.set_normalized_coefficient(hydro_balance[4], inflow[4].out, -1.04)
+        end
     end
 
     # Get the corresponding process data
