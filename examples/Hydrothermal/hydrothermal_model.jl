@@ -16,8 +16,6 @@ import DataFramesMeta
 import CSV
 import Random
 
-include("set_up_ar_process.jl")
-include("simulation.jl")
 include("cross_simulation_linear.jl")
 
 struct Generator
@@ -235,96 +233,13 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             end
             println(f)
         end
+
+        if algo_params.silent
+            JuMP.set_silent(subproblem)
+        else
+            JuMP.unset_silent(subproblem)
+        end
     end
 
     return model
 end
-
-
-function model_and_train()
-
-    # MAIN MODEL AND RUN PARAMETERS    
-    ###########################################################################################################
-    number_of_stages = 120
-    number_of_realizations = 100
-    simulation_replications = 2000
-    model_approach = :custom_model
-    model_approach_alt = :bic_model
-    model_directories_lin = ["fitted_model", "shapiro_model", "msppy_model"]
-
-    applied_solver = LogLinearSDDP.AppliedSolver()
-    problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
-    log_file = file_path * "LogLinearSDDP.log"
-    run_description = ""
-
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)], forward_pass_seed = 11111, simulation_regime = simulation_regime, model_approach = model_approach, log_file = log_file, run_description = run_description)
-  
-    # CREATE AND RUN MODEL
-    ###########################################################################################################
-    f = open(file_path * "inflows.txt", "w")
-    ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach), String(model_approach))
-    model = model_definition(ar_process, problem_params, algo_params, f)
-    
-    # Train model
-    Random.seed!(algo_params.forward_pass_seed)
-    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
-
-    # SIMULATION USING THE LOG LINEAR PROCESS
-    ###########################################################################################################
-    model.ext[:simulation_attributes] = [:level, :inflow, :spillage, :gen, :exchange, :deficit_part, :hydro_gen]
-    
-    # In-sample simulation
-    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), algo_params.simulation_regime)
-    extended_simulation_analysis(simulation_results, file_path, String(model_approach), "_in_sample")
-
-    #----------------------------------------------------------------------------------------------------------
-    # Out-of-sample simulation
-    Random.seed!(12345+algo_params.forward_pass_seed)
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), simulation_loglinear)
-    extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach))
-
-    #----------------------------------------------------------------------------------------------------------
-    # Out-of-sample simulation (alternative log-linear model)
-    loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach_alt), "bic_model")
-    LogLinearSDDP.initialize_process_state(model, loglin_ar_process)
-
-    Random.seed!(12345+algo_params.forward_pass_seed)  
-    sampling_scheme_loglinear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-        return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach_alt))
-    end
-    simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, loglin_ar_process, String(model_approach_alt), simulation_loglinear)
-    extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach_alt))
-
-    # SIMULATION USING A LINEAR PROCESS
-    # ###########################################################################################################
-    # Get the corresponding process data
-    for model_directory_lin in model_directories_lin
-        lin_ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory_lin, String(model_approach))
-
-        # Create the stagewise independent sample data (realizations) for the simulation
-        Random.seed!(12345+algo_params.forward_pass_seed)
-        sampling_scheme_linear = SDDP.OutOfSampleMonteCarlo(model, use_insample_transition = true) do stage
-            if model_directory_lin in ["msppy_model", "shapiro_model"]
-                return get_out_of_sample_realizations_multivariate_linear(number_of_realizations, stage, model_directory_lin)
-            else
-                return get_out_of_sample_realizations_linear(number_of_realizations, stage, model_directory_lin)
-            end
-        end
-        simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
-
-        # Using the sample data and the process data perform a simulation
-        simulation_results = cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
-        extended_simulation_analysis(simulation_results, file_path, String(model_approach), model_directory_lin)
-    end
-
-    return
-end
-
-model_and_train()
