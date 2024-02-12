@@ -265,9 +265,9 @@ function model_and_train()
     ###########################################################################################################
     number_of_stages = 120
     number_of_realizations = 100
-    simulation_replications = 200
-    model_directory = "fitted_model"
-    model_directories_alt = ["shapiro_model", "msppy_model"]
+    simulation_replications = 2000
+    model_directory = "shapiro_model"
+    model_directories_alt = ["fitted_model", "msppy_model"]
     model_directories_loglin = ["custom_model", "bic_model"]
 
     applied_solver = LogLinearSDDP.AppliedSolver()
@@ -276,7 +276,7 @@ function model_and_train()
     file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/"
     log_file = file_path * "LinearizedSDDP.log"
 
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)], forward_pass_seed = 11111, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
     # ADDITIONAL LOGGING TO SDDP.jl
     ###########################################################################################################
@@ -317,7 +317,7 @@ function model_and_train()
 
     # SIMULATION USING THE LINEARIZED PROCESS
     ###########################################################################################################
-    model.ext[:simulation_attributes] = [:level, :inflow]
+    model.ext[:simulation_attributes] = [:level, :inflow, :spillage, :gen, :exchange, :deficit_part, :hydro_gen]
     
     # In-sample simulation
     simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, model_directory, algo_params.simulation_regime)

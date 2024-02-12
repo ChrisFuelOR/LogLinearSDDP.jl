@@ -243,5 +243,54 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         close(f)
     end
 
+    # OBTAINING COST-RELEVANT VARIABLES
+    ############################################################################
+    # Declare file name
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_data.txt"
+    f = open(file_name, "w")
+
+    # Get volume data for given reservoir
+    column_names = [Symbol(i) for i in 1:120]
+    value_df = DataFrames.DataFrame([name => Vector{Vector{Float64}}() for name in column_names])
+    for i in eachindex(simulation_results)
+        outgoing_values = map(simulation_results[i]) do node
+            gen = sum(node[:gen][j] for j in 1:95)
+            hydro_gen = sum(node[:hydro_gen][k] for k in 1:4)
+            deficit = sum(node[:deficit_part][k,i] for i in 1:4 for k in 1:5)
+            exchange = sum(node[:exchange][k,l] for l in 1:5 for k in 1:5)
+            spillage = sum(node[:spillage][k] for k in 1:4)
+            return [gen, hydro_gen, deficit, exchange, spillage]
+        end    
+        push!(value_df, outgoing_values)
+    end
+
+    # compute and log mean
+    for stage in 1:120
+        gen_sum = 0.0
+        hydro_gen_sum = 0.0
+        deficit_sum = 0.0
+        exchange_sum = 0.0
+        spillage_sum = 0.0
+
+        for i in 1:DataFrames.nrow(value_df)
+            gen_sum += value_df[!, Symbol(stage)][i][1] 
+            hydro_gen_sum += value_df[!, Symbol(stage)][i][2] 
+            deficit_sum += value_df[!, Symbol(stage)][i][3] 
+            exchange_sum += value_df[!, Symbol(stage)][i][4] 
+            spillage_sum += value_df[!, Symbol(stage)][i][5] 
+        end
+
+        gen_avg = gen_sum/DataFrames.nrow(value_df)
+        hydro_gen_avg = hydro_gen_sum/DataFrames.nrow(value_df)
+        deficit_avg = deficit_sum/DataFrames.nrow(value_df)
+        exchange_avg = exchange_sum/DataFrames.nrow(value_df)
+        spillage_avg = spillage_sum/DataFrames.nrow(value_df)
+
+        println(f, "(", stage, ",", round(gen_avg, digits = 2), ",", round(hydro_gen_avg, digits = 2), ",", round(deficit_avg, digits = 2), ",", round(exchange_avg, digits = 2), ",", round(spillage_avg, digits = 2), ")")
+    end
+    println(f, "###################")
+
+    close(f)
+
     return
 end
