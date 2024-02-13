@@ -3,6 +3,9 @@ import DataFrames
 import Random
 
 
+include("../read_and_write_files.jl")
+
+
 """ Check if coefficients are transformed correctly. """
 function check_model(
     df::DataFrames.DataFrame,
@@ -129,6 +132,51 @@ function model_output(
     close(f)   
 end
 
+""" Writes the output of a "cross model" to a txt file.
+Cross model means that the same coefficients as for the log-linear process are used for a linearized process.
+"""
+function model_cross_output(
+    all_monthly_models::Vector{MonthlyModelStorage},
+    output_file_name::String,
+)
+    f = open(output_file_name, "w")
+    psi = Vector{Float64}()
+
+    for month in 1:12
+        # Get model parameters
+        lag_order = all_monthly_models[month].lag_order
+        coefficients = GLM.coef(all_monthly_models[month].fitted_model)
+        residuals = GLM.residuals(all_monthly_models[month].fitted_model)
+        std_error = sqrt(sum(residuals .^2) / (length(residuals) - 2)) 
+        monthly_mean = all_monthly_models[month].detrending_mean
+        monthly_std = all_monthly_models[month].detrending_sigma
+
+        # Compute corrected coefficients for SDDP (only for lag order = 1)
+        @assert lag_order == 1
+        lag_month = month - 1 > 0 ? month - 1 : Int(12 - mod((1 - month), 12))
+        lag_mean = all_monthly_models[lag_month].detrending_mean 
+        coefficient_corrected = coefficients[2] * monthly_std / all_monthly_models[lag_month].detrending_sigma
+        error_factor = all_monthly_models[month].detrending_sigma
+        #TODO: What about intercept?
+
+        # Compute corrected coefficients for SDDP
+        coefficient_corrected_lin = Vector{Float64}(undef, 2)
+        coefficient_corrected_lin[1] = coefficient_corrected * exp(monthly_mean - lag_mean)
+        coefficient_corrected_lin[2] = (1-coefficient_corrected) * exp(monthly_mean)
+
+        # Output to file
+        # Note that we store Psi (error_factor) in place of coefficient
+        println(f, month, ";", lag_order, ";", error_factor, ";", coefficient_corrected_lin, ";", std_error)
+
+        push!(psi, error_factor)
+    end
+
+    println("#############################################")     
+    close(f)   
+
+    return psi
+end
+
 
 """ Run analysis, fitting and validation of PAR model."""
 function prepare_ar_model()
@@ -138,7 +186,7 @@ function prepare_ar_model()
     # PARAMETER CONFIGURATION
     training_test_split = true
     detrending_with_sigma = true
-    identification_method = :bic
+    identification_method = :custom
     with_plots = false
 
     # FILE PATH COMPONENTS
@@ -151,6 +199,8 @@ function prepare_ar_model()
     elseif identification_method == :custom
         output_directory = "custom_model"
     end
+
+    psi = Vector{Vector{Float64}}()
     
     # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
     for system_number in 1:4
@@ -212,6 +262,22 @@ function prepare_ar_model()
         println("Model output for ", file_name)
         model_output(all_monthly_models, df, log_df, detrended_log_df, output_file_name)
 
+        # OUTPUT FOR CROSS MODEL
+        #######################################################################################
+        push!(psi, model_cross_output(all_monthly_models, "../LinearizedAutoregressivePreparation/cross_lin_model/model_lin_" * system_name * ".txt"))
+
     end
+
+    # Correct realizations of loglinear model with psi to fit to linear cross model
+    realization_df = read_realization_data(output_directory * "/scenarios_nonlinear.txt")
+    file_name = "../LinearizedAutoregressivePreparation/cross_lin_model/" * "scenarios_linear.txt"
+    f = open(file_name, "w")
+
+    for row in DataFrames.eachrow(realization_df)
+        month = mod(row["Stage"], 12) > 0 ? mod(row["Stage"],12) : 12
+        println(f, row["Stage"], ";", row["Realization_number"], ";", row["Probability"], ";", psi[1][month] * row["Realization_SE"], ";", psi[2][month] * row["Realization_S"],";", psi[3][month] * row["Realization_NE"],";", psi[4][month] * row["Realization_N"])
+    end
+    println(f)
+
 end
 

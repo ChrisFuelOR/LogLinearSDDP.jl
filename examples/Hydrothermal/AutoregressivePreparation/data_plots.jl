@@ -81,6 +81,16 @@ function plot_forecasts(df::DataFrames.DataFrame)
     return
 end
 
+""" Plotting the forecasts for detrended, logarithmized and original data (with comparison to the actual data)."""
+function plot_forecasts2(df::DataFrames.DataFrame)      
+
+    plot_fc_3 = Plots.plot(df[:,:orig],legend=false, color=:blue)
+    Plots.plot!(df[:,:fc_orig],color=:red, lw=2)
+    # Plots.plot!(df[:,:fc_orig_corr],color=:green, lw=2)
+    Plots.display(plot_fc_3)
+
+    return
+end
 
 """ Making box-plot and scatter diagrams for the mean and std of the original historical data
 vs the artificial scenario data on a monthly level."""

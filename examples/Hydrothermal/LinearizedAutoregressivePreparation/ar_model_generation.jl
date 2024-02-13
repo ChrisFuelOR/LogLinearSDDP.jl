@@ -47,6 +47,46 @@ function model_output(
 
 end
 
+""" Writes the output of a "cross model" to a txt file.
+Cross model means that the same coefficients as for the log-linear process are used for a linearized process.
+"""
+function model_cross_output(
+    all_monthly_models::Vector{MonthlyModelStorage},
+    std_errors::Vector{Float64},
+    output_file_name::String,
+)
+    f = open(output_file_name, "w")
+    psi = Vector{Float64}()
+
+    for month in 1:12
+        # Get model parameters (note that we ignore the very small intercepts here, to stay in accordance with Shapiro et al.)
+        lag_order = all_monthly_models[month].lag_order
+        coefficient = GLM.coef(all_monthly_models[month].fitted_model)[2]
+        std_error = std_errors[month]
+        monthly_mean = all_monthly_models[month].detrending_mean
+
+        # Get lag month and corresponding max_gen
+        lag_month = month - 1 > 0 ? month - 1 : Int(12 - mod((1 - month), 12))
+        lag_mean = all_monthly_models[lag_month].detrending_mean 
+
+        # Compute coefficient for SDDP
+        coefficient_loglin = Vector{Float64}(undef, 1)
+        coefficient_loglin[1] = coefficient
+
+        # Compute intercept for SDDP
+        intercept = monthly_mean - coefficient * lag_mean
+
+        # Output to file
+        # Note that we store Psi (error_factor) in place of coefficient
+        println(f, month, ";", lag_order, ";", intercept, ";", coefficient_loglin, ";", 1.0, ";", std_error)
+    end
+
+    println("#############################################")     
+    close(f)   
+
+    return
+end
+
 
 """ Analysis, fitting and validation of the linearized PAR model (with respect to the original data).
 This approach goes back to a paper by Shapiro et al. (2013). The idea is to approximate the true
@@ -131,7 +171,7 @@ function prepare_ar_model()
 
         # ANALYZING AND MODELING THE FULL DATA (ASSUMING A NON-PERIODIC MODEL)
         #######################################################################################
-        box_jenkins_full_time_series(data_frame_to_vector(train_data_log), data_frame_to_vector(train_data), with_plots)
+        box_jenkins_full_time_series(data_frame_to_vector(train_data_log), data_frame_to_vector(train_data), false)
         
         # ANALYZING AND MODELING THE MONTHLY DATA (PERIODIC MODEL)
         #######################################################################################
@@ -140,7 +180,7 @@ function prepare_ar_model()
         # (1) Importantly, here the residuals should be computed as multiplicative deviations!
         # (2) To stay in accordance with Shapiro et al., we ignore the intercepts (which are negligibly small). 
         # It would be better to fit models without intercepts then, but GLM forecasting in Julia relies on models with intercepts.
-        all_monthly_models, std_errors = box_jenkins_periodic(train_data_adapt, train_data_orig, acv_df, μ, σ, with_plots)
+        all_monthly_models, std_errors = box_jenkins_periodic(train_data_adapt, train_data_orig, acv_df, μ, σ, false)
 
         # MODEL VALIDATION: FORECASTS
         #######################################################################################
@@ -158,6 +198,21 @@ function prepare_ar_model()
         println("Model output for ", file_name)
         model_output(all_monthly_models, std_errors, output_file_name)
 
+        # OUTPUT FOR CROSS MODEL
+        #######################################################################################
+        model_cross_output(all_monthly_models, std_errors, "../AutoregressivePreparation/cross_log_model/model_" * system_name * ".txt")
+
     end
+
+    # Write realizations of linear model to loglinear cross model
+    realization_df = read_realization_data(output_directory * "/scenarios_linear.txt")
+    file_name = "../AutoregressivePreparation/cross_log_model/" * "scenarios_nonlinear.txt"
+    f = open(file_name, "w")
+
+    for row in DataFrames.eachrow(realization_df)
+        month = mod(row["Stage"], 12) > 0 ? mod(row["Stage"],12) : 12
+        println(f, row["Stage"], ";", row["Realization_number"], ";", row["Probability"], ";", row["Realization_SE"], ";", row["Realization_S"],";", row["Realization_NE"],";", row["Realization_N"])
+    end
+    println(f)
 end
 

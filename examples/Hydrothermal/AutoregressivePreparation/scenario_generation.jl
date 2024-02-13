@@ -3,24 +3,8 @@ import DataFrames
 import Distributions
 import Random
 include("AutoregressivePreparation.jl")
+include("../read_and_write_files.jl")
 import .AutoregressivePreparation
-
-
-""" Reads stored model data."""
-function read_model(file_name)
-    f = open(file_name)
-    df = CSV.read(file_name, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    
-    close(f)
-    return df
-end
-
-function read_model_std(file_name)
-    df = read_model(file_name)
-    stds = df[:, "Sigma"]
-    return stds
-end
-
 
 """ Method that generates "scenarios" in the sense that it generates a given number
 of realizations and stages for the stagewise independent term (error term) in the PAR model.
@@ -76,10 +60,10 @@ function history_generation(model_directory::String)
     historic_data = [historic_data_SE, historic_data_S, historic_data_NE, historic_data_N]
 
     # Read AR model data for all four reservoir systems
-    model_SE = read_model(model_directory * "/" * "model_SE.txt")
-    model_S = read_model(model_directory * "/" * "model_S.txt")
-    model_NE = read_model(model_directory * "/" * "model_NE.txt")
-    model_N = read_model(model_directory * "/" * "model_N.txt")
+    model_SE = read_model_loglinear(model_directory * "/" * "model_SE.txt")
+    model_S = read_model_loglinear(model_directory * "/" * "model_S.txt")
+    model_NE = read_model_loglinear(model_directory * "/" * "model_NE.txt")
+    model_N = read_model_loglinear(model_directory * "/" * "model_N.txt")
     models = [model_SE, model_S, model_NE, model_N]
 
     all_months = [12,11,10,9,8,7,6,5,4,3,2,1]
@@ -109,17 +93,13 @@ function history_generation(model_directory::String)
                 # Get model data for current month and system
                 lag_order = models[ℓ][month, "Lag_order"]
                 intercept = models[ℓ][month, "Intercept"]
-                current_coefficients = models[ℓ][month, "Coefficients"]
                 psi = models[ℓ][month, "Psi"]
                 sigma = models[ℓ][month, "Sigma"]
+                current_coefficients = parse_coefficients(models[ℓ][month, "Coefficients"])
 
                 coefficients = zeros(lag_order, 4, 4)
-                current_coefficients = strip(current_coefficients, ']')
-                current_coefficients = strip(current_coefficients, '[')
-                current_coefficients = split(current_coefficients, ",")
                 for k in eachindex(current_coefficients)
-                    coefficient = current_coefficients[k]
-                    coefficients[k, ℓ, ℓ] = parse(Float64, coefficient)
+                    coefficients[k, ℓ, ℓ] = current_coefficients[k]
                 end
 
                 # Generate a realization for eta

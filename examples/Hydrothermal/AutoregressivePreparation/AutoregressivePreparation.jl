@@ -47,5 +47,6 @@ include("box_jenkins.jl")
 include("periodic_box_jenkins.jl")
 include("forecasting.jl")
 include("ar_model_generation.jl")
+include("validation_cross_models.jl")
 
 end
