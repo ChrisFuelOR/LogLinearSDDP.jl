@@ -32,7 +32,10 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier
+    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
+    if !ispath(file_path)
+    	mkpath(file_path)
+    end
     log_file = file_path * "LogLinearSDDP.log"
     run_description = ""
     ###########################################################################################################
