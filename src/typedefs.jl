@@ -52,13 +52,11 @@ Struct for storing information related to a cut.
 The argument "coefficients" is the cut slope vector β. It can be computed as the dual vector corresponding
     to copy constraints.
 
-The argument "stochastic_intercept_tight" is the value of the full intercept at the state of construction,
+The argument "intercept_variable_tight" is the value of the intercept variable at the state of construction,
     i.e. where the cut is tight. This is used for checks and to compute other values.
 
 The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
     but a matrix of intercept factors for each τ=t,...  ,T and each component ℓ of the autoregressive process. 
-    These factors are used to compute (adapt) the intercept of a cut to the scenario at hand.
-    This is done by fixing the corresponding cut_intercept_variable.
 
 The argument "deterministic_intercept" is used to account for the contribution of deterministic constraints
     to the intercept. Handling them as coupling constraints is unnecessary, e.g. from a memory perspective, 
@@ -67,9 +65,6 @@ The argument "deterministic_intercept" is used to account for the contribution o
 The argument "trial state" is the point (incumbent) where the cut is constructed.
 
 The argument "cut_constraint" refers to the cut constraint in the JuMP model.
-
-The argument "cut_intercept_variable" refers to the artificial variable in the JuMP model which is fixed to the
-    cut intercept for the specific scenario at hand.
 
 The argument "non_dominated_count" is required for cut selection purposes.
 
@@ -80,11 +75,10 @@ The argument "iteration" stores the iteration number in which the cut was constr
 mutable struct Cut
     coefficients::Dict{Symbol,Float64}
     intercept_factors::Array{Float64,2}
-    stochastic_intercept_tight::Float64
+    intercept_variable_tight::Float64
     deterministic_intercept::Float64
     trial_state::Dict{Symbol,Float64}
     constraint_ref::Union{Nothing,JuMP.ConstraintRef}
-    cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
     obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
     belief_y::Union{Nothing,Dict{T,Float64} where {T}}
     non_dominated_count::Int64

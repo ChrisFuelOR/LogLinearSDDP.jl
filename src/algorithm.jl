@@ -891,6 +891,18 @@ function train(
         for oracle in node.bellman_function.local_thetas
             oracle.deletion_minimum = cut_deletion_minimum
         end
+
+        # CHANGES TO SDDP.jl
+        ####################################################################################
+        ar_process = model.ext[:ar_process]
+        t = node.index
+        T = model.ext[:problem_params].number_of_stages
+        L = LogLinearSDDP.get_max_dimension(ar_process)
+
+        # Add new variables for each problem which are fixed to correctly adapt the cut intercept to a given scenario
+        # Initially fixed to 0.0
+        JuMP.@variable(node.subproblem, w[1:T-t+1,1:L] == 0.0)
+
     end
     dashboard_callback = if dashboard
         SDDP.launch_dashboard()
@@ -918,6 +930,7 @@ function train(
         forward_pass_callback,
         # post_iteration_callback,
     )
+
     status = :not_solved
     try
         TimerOutputs.@timeit model.timer_output "loop" begin

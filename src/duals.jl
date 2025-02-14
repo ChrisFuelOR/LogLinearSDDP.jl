@@ -72,10 +72,10 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 
     # Evaluate the "stochastic" part of the intercept for the current noise in the backward pass
     TimerOutputs.@timeit model.timer_output "cut_intercept_tight" begin
-        stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+        scenario_intercept_tight = evaluate_cut_scenario_tight(node, α)
     end
 
-    return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight
+    return JuMP.objective_value(node.subproblem), λ, α, scenario_intercept_tight
 end
 
 
@@ -92,30 +92,6 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
-
-    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
-
-    for cut_index in eachindex(cuts)
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
-    end
-
-    return sum(cut_array)
-end
-
-function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
-
-    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
-
-    @batch minbatch=100 for cut_index in eachindex(cuts)
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
-    end
-
-    return sum(cut_array)
-end
-
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
     for ℓ in 1:L
@@ -124,12 +100,12 @@ function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.
     end
 end
 
-function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+function compute_alpha_tau!(subproblem::JuMP.Model, α::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
 
     for τ in t+1:T 
         L_τ = ar_parameters[τ].dimension
         for ℓ in 1:L_τ
-            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+            α[τ-t+1,ℓ] = JuMP.dual(subproblem[:w][τ-t+1,ℓ]) * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
         end
     end
 end
@@ -156,14 +132,10 @@ function get_alphas(node::SDDP.Node)
     end     
 
     # Get cut constraint duals and compute first factor
-    if t < T
-        TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
-        end
-       
+    if t < T     
         # Case τ > t
         TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
-            compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+            compute_alpha_tau!(node.subproblem, α, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
         end
        
     end

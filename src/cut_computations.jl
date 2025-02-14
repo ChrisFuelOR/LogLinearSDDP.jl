@@ -92,7 +92,7 @@ end
 Evaluation of all cut intrcepts for a given problem and the given scenario (process state/history) at hand.
 """
 
-function evaluate_cut_intercepts(
+function evaluate_cut_scenarios(
     node::SDDP.Node,
     noise_term::Union{Float64,Any},
 )
@@ -106,42 +106,41 @@ function evaluate_cut_intercepts(
     autoregressive_data = model.ext[:ar_process]
     t = node.index
 
-    if !isempty(node.bellman_function.global_theta.cuts)
-        # Get exponents for the considered cut
-        cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
+    # Get exponents for the considered cut
+    cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
-        # Get process state for the considered cut
-        process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
+    # Get process state for the considered cut
+    process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
 
-        # First compute scenario-specific factors
-        TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-            scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
-        end
+    # First compute scenario-specific factors
+    TimerOutputs.@timeit model.timer_output "scenario_factors" begin
+        scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+    end
 
-        # Iterate over all cuts and adapt intercept
-        TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
-            set_intercepts(node.bellman_function.global_theta.cuts, t+1, scenario_factors, problem_params, autoregressive_data, model.timer_output)
-        end
+    # Iterate over all cuts and adapt intercept
+    TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
+        set_scenario_values(subproblem, t+1, scenario_factors, problem_params, autoregressive_data)
     end
 
     return
 
 end
 
-function set_intercepts(
-    cuts::Vector{LogLinearSDDP.Cut},
+function set_scenario_values(
+    subproblem::JuMP.Model,
     t::Int64,
     scenario_factors::Array{Float64,2},
     problem_params::LogLinearSDDP.ProblemParams,
     ar_process::LogLinearSDDP.AutoregressiveProcess,
-    timer_output::Any,
     )
 
-    for cut in cuts
-        TimerOutputs.@timeit timer_output "intercept_value" begin    
-            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params, ar_process)
+    T = problem_params.number_of_stages
+
+    for τ in t:T
+        L_τ = ar_process.parameters[τ].dimension
+        for ℓ in 1:L_τ
+            JuMP.fix(subproblem[:w][τ-t+1,ℓ], scenario_factors[τ-t+1,ℓ])
         end
-        JuMP.fix(cut.cut_intercept_variable, intercept_value)
     end
 end
 
@@ -180,34 +179,6 @@ function compute_scenario_factors(
 
 end
 
-
-""" 
-Compute the value of the cut intercept for the given cut and the given scenario (process state/history) at hand.
-"""
-
-function compute_intercept_value(
-    t::Int64,
-    cut::LogLinearSDDP.Cut,
-    scenario_factors::Array{Float64,2},
-    problem_params::LogLinearSDDP.ProblemParams,
-    ar_process::LogLinearSDDP.AutoregressiveProcess,
-)
-
-    T = problem_params.number_of_stages
-
-    #Evaluate the intercept
-    intercept_value = cut.deterministic_intercept
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
-        end
-    end
-
-    return intercept_value
-
-end
-
 function compute_intercept_value_tight(
     t::Int64,
     T::Int64,
@@ -232,7 +203,7 @@ end
 Evaluation the cut intercept for the about to be created cut at the state of construction (point of tightness)
 """
 
-function evaluate_cut_intercept_tight(
+function evaluate_cut_scenario_tight(
     node::SDDP.Node,
     intercept_factors::Array{Float64,2},
 )
@@ -263,4 +234,5 @@ function evaluate_cut_intercept_tight(
     intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
 
     return intercept_value
+
 end
