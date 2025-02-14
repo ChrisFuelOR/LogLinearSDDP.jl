@@ -51,8 +51,8 @@ function parameterize(
     set_objective(node)
     
     model = SDDP.get_policy_graph(node.subproblem)
-    TimerOutputs.@timeit model.timer_output "evaluate_cut_intercepts" begin
-        evaluate_cut_intercepts(node, noise_term)
+    TimerOutputs.@timeit model.timer_output "evaluate_cut_scenarios" begin
+        evaluate_cut_scenarios(node, noise_term)
     end
     
     return
