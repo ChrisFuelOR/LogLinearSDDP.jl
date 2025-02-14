@@ -58,9 +58,9 @@ function _add_cut_constraint_to_model(V::LogLinearSDDP.ConvexApproximation, cut:
      # CHANGES TO SDDP.jl
     ####################################################################################
     cut.constraint_ref = if JuMP.objective_sense(model) == MOI.MIN_SENSE
-        JuMP.@constraint(model, expr >= sum(cut.intercept_factors[τ,ℓ] * model[:w][τ,ℓ] for τ in 1:size(cut.intercept_factors,1), ℓ in 1:size(cut.intercept_factors,2)))
+        JuMP.@constraint(model, expr >= - cut.deterministic_intercept + sum(cut.intercept_factors[τ,ℓ] * model[:w][τ,ℓ] for τ in 1:size(cut.intercept_factors,1), ℓ in 1:size(cut.intercept_factors,2)))
     else
-        JuMP.@constraint(model, expr <= sum(cut.intercept_factors[τ,ℓ] * model[:w][τ,ℓ] for τ in 1:size(cut.intercept_factors,1), ℓ in 1:size(cut.intercept_factors,2)))
+        JuMP.@constraint(model, expr <= - cut.deterministic_intercept + sum(cut.intercept_factors[τ,ℓ] * model[:w][τ,ℓ] for τ in 1:size(cut.intercept_factors,1), ℓ in 1:size(cut.intercept_factors,2)))
     end
     ####################################################################################
 

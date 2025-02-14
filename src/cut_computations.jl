@@ -123,7 +123,6 @@ function evaluate_cut_scenarios(
             set_scenario_values(subproblem, t+1, scenario_factors, problem_params, autoregressive_data)
         end
 
-        Infiltrator.@infiltrate
     end
 
     return
