@@ -697,7 +697,7 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
     end
    
     # println(forward_trajectory.scenario_path)
-    # Infiltrator.@infiltrate
+    Infiltrator.@infiltrate
    
     push!(
         options.log,
