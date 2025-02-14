@@ -26,7 +26,7 @@ function _add_cut(
         θᵏ -= πᵏ[key] * x
     end
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
-    cut = LogLinearSDDP.Cut(πᵏ, αᵏ, uᵏ, θᵏ - uᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
+    cut = LogLinearSDDP.Cut(πᵏ, αᵏ, uᵏ, θᵏ - uᵏ, xᵏ, nothing, obj_y, belief_y, 1, iteration)
     _add_cut_constraint_to_model(V, cut)
     push!(V.cuts, cut)
 

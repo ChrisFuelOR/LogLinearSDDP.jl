@@ -106,20 +106,22 @@ function evaluate_cut_scenarios(
     autoregressive_data = model.ext[:ar_process]
     t = node.index
 
-    # Get exponents for the considered cut
-    cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
+    if !isempty(node.bellman_function.global_theta.cuts)
+        # Get exponents for the considered cut
+        cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
-    # Get process state for the considered cut
-    process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
+        # Get process state for the considered cut
+        process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
 
-    # First compute scenario-specific factors
-    TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-        scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
-    end
+        # First compute scenario-specific factors
+        TimerOutputs.@timeit model.timer_output "scenario_factors" begin
+            scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+        end
 
-    # Iterate over all cuts and adapt intercept
-    TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
-        set_scenario_values(subproblem, t+1, scenario_factors, problem_params, autoregressive_data)
+        # Iterate over all cuts and adapt intercept
+        TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
+            set_scenario_values(subproblem, t+1, scenario_factors, problem_params, autoregressive_data)
+        end
     end
 
     return

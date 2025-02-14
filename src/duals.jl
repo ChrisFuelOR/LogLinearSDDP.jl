@@ -105,7 +105,7 @@ function compute_alpha_tau!(subproblem::JuMP.Model, α::Array{Float64,2}, cut_ex
     for τ in t+1:T 
         L_τ = ar_parameters[τ].dimension
         for ℓ in 1:L_τ
-            α[τ-t+1,ℓ] = JuMP.dual(subproblem[:w][τ-t+1,ℓ]) * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+            α[τ-t+1,ℓ] = JuMP.dual(JuMP.FixRef(subproblem[:w][τ-t+1,ℓ])) * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
         end
     end
 end
