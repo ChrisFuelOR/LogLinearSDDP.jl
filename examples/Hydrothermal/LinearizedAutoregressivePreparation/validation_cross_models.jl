@@ -79,7 +79,6 @@ function static_point_forecast_cross_model(
 
             # Naive forecast
             df[row, :fc_naive] = df[row-lag_order, :orig]
-            Infiltrator.@infiltrate
         end
     end
 
@@ -195,7 +194,7 @@ function validate_ar_cross_model()
 
     # PARAMETER CONFIGURATION
     training_test_split = true
-    with_plots = true
+    with_plots = false
     
     # FILE PATH COMPONENTS
     directory_name = "historical_data"
@@ -242,7 +241,7 @@ function validate_ar_cross_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios_cross_model(system_number, df, cross_models, [df[1,1]], std_errors, 200, with_plots)
+        generate_full_scenarios_cross_model(system_number, df, cross_models, [df[1,1]], std_errors, 200, true)
 
     end
 end

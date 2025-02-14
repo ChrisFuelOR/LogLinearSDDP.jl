@@ -219,7 +219,6 @@ function generate_full_scenarios_given_model(
             d = Distributions.MvNormal(zeros(4), sigma_matrices[month])
             error = rand(d, 1)
             df[row, :fc_orig] = prediction * exp(error[system_number])
-            Infiltrator.@infiltrate
         end
 
         current_df = df[121:948,:]
@@ -259,7 +258,7 @@ function validate_ar_model()
 
     # PARAMETER CONFIGURATION
     training_test_split = true
-    with_plots = true
+    with_plots = false
     
     # FILE PATH COMPONENTS
     directory_name = "historical_data"
@@ -268,7 +267,7 @@ function validate_ar_model()
     output_directory = "shapiro_model/"
 
     # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
-    for system_number in 1:4
+    for system_number in 4:4
 
         # We reset the seed for each system to make sure that the same multivariate Normal distribution is used for each
         Random.seed!(12345)
@@ -309,7 +308,7 @@ function validate_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios_given_model(system_number, df, all_monthly_models, [df[1,1]], sigma_matrices, 200, with_plots)
+        generate_full_scenarios_given_model(system_number, df, all_monthly_models, [df[1,1]], sigma_matrices, 1000, true)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################

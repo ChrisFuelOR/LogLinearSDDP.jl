@@ -132,7 +132,7 @@ function prepare_ar_model()
     output_directory = "fitted_model"
 
     # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
-    for system_number in 1:4
+    for system_number in 4:4
         system_name = system_names[system_number]
         file_name = directory_name * "/" * file_names[system_number]
         output_file_name = output_directory * "/model_lin_" * String(system_name) * ".txt"   
@@ -191,7 +191,7 @@ function prepare_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios(system_number, df, all_monthly_models, [df[1,1]], std_errors, 200, with_plots)
+        generate_full_scenarios(system_number, df, all_monthly_models, [df[1,1]], std_errors, 1000, true)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################
@@ -200,19 +200,19 @@ function prepare_ar_model()
 
         # OUTPUT FOR CROSS MODEL
         #######################################################################################
-        model_cross_output(all_monthly_models, std_errors, "../AutoregressivePreparation/cross_log_model/model_" * system_name * ".txt")
+        # model_cross_output(all_monthly_models, std_errors, "../AutoregressivePreparation/cross_log_model/model_" * system_name * ".txt")
 
     end
 
-    # Write realizations of linear model to loglinear cross model
-    realization_df = read_realization_data(output_directory * "/scenarios_linear.txt")
-    file_name = "../AutoregressivePreparation/cross_log_model/" * "scenarios_nonlinear.txt"
-    f = open(file_name, "w")
+    # # Write realizations of linear model to loglinear cross model
+    # realization_df = read_realization_data(output_directory * "/scenarios_linear.txt")
+    # file_name = "../AutoregressivePreparation/cross_log_model/" * "scenarios_nonlinear.txt"
+    # f = open(file_name, "w")
 
-    for row in DataFrames.eachrow(realization_df)
-        month = mod(row["Stage"], 12) > 0 ? mod(row["Stage"],12) : 12
-        println(f, row["Stage"], ";", row["Realization_number"], ";", row["Probability"], ";", row["Realization_SE"], ";", row["Realization_S"],";", row["Realization_NE"],";", row["Realization_N"])
-    end
-    println(f)
+    # for row in DataFrames.eachrow(realization_df)
+    #     month = mod(row["Stage"], 12) > 0 ? mod(row["Stage"],12) : 12
+    #     println(f, row["Stage"], ";", row["Realization_number"], ";", row["Probability"], ";", row["Realization_SE"], ";", row["Realization_S"],";", row["Realization_NE"],";", row["Realization_N"])
+    # end
+    # println(f)
 end
 

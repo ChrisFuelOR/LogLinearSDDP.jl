@@ -115,6 +115,8 @@ function plot_scenario_statistics(
     Plots.display(bx_plot_std)
     Plots.savefig(bx_plot_std, "Box_plot_std_" * string(system_number) * ".pdf")
 
+    Infiltrator.@infiltrate
+
     return
 end
 

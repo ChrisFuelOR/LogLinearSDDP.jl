@@ -6,7 +6,7 @@ import DataFrames
 import Distributions
 using GLM
 import HypothesisTests
-using Plots; gr()#; pgfplotsx() gr()
+using Plots; pgfplotsx()#; pgfplotsx() gr()
 import Statistics
 import StatsBase
 import StatsPlots

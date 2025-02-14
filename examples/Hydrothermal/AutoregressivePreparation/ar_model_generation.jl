@@ -255,7 +255,8 @@ function prepare_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios(system_number, df, all_monthly_models, [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]], 200, detrending_with_sigma, with_plots)
+        starting_values = [detrended_log_df[1,1], detrended_log_df[1,2], detrended_log_df[1,3], detrended_log_df[1,4], detrended_log_df[1,5], detrended_log_df[1,6], detrended_log_df[1,7], detrended_log_df[1,8], detrended_log_df[1,9], detrended_log_df[1,10]]
+        generate_full_scenarios(system_number, df, all_monthly_models, starting_values, 1000, detrending_with_sigma, with_plots)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################
