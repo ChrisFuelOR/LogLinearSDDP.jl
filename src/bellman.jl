@@ -27,7 +27,7 @@ function _add_cut(
     end
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
     cut = LogLinearSDDP.Cut(πᵏ, αᵏ, uᵏ, θᵏ - uᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
-    _add_cut_constraint_to_model(V, cut)
+    _add_cut_constraint_to_model2(V, cut)
     push!(V.cuts, cut)
 
     if cut_selection
@@ -67,11 +67,46 @@ function _add_cut_constraint_to_model(V::LogLinearSDDP.ConvexApproximation, cut:
     else
         JuMP.@constraint(model, expr <= cut.cut_intercept_variable)
     end
+    
+    node = SDDP.get_node(model)
+    push!(node.ext[:cut_cons], cut.constraint_ref)
     ####################################################################################
 
     return
 end
 
+function _add_cut_constraint_to_model2(V::LogLinearSDDP.ConvexApproximation, cut::LogLinearSDDP.Cut)
+    model = JuMP.owner_model(V.theta)
+    yᵀμ = JuMP.AffExpr(0.0)
+    if V.objective_states !== nothing
+        for (y, μ) in zip(cut.obj_y, V.objective_states)
+            JuMP.add_to_expression!(yᵀμ, y, μ)
+        end
+    end
+    if V.belief_states !== nothing
+        for (k, μ) in V.belief_states
+            JuMP.add_to_expression!(yᵀμ, cut.belief_y[k], μ)
+        end
+    end
+    expr = JuMP.@expression(
+        model,
+        V.theta + yᵀμ - sum(cut.coefficients[i] * x for (i, x) in V.states)
+    )
+
+     # CHANGES TO SDDP.jl
+    ####################################################################################
+    cut.constraint_ref = if JuMP.objective_sense(model) == MOI.MIN_SENSE
+        JuMP.@constraint(model, expr >= 0)
+    else
+        JuMP.@constraint(model, expr <= 0)
+    end
+    
+    node = SDDP.get_node(model)
+    push!(node.ext[:cut_cons], cut.constraint_ref)
+    ####################################################################################
+
+    return
+end
 
 function refine_bellman_function(
     model::SDDP.PolicyGraph{T},

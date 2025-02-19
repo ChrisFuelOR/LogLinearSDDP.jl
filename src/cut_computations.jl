@@ -121,6 +121,7 @@ function evaluate_cut_intercepts(
         # Iterate over all cuts and adapt intercept
         TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
             set_intercepts(node.bellman_function.global_theta.cuts, t+1, scenario_factors, problem_params, autoregressive_data, model.timer_output)
+            #set_intercepts2(node.bellman_function.global_theta.cuts, t+1, scenario_factors, problem_params, autoregressive_data, model.timer_output)
         end
     end
 
@@ -142,6 +143,23 @@ function set_intercepts(
             intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params, ar_process)
         end
         JuMP.fix(cut.cut_intercept_variable, intercept_value)
+    end
+end
+
+function set_intercepts2(
+    cuts::Vector{LogLinearSDDP.Cut},
+    t::Int64,
+    scenario_factors::Array{Float64,2},
+    problem_params::LogLinearSDDP.ProblemParams,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    timer_output::Any,
+    )
+
+    for cut in cuts
+        TimerOutputs.@timeit timer_output "intercept_value" begin    
+            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params, ar_process)
+        end
+        JuMP.set_normalized_rhs(cut.constraint_ref, intercept_value)
     end
 end
 
@@ -208,7 +226,7 @@ function compute_intercept_value(
 
 end
 
-function compute_intercept_value_tight(
+function compute_stochastic_intercept_value_tight(
     t::Int64,
     T::Int64,
     scenario_factors::Array{Float64,2},
@@ -260,7 +278,7 @@ function evaluate_cut_intercept_tight(
     end
 
     #Evaluate the stochastic part of the intercept
-    intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
+    intercept_value = compute_stochastic_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
 
     return intercept_value
 end

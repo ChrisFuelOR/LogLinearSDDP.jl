@@ -697,7 +697,7 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
     end
    
     # println(forward_trajectory.scenario_path)
-    Infiltrator.@infiltrate
+    # Infiltrator.@infiltrate
    
     push!(
         options.log,
@@ -891,6 +891,10 @@ function train(
         for oracle in node.bellman_function.local_thetas
             oracle.deletion_minimum = cut_deletion_minimum
         end
+
+        # CHANGES TO SDDP.jl
+        ####################################################################################
+        node.ext[:cut_cons] = Vector{JuMP.ConstraintRef}()
     end
     dashboard_callback = if dashboard
         SDDP.launch_dashboard()

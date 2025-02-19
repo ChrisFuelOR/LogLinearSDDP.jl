@@ -173,6 +173,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
+        direct_mode = true,
         optimizer = Gurobi.Optimizer,
         sense = :Min,
         lower_bound = 0.0,

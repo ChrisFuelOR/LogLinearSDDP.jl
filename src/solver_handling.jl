@@ -126,7 +126,8 @@ function set_solver_for_model(
 )
 
     for (_, node) in model.nodes
-        set_solver!(node.subproblem, algo_params, applied_solver, algo_params.solver_approach)
+        #set_solver!(node.subproblem, algo_params, applied_solver, algo_params.solver_approach)
+        JuMP.set_attribute(node.subproblem, MOI.Silent(), algo_params.silent)
     end
 end
 

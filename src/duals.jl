@@ -92,16 +92,91 @@ function prepare_backward_pass(node::SDDP.Node, ::ContinuousConicDuality, ::LogL
 end
 
 
-function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
+function get_existing_cuts_factors1(cuts::Vector{LogLinearSDDP.Cut}, model::JuMP.Model)
 
     cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
 
     for cut_index in eachindex(cuts)
         # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
         cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+        #println(JuMP.dual(cuts[cut_index].constraint_ref))
+    end
+    #println()
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors3(cuts::Vector{LogLinearSDDP.Cut}, model::JuMP.Model)
+
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = MOI.get(JuMP.backend(model), MOI.ConstraintDual(), JuMP.index(cuts[cut_index].constraint_ref)) * cuts[cut_index].intercept_factors
     end
 
     return sum(cut_array)
+end
+
+function get_existing_cuts_factors4(cuts::Vector{LogLinearSDDP.Cut}, node::SDDP.Node)
+
+    indices = JuMP.index.(node.ext[:cut_cons])
+    dual_solution = zeros(length(indices))
+    dual_solution .= MOI.get(JuMP.backend(node.subproblem), MOI.ConstraintDual(), indices)
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = dual_solution[cut_index] * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors5(cuts::Vector{LogLinearSDDP.Cut}, node::SDDP.Node)
+
+    dual_solution = zeros(length(cuts))
+    Gurobi.GRBgetdblattrarray(JuMP.backend(node.subproblem), "Pi", 9, length(dual_solution), dual_solution)
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))   
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        cut_array[cut_index] = dual_solution[cut_index] * cuts[cut_index].intercept_factors
+    end
+    
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors6(cuts::Vector{LogLinearSDDP.Cut}, node::SDDP.Node)
+    
+    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))   
+
+    for cut_index in eachindex(cuts)
+        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+        dual_value = Ref{Cdouble}()
+        cut_array[cut_index] = Gurobi.GRBgetdblattrelement(JuMP.backend(node.subproblem), "Pi", 9+cut_index, dual_value) * cuts[cut_index].intercept_factors
+    end
+
+    return sum(cut_array)
+end
+
+function get_existing_cuts_factors7(cuts::Vector{LogLinearSDDP.Cut}, node::SDDP.Node)
+
+    dual_solution = zeros(length(cuts))
+    Gurobi.GRBgetdblattrarray(JuMP.backend(node.subproblem), "Pi", 9, length(dual_solution), dual_solution)
+    non_zero_dual_indices = findall(>(0), dual_solution)
+    cut_array = Vector{Array{Float64,2}}()   
+    
+    if length(non_zero_dual_indices) > 0
+        for cut_index in non_zero_dual_indices
+            # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+            push!(cut_array, dual_solution[cut_index] * cuts[cut_index].intercept_factors)
+        end
+        return sum(cut_array)
+
+    else
+        return zeros(size(cuts[1].intercept_factors))
+    end
 end
 
 function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
@@ -134,6 +209,21 @@ function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2},
     end
 end
 
+function compute_alpha_tau2!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            prod_val = cut_factors[τ-t,ℓ]
+            exp_val = current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ]
+            for ν in 1:L_t
+                prod_val *= exp(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + exp_val))
+            end
+            α[τ-t+1,ℓ] = prod_val
+        end
+    end
+end
+
 function get_alphas(node::SDDP.Node)
 
     # We also need the dual variables for all coupling constraints.
@@ -157,15 +247,39 @@ function get_alphas(node::SDDP.Node)
 
     # Get cut constraint duals and compute first factor
     if t < T
-        TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+        # TimerOutputs.@timeit model.timer_output "existing_cut_factor_1" begin
+        #    cut_factors = get_existing_cuts_factors1(node.bellman_function.global_theta.cuts, node.subproblem)
+        # end
+        # TimerOutputs.@timeit model.timer_output "existing_cut_factor_3" begin
+        #    cut_factors = get_existing_cuts_factors3(node.bellman_function.global_theta.cuts, node.subproblem)
+        # end
+        # TimerOutputs.@timeit model.timer_output "existing_cut_factor_4" begin
+        #    cut_factors = get_existing_cuts_factors4(node.bellman_function.global_theta.cuts, node)
+        # end
+        # TimerOutputs.@timeit model.timer_output "existing_cut_factor_5" begin
+        #    cut_factors = BenchmarkTools.@btime get_existing_cuts_factors5($node.bellman_function.global_theta.cuts, $node)
+        # end
+        # TimerOutputs.@timeit model.timer_output "existing_cut_factor_6" begin
+        #    cut_factors = get_existing_cuts_factors6(node.bellman_function.global_theta.cuts, node)
+        # end
+        TimerOutputs.@timeit model.timer_output "existing_cut_factor_7" begin
+           cut_factors = get_existing_cuts_factors7(node.bellman_function.global_theta.cuts, node)
         end
-       
+        
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors1($node.bellman_function.global_theta.cuts, $node.subproblem)
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors3($node.bellman_function.global_theta.cuts, $node.subproblem)
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors4($node.bellman_function.global_theta.cuts, $node)
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors5($node.bellman_function.global_theta.cuts, $node)
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors6($node.bellman_function.global_theta.cuts, $node)
+        # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors7($node.bellman_function.global_theta.cuts, $node)
+              
         # Case τ > t
         TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
             compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
         end
-       
+        #BenchmarkTools.@btime compute_alpha_tau!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau2!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+
     end
 
     return α
