@@ -199,12 +199,74 @@ function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.
     end
 end
 
+function compute_alpha_t2!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    expo = ar_process_stage.intercept .+ ar_process_stage.psi .* current_independent_noise_term
+
+    for ℓ in 1:L
+        α[1,ℓ] = JuMP.dual(coupling_constraints[ℓ]) * exp(expo[ℓ])
+    end
+end
+
+function compute_alpha_t3!(α::Array{Float64,2}, node::SDDP.Node, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    indices = JuMP.index.(coupling_constraints)
+    dual_solution = zeros(length(indices))
+    dual_solution .= MOI.get(JuMP.backend(node.subproblem), MOI.ConstraintDual(), indices)
+
+    for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
+function compute_alpha_t4!(α::Array{Float64,2}, node::SDDP.Node, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Vector{Float64}, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    indices = JuMP.index.(coupling_constraints)
+    dual_solution = zeros(length(indices))
+    dual_solution .= MOI.get(JuMP.backend(node.subproblem), MOI.ConstraintDual(), indices)
+
+    for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
+function compute_alpha_t5!(α::Array{Float64,2}, node::SDDP.Node, intercept::Vector{Float64}, psi::Vector{Float64}, current_independent_noise_term::Vector{Float64}, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    indices = JuMP.index.(coupling_constraints)
+    dual_solution = zeros(length(indices))
+    dual_solution .= MOI.get(JuMP.backend(node.subproblem), MOI.ConstraintDual(), indices)
+
+    @turbo for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(intercept[ℓ] + current_independent_noise_term[ℓ] * psi[ℓ])
+    end
+end
+
+function compute_alpha_t6!(α::Array{Float64,2}, node::SDDP.Node, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Vector{Float64}, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    indices = JuMP.index.(coupling_constraints)
+    dual_solution = zeros(length(indices))
+    Gurobi.GRBgetdblattrarray(JuMP.backend(node.subproblem), "Pi", 0, length(dual_solution), dual_solution)
+
+    for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(ar_process_stage.intercept[ℓ] + current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
+   
+function compute_alpha_t7!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
+
+    dual_solution = JuMP.dual.(coupling_constraints)
+    for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(ar_process_stage.intercept[ℓ]) * exp(current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+    end
+end
+
 function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
 
     for τ in t+1:T 
         L_τ = ar_parameters[τ].dimension
         for ℓ in 1:L_τ
-            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ν] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ν]) for ν in 1:L_t)
         end
     end
 end
@@ -214,15 +276,145 @@ function compute_alpha_tau2!(α::Array{Float64,2}, cut_factors::Array{Float64,2}
     for τ in t+1:T 
         L_τ = ar_parameters[τ].dimension
         for ℓ in 1:L_τ
-            prod_val = cut_factors[τ-t,ℓ]
-            exp_val = current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ]
-            for ν in 1:L_t
-                prod_val *= exp(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + exp_val))
-            end
-            α[τ-t+1,ℓ] = prod_val
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(sum(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1] + current_independent_noise_term[ν] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ν] for ν in 1:L_t))
         end
     end
 end
+
+
+function compute_alpha_tau3!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            sum_val = 0.0
+            for ν in 1:L_t
+                sum_val += cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν])
+            end
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(sum_val)
+        end
+    end
+end
+
+function compute_alpha_tau4!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    beta = zeros(T-(t+1)+1,4)
+    aux = zeros(T-(t+1)+1,4)
+    Tullio.@tullio aux[τ-t+1,ℓ] = sum(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν]) for ν in 1:L_t) (τ in t+1:T, ℓ in 1:4)
+    Tullio.@tullio beta[τ-t,ℓ] = cut_factors[τ-t,ℓ] * exp(aux[τ-t,ℓ]) (τ in t+1:T)
+    α[2:end,:] = beta
+end
+
+function compute_alpha_tau5!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    aux = zeros(T-(t+1)+1,4)
+    Tullio.@tullio aux[τ-t+1,ℓ] = sum(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν]) for ν in 1:L_t) (τ in t+1:T, ℓ in 1:4)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(aux[τ-t,ℓ])
+        end
+    end
+end
+
+function compute_alpha_tau6!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    β = @view α[2:end,:]
+    Tullio.@tullio β[τ-t,ℓ] = cut_factors[τ-t,ℓ] * exp(sum(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν]) for ν in 1:L_t)) (τ in t+1:T, ℓ in 1:4)
+end
+
+function compute_alpha_tau7!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    β = @view α[2:end,:]
+    Tullio.@tullio β[τ-t+1,ℓ] = sum(cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν]) for ν in 1:L_t) (τ in t+1:T, ℓ in 1:4)
+    β = cut_factors .* exp.(β)
+end
+
+function compute_alpha_tau8!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            α[ℓ,τ-t+1] = cut_factors[τ-t,ℓ] * exp(sum(ar_process_stage.intercept[ν] * cut_exponents[ν,ℓ,τ,1] + current_independent_noise_term[ν] * cut_exponents[ν,ℓ,τ,1] * ar_process_stage.psi[ν] for ν in 1:L_t))
+        end
+    end
+end
+
+function compute_alpha_tau9!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for τ in t+1:T 
+        L_τ = ar_parameters[τ].dimension
+        for ℓ in 1:L_τ
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * ar_process_stage.intercept[ℓ] + cut_exponents[τ,ℓ,ℓ,1] * current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
+        end
+    end
+end
+
+function compute_alpha_tau10!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+    
+    β = @view α[2:end,:]
+    Tullio.@tullio β[τ-t+1,ℓ] = cut_exponents[τ,ℓ,ℓ,1] * (ar_process_stage.intercept[ℓ] + current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ]) (τ in t+1:T, ℓ in 1:4)
+    β = cut_factors .* exp.(β)
+end
+
+function compute_alpha_tau11!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for ℓ in 1:4
+        expo_factor = ar_process_stage.intercept[ℓ] + current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ]
+        for τ in t+1:T 
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * expo_factor)
+        end
+    end
+end
+
+function compute_alpha_tau12!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Array{Float64,4}, intercept::Vector{Float64}, psi::Vector{Float64}, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    for ℓ in 1:4
+        for τ in t+1:T 
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * (intercept[ℓ] + current_independent_noise_term[ℓ] * psi[ℓ]))
+        end
+    end
+end
+
+function compute_alpha_tau13!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Array{Float64,4}, intercept::Vector{Float64}, psi::Vector{Float64}, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    @turbo for ℓ in 1:4
+        for τ in t+1:T 
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * (intercept[ℓ] + current_independent_noise_term[ℓ] * psi[ℓ]))
+        end
+    end
+end
+
+function compute_alpha_tau11b!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    @inbounds for ℓ in 1:4
+        expo_factor = ar_process_stage.intercept[ℓ] + current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ]
+        for τ in t+1:T 
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * expo_factor)
+        end
+    end
+end
+
+function compute_alpha_tau2b!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    @inbounds for τ in t+1:T 
+        for ℓ in 1:4
+            expo_factor = 0.0
+            for ν in 1:4
+                expo_factor += ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1] + current_independent_noise_term[ν] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ν]
+            end
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(expo_factor)
+        end
+    end
+end
+
+function compute_alpha_tau2c!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+
+    #TODO
+
+end
+
 
 function get_alphas(node::SDDP.Node)
 
@@ -243,7 +435,16 @@ function get_alphas(node::SDDP.Node)
     # Case τ = t 
     TimerOutputs.@timeit model.timer_output "alpha_t_new" begin
         compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
-    end     
+        #compute_alpha_t6!($α, $node, $ar_process_stage, collect($current_independent_noise_term), $node.subproblem.ext[:coupling_constraints], $L_t)
+    end   
+
+    #BenchmarkTools.@btime compute_alpha_t!($α, $ar_process_stage, $current_independent_noise_term, $node.subproblem.ext[:coupling_constraints], $L_t) 
+    #BenchmarkTools.@btime compute_alpha_t2!($α, $ar_process_stage, $current_independent_noise_term, $node.subproblem.ext[:coupling_constraints], $L_t) 
+    #BenchmarkTools.@btime compute_alpha_t3!($α, $node, $ar_process_stage, $current_independent_noise_term, $node.subproblem.ext[:coupling_constraints], $L_t) 
+    #BenchmarkTools.@btime compute_alpha_t4!($α, $node, $ar_process_stage, collect($current_independent_noise_term), $node.subproblem.ext[:coupling_constraints], $L_t)
+    #BenchmarkTools.@btime compute_alpha_t5!($α, $node, $ar_process_stage.intercept, $ar_process_stage.psi, collect($current_independent_noise_term), $node.subproblem.ext[:coupling_constraints], $L_t)
+    #BenchmarkTools.@btime compute_alpha_t6!($α, $node, $ar_process_stage, collect($current_independent_noise_term), $node.subproblem.ext[:coupling_constraints], $L_t)
+    #BenchmarkTools.@btime compute_alpha_t7!($α, $ar_process_stage, $current_independent_noise_term, $node.subproblem.ext[:coupling_constraints], $L_t) 
 
     # Get cut constraint duals and compute first factor
     if t < T
@@ -272,14 +473,103 @@ function get_alphas(node::SDDP.Node)
         # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors5($node.bellman_function.global_theta.cuts, $node)
         # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors6($node.bellman_function.global_theta.cuts, $node)
         # cut_factors = BenchmarkTools.@btime get_existing_cuts_factors7($node.bellman_function.global_theta.cuts, $node)
-              
+        
         # Case τ > t
         TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
-            compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+            #compute_alpha_tau11!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+            compute_alpha_tau13!(α, cut_factors, model.ext[:cut_exponents][t+1],  ar_process_stage.intercept, ar_process_stage.psi, current_independent_noise_term, t, T, L_t)
         end
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau2!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau3!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau9!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau10!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+        # println()
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau11!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+        # println()
+
+        # α = Array{Float64,2}(undef, T-t+1, L)
+        # # Case τ > t
+        # compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
+        #     compute_alpha_tau12!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage.intercept, ar_process_stage.psi, current_independent_noise_term, t, T, L_t)
+        # end
+        # println(α)
+        # println()
+
+
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new4" begin
+        #     compute_alpha_tau7!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+
+        #β = permutedims(α, [2, 1])
+        #expo = permutedims(model.ext[:cut_exponents][t+1], [3, 2, 1, 4])
+
+        # TimerOutputs.@timeit model.timer_output "alpha_tau_new4" begin
+        #     compute_alpha_tau7!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+        # end
+        
+        #Infiltrator.@infiltrate
         #BenchmarkTools.@btime compute_alpha_tau!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
         #BenchmarkTools.@btime compute_alpha_tau2!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
-
+        #BenchmarkTools.@btime compute_alpha_tau2b!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau3!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau4!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau5!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau6!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau7!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau8!($β, $cut_factors, $expo, $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau9!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau10!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau11!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau12!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage.intercept, $ar_process_stage.psi, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau13!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage.intercept, $ar_process_stage.psi, $current_independent_noise_term, $t, $T, $L_t)
+        #BenchmarkTools.@btime compute_alpha_tau11b!($α, $cut_factors, $model.ext[:cut_exponents][$t+1], $ar_process_stage, $ar_process.parameters, $current_independent_noise_term, $t, $T, $L_t)
+        
+        #α = permutedims(β, [2, 1])
+        #Infiltrator.@infiltrate
     end
 
     return α

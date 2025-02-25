@@ -44,22 +44,23 @@ At the end, the following things are logged.
 
 """
 
-# struct Log
-#     iteration::Int64
-#     bound::Float64
-#     simulation_value::Float64
-#     current_state::Vector{Dict{Symbol,Float64}}
-#     time::Float64
-#     pid::Int64
-#     #total_cuts::Int64
-#     total_solves::Int64
-#     duality_key::String
-#     serious_numerical_issue::Bool
-# end
+struct Log
+    iteration::Int64
+    bound::Float64
+    simulation_value::Float64
+    # current_state::Vector{Dict{Symbol,Float64}}
+    time::Float64
+    pid::Int64
+    total_cuts::Int64
+    active_cuts::Int64
+    total_solves::Int64
+    duality_key::String
+    serious_numerical_issue::Bool
+end
 
 struct Results
     status::Symbol
-    log::Vector{SDDP.Log}
+    log::Vector{LogLinearSDDP.Log}
 end
 
 
@@ -179,9 +180,12 @@ function print_iteration_header(io)
     header = "It_Time"
     print(io, lpad(Printf.@sprintf("%s", header), 13))
     print(io, "  ")
-    # header = "#Cuts"
-    # print(io, lpad(Printf.@sprintf("%s", header), 16))
-    # print(io, "       ")
+    header = "#Tot. Cuts"
+    print(io, lpad(Printf.@sprintf("%s", header), 16))
+    print(io, "       ")
+    header = "#Act. Cuts"
+    print(io, lpad(Printf.@sprintf("%s", header), 16))
+    print(io, "       ")
     println(io)
 
     header = ""
@@ -192,6 +196,8 @@ function print_iteration_header(io)
     header = "[s]"
     print(io, lpad(Printf.@sprintf("%s", header), 13))
     print(io, "  ")
+    print(io, "                ")
+    print(io, "                ")
     header = "Total"
     print(io, lpad(Printf.@sprintf("%s", header), 13))
     print(io, "  ")
@@ -209,7 +215,7 @@ function print_iteration_header(io)
     flush(io)
 end
 
-function print_iteration(io, log::SDDP.Log, start_time::Float64)
+function print_iteration(io, log::LogLinearSDDP.Log, start_time::Float64)
     print(io, rpad(Printf.@sprintf("%-5d", log.iteration), 6))
     print(io, "  ")
     print(io, lpad(Printf.@sprintf("%1.6e", log.bound), 13))
@@ -226,8 +232,10 @@ function print_iteration(io, log::SDDP.Log, start_time::Float64)
     print(io, "  ")
     print(io, lpad(Printf.@sprintf("%1.6e", log.time - start_time), 13))
     print(io, "  ")
-    # print(io, lpad(Printf.@sprintf("%5d", log.total_cuts), 7))
-    # print(io, "  ")
+    print(io, lpad(Printf.@sprintf("%5d", log.total_cuts), 7))
+    print(io, "  ")
+    print(io, lpad(Printf.@sprintf("%5d", log.active_cuts), 7))
+    print(io, "  ")
     print(io, lpad(Printf.@sprintf("%5d", log.total_solves), 7))
     print(io, "  ")
     print(io, log.serious_numerical_issue ? "†" : " ")
@@ -241,7 +249,7 @@ function print_iteration(io, log::SDDP.Log, start_time::Float64)
 end
 
 
-function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{SDDP.Log})
+function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{LogLinearSDDP.Log})
     if algo_params.print_level > 0 && mod(length(log), algo_params.log_frequency) == 0
         # Get time() after last iteration to compute iteration specific time
         if lastindex(log) > 1

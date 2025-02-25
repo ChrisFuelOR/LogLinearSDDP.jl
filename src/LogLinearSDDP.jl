@@ -20,6 +20,8 @@ import Dates
 import Distributed
 import BenchmarkTools
 using Polyester: @batch
+using Tullio
+using LoopVectorization
 
 const MOI = MathOptInterface #TODO
 

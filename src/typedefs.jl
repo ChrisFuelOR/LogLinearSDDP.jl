@@ -205,6 +205,7 @@ of SDDP yet.
 mutable struct AlgoParams
     stopping_rules::Vector{SDDP.AbstractStoppingRule}
     simulation_regime::LogLinearSDDP.AbstractSimulationRegime
+    cut_selection::Bool
     ############################################################################
     print_level::Int64
     log_frequency::Int64
@@ -221,6 +222,7 @@ mutable struct AlgoParams
     function AlgoParams(;
         stopping_rules = [SDDP.IterationLimit(100)],
         simulation_regime = LogLinearSDDP.NoSimulation(), #TODO
+        cut_selection = false,
         print_level = 2,
         log_frequency = 1,
         log_file = "LogLinearSDDP.log",
@@ -236,6 +238,7 @@ mutable struct AlgoParams
         return new(
             stopping_rules,
             simulation_regime,
+            cut_selection,
             print_level,
             log_frequency,
             log_file,
@@ -284,7 +287,7 @@ struct AutoregressiveProcessStage
     dimension::Int64
     intercept::Vector{Float64}
     coefficients::Array{Float64,3}
-    psi::Vector{Any}
+    psi::Vector{Float64}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 

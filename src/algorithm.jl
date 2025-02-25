@@ -85,7 +85,8 @@ struct Options{T}
     dashboard_callback::Function
     print_level::Int64
     start_time::Float64
-    log::Vector{SDDP.Log}
+    log::Vector{LogLinearSDDP.Log}
+    sddp_log::Vector{SDDP.Log}
     log_file_handle::Any
     log_frequency::Union{Int,Function}
     forward_pass::SDDP.AbstractForwardPass
@@ -107,7 +108,8 @@ struct Options{T}
         dashboard_callback::Function = (a, b) -> nothing,
         print_level::Int64 = 0,
         start_time::Float64 = 0.0,
-        log::Vector{SDDP.Log} = SDDP.Log[],
+        log::Vector{LogLinearSDDP.Log} = LogLinearSDDP.Log[],
+        sddp_log::Vector{SDDP.Log} = SDDP.Log[],
         log_file_handle = IOBuffer(),
         log_frequency::Union{Int,Function} = 1,
         forward_pass::SDDP.AbstractForwardPass = SDDP.DefaultForwardPass(),
@@ -130,6 +132,7 @@ struct Options{T}
             print_level,
             start_time,
             log,
+            sddp_log,
             log_file_handle,
             log_frequency,
             forward_pass,
@@ -194,8 +197,12 @@ function solve_subproblem(
     if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
         SDDP.attempt_numerical_recovery(model, node)
     end
-    state = SDDP.get_outgoing_state(node)
-    stage_objective = SDDP.stage_objective_value(node.stage_objective)
+
+        state = SDDP.get_outgoing_state(node)
+    TimerOutputs.@timeit model.timer_output "evaluate_objective" begin
+        # stage_objective = SDDP.stage_objective_value(node.stage_objective)
+        stage_objective = JuMP.objective_value(node.subproblem) - JuMP.value(bellman_term(node.bellman_function)) - JuMP.value(SDDP.get_objective_state_component(node)) - JuMP.value(SDDP.get_belief_state_component(node))
+    end
 
     # CHANGES TO SDDP.jl
     ####################################################################################
@@ -407,19 +414,21 @@ function backward_pass(
                 scenario_path[1:index],
                 options.duality_handler,
             )
-            new_cuts = refine_bellman_function(
-                model,
-                node,
-                node.bellman_function,
-                options.risk_measures[node_index],
-                outgoing_state,
-                items.duals,
-                items.supports,
-                items.probability,
-                items.objectives,
-                items.intercept_factors,
-                items.stochastic_intercepts_tight,
-            )
+            TimerOutputs.@timeit model.timer_output "bellman_update" begin
+                new_cuts = refine_bellman_function(
+                    model,
+                    node,
+                    node.bellman_function,
+                    options.risk_measures[node_index],
+                    outgoing_state,
+                    items.duals,
+                    items.supports,
+                    items.probability,
+                    items.objectives,
+                    items.intercept_factors,
+                    items.stochastic_intercepts_tight,
+                )
+            end
             push!(cuts[node_index], new_cuts)
             if options.refine_at_similar_nodes
                 # Refine the bellman function at other nodes with the same
@@ -701,21 +710,37 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
    
     push!(
         options.log,
-        SDDP.Log(
+        LogLinearSDDP.Log(
             model.ext[:iteration], #length(options.log) + 1,
             bound,
             forward_trajectory.cumulative_value,
             #forward_trajectory.sampled_states,
             time() - options.start_time,
             Distributed.myid(),
-            #TODO: total_cuts
+            model.ext[:total_cuts],
+            model.ext[:active_cuts],
             model.ext[:total_solves],
             duality_log_key(options.duality_handler),
             model.ext[:numerical_issue],
         ),
     )
+
+    push!(
+        options.sddp_log,
+        SDDP.Log(
+            model.ext[:iteration], 
+            bound, 
+            forward_trajectory.cumulative_value, 
+            time() - options.start_time, 
+            Distributed.myid(), 
+            model.ext[:total_solves], 
+            duality_log_key(options.duality_handler), 
+            model.ext[:numerical_issue],
+         ),
+    )
+
     has_converged, status =
-    SDDP.convergence_test(model, options.log, options.stopping_rules)
+    SDDP.convergence_test(model, options.sddp_log, options.stopping_rules)
     return SDDP.IterationResult(
         Distributed.myid(),
         bound,
@@ -783,7 +808,7 @@ function train(
     forward_pass_callback::Function = (x) -> nothing,
     post_iteration_callback = result -> nothing,
 )
-    function log_frequency_f(log::Vector{SDDP.Log})
+    function log_frequency_f(log::Vector{LogLinearSDDP.Log})
         if mod(length(log), log_frequency) != 0
             return false
         end
@@ -832,7 +857,8 @@ function train(
     end
 
     log_file_handle = open(log_file, "a")
-    log = SDDP.Log[]
+    log = LogLinearSDDP.Log[]
+    sddp_log = SDDP.Log[]
 
     if print_level > 0
         SDDP.print_helper(print_banner, log_file_handle)
@@ -896,6 +922,12 @@ function train(
         ####################################################################################
         node.ext[:cut_cons] = Vector{JuMP.ConstraintRef}()
     end
+    
+    # CHANGES TO SDDP.jl
+    ####################################################################################
+    model.ext[:total_cuts] = 0
+    model.ext[:active_cuts] = 0
+
     dashboard_callback = if dashboard
         SDDP.launch_dashboard()
     else
@@ -915,6 +947,7 @@ function train(
         print_level,
         start_time = time(),
         log,
+        sddp_log,
         log_file_handle,
         log_frequency = log_frequency_f,
         forward_pass,
@@ -939,7 +972,7 @@ function train(
         # And close the dashboard callback if necessary.
         dashboard_callback(nothing, true)
     end
-    training_results = SDDP.TrainingResults(status, log)
+    training_results = SDDP.TrainingResults(status, sddp_log)
     model.most_recent_training_results = training_results
     if print_level > 0
         #SDDP.log_iteration(options; force_if_needed = true)

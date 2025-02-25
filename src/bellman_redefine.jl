@@ -9,6 +9,14 @@
 # Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
+mutable struct SampledState
+    state::Dict{Symbol,Float64}
+    obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
+    belief_y::Union{Nothing,Dict{T,Float64} where {T}}
+    dominating_cut::LogLinearSDDP.Cut
+    best_objective::Float64
+end
+
 mutable struct ConvexApproximation
     theta::JuMP.VariableRef
     states::Dict{Symbol,JuMP.VariableRef}
@@ -16,7 +24,7 @@ mutable struct ConvexApproximation
     belief_states::Union{Nothing,Dict{T,JuMP.VariableRef} where {T}}
     # Storage for cut selection
     cuts::Vector{LogLinearSDDP.Cut}
-    sampled_states::Vector{SDDP.SampledState}
+    sampled_states::Vector{LogLinearSDDP.SampledState}
     cuts_to_be_deleted::Vector{LogLinearSDDP.Cut}
     deletion_minimum::Int64
 
@@ -33,7 +41,7 @@ mutable struct ConvexApproximation
             objective_states,
             belief_states,
             LogLinearSDDP.Cut[],
-            SDDP.SampledState[],
+            LogLinearSDDP.SampledState[],
             LogLinearSDDP.Cut[],
             deletion_minimum,
         )
