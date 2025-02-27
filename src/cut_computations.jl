@@ -218,6 +218,34 @@ function compute_scenario_factors8!(
     return
 end
 
+function compute_scenario_factors(
+    t::Int64,
+    process_state::Dict{Int64, Any},
+    problem_params::LogLinearSDDP.ProblemParams,
+    cut_exponents_stage::Array{Float64,4},
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+)
+
+    T = problem_params.number_of_stages
+    L = LogLinearSDDP.get_max_dimension(ar_process)
+    p = ar_process.lag_order
+    scenario_factors = ones(T-(t-1), L)
+
+    for k in t-p:t-1
+        if k <= 1
+            L_k = L
+        else
+            L_k = ar_process.parameters[k].dimension
+        end
+
+        for m in 1:L_k
+            scenario_factors = scenario_factors .* process_state[k][m] .^ cut_exponents_stage[t:T,1:L,m,t-k] 
+        end
+    end
+
+    return scenario_factors
+
+end
 
 function compute_intercept_value2b(
     t::Int64,
