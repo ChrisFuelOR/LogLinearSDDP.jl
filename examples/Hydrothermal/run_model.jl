@@ -27,8 +27,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 3
-    number_of_realizations = 1
+    number_of_stages = 120
+    number_of_realizations = 100
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
