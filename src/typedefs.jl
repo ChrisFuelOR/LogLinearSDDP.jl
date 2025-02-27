@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 """ 
@@ -32,15 +32,11 @@ following properties
 > no usage of believe or objective states
 
 Additionally, this version of SDDP is restricted to using a SINGLE_CUT approach.
-A MULTI_CUT approach is not supported yet, as it affects the already complicated
-cut formulas.
+A MULTI_CUT approach is not supported yet.
 
 Importantly, this package does not require the user to model an explicit state 
 expansion for the given problem to take the history of the AR process into account.
-Instead, specific nonlinear cut formulas are used to adapt the cut intercept to 
-a scenario at hand.
-
-TODO: Update this later
+Instead, tailored cut formulas are used to adapt the cut intercept to a scenario at hand.
 """
 
 ################################################################################
@@ -52,17 +48,18 @@ Struct for storing information related to a cut.
 The argument "coefficients" is the cut slope vector β. It can be computed as the dual vector corresponding
     to copy constraints.
 
-The argument "stochastic_intercept_tight" is the value of the full intercept at the state of construction,
-    i.e. where the cut is tight. This is used for checks and to compute other values.
-
-The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
-    but a matrix of intercept factors for each τ=t,...  ,T and each component ℓ of the autoregressive process. 
-    These factors are used to compute (adapt) the intercept of a cut to the scenario at hand.
-    This is done by fixing the corresponding cut_intercept_variable.
-
 The argument "deterministic_intercept" is used to account for the contribution of deterministic constraints
     to the intercept. Handling them as coupling constraints is unnecessary, e.g. from a memory perspective, 
     but not taking them into account leads to a wrong intercept.
+
+The argument "stochastic_intercept_tight" is the value of the full intercept at the state (including scenario) 
+    of construction, i.e. where the cut is tight. This is used for checks and to compute other values.
+    It may also be used for cut selection purposes.
+
+The argument "intercept_factors" is not a scalar intercept as in standard SDDP, 
+    but a matrix of intercept factors for each τ=t,... ,T and each component ℓ of the autoregressive process. 
+    These factors are used to compute (adapt) the intercept of a cut to the scenario at hand.
+    This is done by fixing the corresponding cut_intercept_variable.
 
 The argument "trial state" is the point (incumbent) where the cut is constructed.
 
@@ -79,14 +76,12 @@ The argument "iteration" stores the iteration number in which the cut was constr
 
 mutable struct Cut
     coefficients::Dict{Symbol,Float64}
-    intercept_factors::Array{Float64,2}
-    stochastic_intercept_tight::Float64
     deterministic_intercept::Float64
+    stochastic_intercept_tight::Float64
+    intercept_factors::Array{Float64,2}
     trial_state::Dict{Symbol,Float64}
     constraint_ref::Union{Nothing,JuMP.ConstraintRef}
     cut_intercept_variable::Union{Nothing,JuMP.VariableRef}
-    obj_y::Union{Nothing,NTuple{N,Float64} where {N}}
-    belief_y::Union{Nothing,Dict{T,Float64} where {T}}
     non_dominated_count::Int64
     iteration::Int64
 end
@@ -98,7 +93,7 @@ end
 """
 Different simulation regimes.
 
-Simulation means that after training the model we perform a simulation with
+Simulation means that after training the model, we perform a simulation with
     number_of_replications. This can be either an in-sample simulation
     (SDDP.InSampleMonteCarlo) or an out-of-sample simulation
     (SDDP.OutOfSampleMonteCarlo). In the latter case, we have to provide a
@@ -110,7 +105,7 @@ Default is NoSimulation.
 
 The simulation_seed determines which scenarios are sampled. That is, for InSampleMonteCarlo
 it determines the scenario path chosen on the in-sample realizations. For OutOfSampleMonteCarlo
-it determines which scenarios are drawn from the underlying distributions. 
+it determines which scenarios are drawn from the underlying distribution. 
 """
 
 # Simulation regimes
@@ -140,9 +135,9 @@ mutable struct NoSimulation <: AbstractSimulationRegime end
 Stores some parameters of the test problem that is solved.
 This is mainly used for logging purposes.
 
-    number_of_stages:       stage number of the multistage problem
+    number_of_stages:       number of stages of the multistage problem
     numer_of_realizations:  number of stagewise independent noise realization of ηₜ
-    number_of_lags:         number of lags of the autoregressive noise process
+    tree_seed:              seed for the scenario tree generation
 """
 
 struct ProblemParams
@@ -164,39 +159,10 @@ struct ProblemParams
 end
 
 ################################################################################
-# SOLVER HANDLING
-################################################################################
-struct AppliedSolver
-    solver :: Any
-    solver_tol :: Float64
-    solver_time :: Int64
-
-    function AppliedSolver(;
-        solver = "Gurobi",
-        solver_tol = 1e-4,
-        solver_time = 300,
-        )
-        return new(
-            solver,
-            solver_tol,
-            solver_time,
-            )
-    end
-end
-
-abstract type AbstractSolverApproach end
-
-mutable struct GAMS_Solver <: AbstractSolverApproach end
-mutable struct Direct_Solver <: AbstractSolverApproach end
-
-################################################################################
 # DEFINING STRUCT FOR CONFIGURATION OF ALGORITHM PARAMETERS
 ################################################################################
 """
-Note that the parameters from risk_measure to refine_at_similar_nodes are
-basic SDDP parameters which are required as we are using some functionality
-from the package SDDP.jl. They should not be changed, though, as for different
-choices the DynamicSDDiP algorithm will not work.
+Struct containing user-defined parameters for the algorithm.
 
 Note that run_numerical_stability_report is not updated to the modified version
 of SDDP yet.
@@ -205,6 +171,7 @@ of SDDP yet.
 mutable struct AlgoParams
     stopping_rules::Vector{SDDP.AbstractStoppingRule}
     simulation_regime::LogLinearSDDP.AbstractSimulationRegime
+    cut_selection::Bool
     ############################################################################
     print_level::Int64
     log_frequency::Int64
@@ -212,40 +179,36 @@ mutable struct AlgoParams
     run_numerical_stability_report::Bool
     numerical_focus::Bool
     silent::Bool
-    infiltrate_state::Symbol
     forward_pass_seed::Union{Nothing,Int}
     run_description::String
-    solver_approach::Union{LogLinearSDDP.GAMS_Solver,LogLinearSDDP.Direct_Solver} # Direct_Solver ≠ Direct mode for solve
     model_approach::Symbol
 
     function AlgoParams(;
         stopping_rules = [SDDP.IterationLimit(100)],
         simulation_regime = LogLinearSDDP.NoSimulation(), #TODO
+        cut_selection = false,
         print_level = 2,
         log_frequency = 1,
         log_file = "LogLinearSDDP.log",
         run_numerical_stability_report = false,
         numerical_focus = false,
         silent = true,
-        infiltrate_state = :none,
         forward_pass_seed = nothing,
         run_description = "",
-        solver_approach = LogLinearSDDP.Direct_Solver(), #TODO
         model_approach = :fitted_model,
     )
         return new(
             stopping_rules,
             simulation_regime,
+            cut_selection,
             print_level,
             log_frequency,
             log_file,
             run_numerical_stability_report,
             numerical_focus,
             silent,
-            infiltrate_state,
             forward_pass_seed,
             run_description,
-            solver_approach,
             model_approach,
         )
     end
@@ -258,8 +221,6 @@ end
 Struct containing the parameters for the log-linear autoregressive process for a given stage.
 Note that the process is defined componentwise for each component ℓ.
 
-dimension:      Int64 which defines the dimension of the random process at the current stage;
-                denoted by L in the paper
 intercept:      Vector containing the intercepts of the log-linear AR process;
                 one-dimensional with component ℓ;
                 denoted by γ in the paper
@@ -281,15 +242,13 @@ should be defined in advance.
 """
 
 struct AutoregressiveProcessStage
-    dimension::Int64
     intercept::Vector{Float64}
     coefficients::Array{Float64,3}
-    psi::Vector{Any}
+    psi::Vector{Float64}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 
     function AutoregressiveProcessStage(
-        dimension,
         intercept,
         coefficients,
         eta;
@@ -297,7 +256,6 @@ struct AutoregressiveProcessStage
         probabilities = fill(1 / length(eta), length(eta)),
     )
         return new(
-            dimension,
             intercept,
             coefficients,
             psi,
@@ -310,15 +268,22 @@ end
 """
 Struct containing the data for the log-linear autoregressive process for all stages.
 
-1.) Note that we assume that the lag order is the same for all stages and components because otherwise
+1.) Note that we assume that the lag order is the same for all stages and components. Otherwise
 the cut formulas become way more sophisticated (see paper). In practice, different components and stages
 may require different lag orders, for instance in SPAR models. If a stage-component combination requires less
 lags than globally defined, we can set the ar_coefficients corresponding to excessive lags to 1, so that 
 they do not have any effect.
 
-2.) Note that we assume the first stage data to be deterministic. Therefore, it should be included in
+2.) Note that - in contrast to the paper - we also assume that the dimension of the process is the same 
+for all stages. This allows us to accelerate nested loops with tools that do not allow for indices to be 
+dependent on each other. This is a very natural assumption in practice. For instance, in our hydrothermal
+scheduling example, we have the same number of reservoirs for each stage.
+
+3.) Note that we assume the first stage data to be deterministic. Therefore, it should be included in
 ar_history instead of ar_data.
 
+dimension:      Int64 which defines the dimension of the random process;
+                denoted by L in the paper
 lag_order:      Int64 which defines the lag order of the random process (for each component and stage);
                 denoted by p in the paper
 parameters:     Dict containing the stage-specific data of the AR process. 
@@ -326,15 +291,17 @@ parameters:     Dict containing the stage-specific data of the AR process.
                 one-dimensional with component t
 history:        Dict containing the historic values of the AR process (including stage 1).
                 The key is the stage and the value is a vector of index ℓ.
+simplified:     If true, there are no dependencies between different components (i.e. spatial dependencies).
+                Therefore, some computations can be simplified.
 """
 
 struct AutoregressiveProcess
+    dimension::Int64
     lag_order::Int64
     parameters::Dict{Int64,AutoregressiveProcessStage}
     history::Dict{Int64,Vector{Float64}}
+    simplified::Bool
 end
-
-
 
 
 """ 
@@ -344,7 +311,6 @@ MAIN DOCUMENTATION FOR MODEL DEFINITION [SHOULD LATER BE MOVED TO A PROPER DOC F
 The models should be set up in the following way:
 
 > Define important parameters
- >> AppliedSolver:  defines which solver should be used with which configuration within the algorithm
  >> ProblemParams:  specifies the number of stages and the number of realizations per stage
  >> AlgoParams:     specifies the configuration of the algorithm (note that only a few of the SDDP.jl parameters
                     can be changed here; see above)
@@ -354,7 +320,8 @@ The models should be set up in the following way:
     historic values as values.
  >> Importantly, the deterministic first stage should be defined as part of the AR history.
  >> The constant lag order should be defined.
- >> For all following stages, intercepts, coefficients and dimensions of the AR process can be defined and stored
+ >> The constant dimension should be defined.
+ >> For all following stages, intercepts and coefficients of the AR process can be defined and stored
     in a AutoregressiveProcessStage struct object.
  >> Importantly, also the stagewise independent realizations are stored there, even if they are only used in
     the model definition (or for logging) later on, but not required in the actual algorithm.
@@ -368,7 +335,7 @@ The models should be set up in the following way:
 > Define the policy graph and the subproblems as in SDDP.jl.
  >> You should define a lower bound for minimization problems (upper bound for maximization problems).
  >> Importantly, for the cut generation, the coupling constraint containing the .in-part of the 
-    state variables have to be stored in sp.ext[:coupling_constraints] in order to be accessed within
+    state variables have to be stored in subproblem.ext[:coupling_constraints] in order to be accessed within
     the cut generation process.
 > The realizations (and probabilities) that are given to the parameterize-function in the model
     definition only include the stagewise independent part of the uncertainty.

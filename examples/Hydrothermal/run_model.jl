@@ -27,8 +27,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
 
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
-    number_of_stages = 120
-    number_of_realizations = 100
+    number_of_stages = 3
+    number_of_realizations = 1
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
@@ -36,10 +36,10 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     log_file = file_path * "LogLinearSDDP.log"
     run_description = ""
     ###########################################################################################################
-    applied_solver = LogLinearSDDP.AppliedSolver()
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = true, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(10)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
+        log_file = log_file, silent = true, model_approach = model_approach, run_description = run_description)
 
     # CREATE AND RUN MODEL
     ###########################################################################################################
@@ -49,7 +49,7 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
 
     # Train model
     Random.seed!(algo_params.forward_pass_seed)
-    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, applied_solver, ar_process)
+    LogLinearSDDP.train_loglinear(model, algo_params, problem_params, ar_process)
     close(f)
 
     # SIMULATION USING THE LINEARIZED PROCESS
@@ -121,10 +121,10 @@ LOGLINEAR MODEL OPTIONS are
 function run_model_starter()
 
     run_model(11111, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(22222, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(22222, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
 
 end
 

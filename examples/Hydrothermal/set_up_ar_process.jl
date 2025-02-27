@@ -1,19 +1,18 @@
+import LogLinearSDDP
+
 include("read_and_write_files.jl")
 
 struct LinearAutoregressiveProcessStage
-    dimension::Int64
     coefficients::Array{Float64,2}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 
     function LinearAutoregressiveProcessStage(
-        dimension,
         coefficients,
         eta;
         probabilities = fill(1 / length(eta), length(eta)),
     )
         return new(
-            dimension,
             coefficients,
             eta,
             probabilities,
@@ -22,6 +21,7 @@ struct LinearAutoregressiveProcessStage
 end
 
 struct LinearAutoregressiveProcess
+    dimension::Int64
     lag_order::Int64
     parameters::Dict{Int64,LinearAutoregressiveProcessStage}
     history::Vector{Float64}
@@ -98,13 +98,13 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
             # Get eta data        
             eta = get_realization_data(eta_df, t, number_of_realizations)
 
-            ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta, psi = psi)
+            ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta, psi = psi)
 
         end
     end
     
     # All stages
-    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+    ar_process = LogLinearSDDP.AutoregressiveProcess(dim, lag_order, ar_parameters, ar_history, true)
 
     return ar_process
 end
@@ -156,11 +156,11 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
         # Get eta data        
         eta = get_realization_data(eta_df, t, number_of_realizations)
 
-        ar_parameters[t] = LinearAutoregressiveProcessStage(dim, coefficients, eta)
+        ar_parameters[t] = LinearAutoregressiveProcessStage(coefficients, eta)
     end
    
      # All stages
-     ar_process = LinearAutoregressiveProcess(lag_order, ar_parameters, ar_history)
+     ar_process = LinearAutoregressiveProcess(dim, lag_order, ar_parameters, ar_history)
 
      return ar_process
 end

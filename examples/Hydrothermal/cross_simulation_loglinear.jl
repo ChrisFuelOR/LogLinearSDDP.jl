@@ -13,7 +13,6 @@ import LogLinearSDDP
 import SDDP
 
 
-include("set_up_ar_process.jl")
 include("simulation.jl")
 
 function solve_subproblem_cross(

@@ -104,18 +104,6 @@ function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
     return sum(cut_array)
 end
 
-function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
-
-    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
-
-    @batch minbatch=100 for cut_index in eachindex(cuts)
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
-    end
-
-    return sum(cut_array)
-end
-
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
     for ℓ in 1:L
@@ -127,7 +115,7 @@ end
 function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
 
     for τ in t+1:T 
-        L_τ = ar_parameters[τ].dimension
+        L_τ = ar_process.dimension
         for ℓ in 1:L_τ
             α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
         end
@@ -144,8 +132,8 @@ function get_alphas(node::SDDP.Node)
     T = model.ext[:problem_params].number_of_stages
     ar_process = model.ext[:ar_process]
     ar_process_stage = ar_process.parameters[t]    
-    L = get_max_dimension(ar_process)
-    L_t = ar_process_stage.dimension
+    L = ar_process.dimension
+    L_t = ar_process.dimension
     α = Array{Float64,2}(undef, T-t+1, L)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
@@ -158,7 +146,7 @@ function get_alphas(node::SDDP.Node)
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            cut_factors = get_existing_cuts_factors(node.bellman_function.global_theta.cuts)
         end
        
         # Case τ > t

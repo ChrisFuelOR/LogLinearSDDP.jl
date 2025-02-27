@@ -105,7 +105,7 @@ function create_model_1D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref
             
             realizations = ar_process.parameters[t].eta
@@ -120,7 +120,7 @@ function create_model_1D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref
             
             realizations = ar_process.parameters[t].eta
@@ -160,7 +160,7 @@ function create_model_2D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             realizations = ar_process.parameters[t].eta
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref_1
         end
         
@@ -173,38 +173,6 @@ function create_model_2D(ar_process::LogLinearSDDP.AutoregressiveProcess)
     return model
 
 end
-
-function test_get_max_dimension()
-
-    # 1D example
-    ar_process, stages, realizations = create_autoregressive_data_1D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test L == 1
-
-    # 2D example
-    ar_process, stages, realizations = create_autoregressive_data_2D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test L == 2
-
-    return
-end
-
-function test_get_lag_dimensions()
-
-    # 1D example
-    ar_process, stages, realizations = create_autoregressive_data_1D()
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 2) == [1]
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 3) == [1]
-
-    # 2D example
-    ar_process, stages, realizations = create_autoregressive_data_2D()
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 2) == [2, 2]
-    @test LogLinearSDDP.get_lag_dimensions(ar_process, 3) == [2, 2]
-
-    return
-end
-
 
 function test_initialize_process_state()
 

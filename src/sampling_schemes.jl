@@ -73,7 +73,7 @@ function sample_scenario(
                 error_term_factor = ar_process_stage.psi[ℓ]
                 coefficients = ar_process_stage.coefficients
                 lag_order = ar_process.lag_order
-                lag_dimensions = get_lag_dimensions(ar_process, t)
+                lag_dimensions = ar_process.dimension
                 noise_term[ℓ] = exp(intercept) * exp(independent_term * error_term_factor) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
             end
         end
@@ -198,7 +198,7 @@ function sample_backward_noise_terms(
             error_term_factor = ar_process_stage.psi[ℓ]
             coefficients = ar_process_stage.coefficients
             lag_order = ar_process.lag_order
-            lag_dimensions = get_lag_dimensions(ar_process, t)
+            lag_dimensions = ar_process.dimension
 
             noise_values[ℓ] = exp(intercept) * exp(independent_value * error_term_factor) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
         end

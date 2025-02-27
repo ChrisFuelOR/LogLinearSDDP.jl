@@ -16,8 +16,6 @@ import DataFramesMeta
 import CSV
 import Random
 
-include("cross_simulation_linear.jl")
-
 struct Generator
     name::String
     cost::Float64 # in $/MWh
@@ -215,7 +213,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
         # Store coupling constraint reference to access dual multipliers later
         if t != 1
-            coupling_refs = subproblem.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = subproblem.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             for i in eachindex(coupling_refs)
                 coupling_refs[i] = coupling_ref[i]
             end

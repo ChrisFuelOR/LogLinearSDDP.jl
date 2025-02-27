@@ -2,22 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 # Internal function: set the objective of node to the stage objective, plus the
 # cost/value-to-go term.
 function set_objective(node::SDDP.Node{T}) where {T}
-    objective_state_component = SDDP.get_objective_state_component(node)
-    belief_state_component = SDDP.get_belief_state_component(node)
-    if objective_state_component != JuMP.AffExpr(0.0) ||
-       belief_state_component != JuMP.AffExpr(0.0)
-        node.stage_objective_set = false
-    end
     if !node.stage_objective_set
         JuMP.set_objective(
             node.subproblem,
@@ -25,8 +19,6 @@ function set_objective(node::SDDP.Node{T}) where {T}
             JuMP.@expression(
                 node.subproblem,
                 node.stage_objective +
-                objective_state_component +
-                belief_state_component +
                 bellman_term(node.bellman_function)
             )
         )
@@ -85,7 +77,8 @@ struct Options{T}
     dashboard_callback::Function
     print_level::Int64
     start_time::Float64
-    log::Vector{SDDP.Log}
+    log::Vector{LogLinearSDDP.Log}
+    sddp_log::Vector{SDDP.Log}
     log_file_handle::Any
     log_frequency::Union{Int,Function}
     forward_pass::SDDP.AbstractForwardPass
@@ -107,7 +100,8 @@ struct Options{T}
         dashboard_callback::Function = (a, b) -> nothing,
         print_level::Int64 = 0,
         start_time::Float64 = 0.0,
-        log::Vector{SDDP.Log} = SDDP.Log[],
+        log::Vector{LogLinearSDDP.Log} = LogLinearSDDP.Log[],
+        sddp_log::Vector{SDDP.Log} = SDDP.Log[],
         log_file_handle = IOBuffer(),
         log_frequency::Union{Int,Function} = 1,
         forward_pass::SDDP.AbstractForwardPass = SDDP.DefaultForwardPass(),
@@ -130,6 +124,7 @@ struct Options{T}
             print_level,
             start_time,
             log,
+            sddp_log,
             log_file_handle,
             log_frequency,
             forward_pass,
@@ -161,18 +156,6 @@ function solve_subproblem(
         SDDP.set_incoming_state(node, state)
         LogLinearSDDP.parameterize(node, noise_term)
     end
-    pre_optimize_ret = if node.pre_optimize_hook !== nothing
-        node.pre_optimize_hook(
-            model,
-            node,
-            state,
-            noise_term,
-            scenario_path,
-            duality_handler,
-        )
-    else
-        nothing
-    end
 
     TimerOutputs.@timeit model.timer_output "solver_call" begin
         JuMP.optimize!(node.subproblem)
@@ -195,7 +178,14 @@ function solve_subproblem(
         SDDP.attempt_numerical_recovery(model, node)
     end
     state = SDDP.get_outgoing_state(node)
-    stage_objective = SDDP.stage_objective_value(node.stage_objective)
+    
+    # CHANGES TO SDDP.jl
+    ####################################################################################
+    # Changed for more efficiency
+    TimerOutputs.@timeit model.timer_output "evaluate_objective" begin
+        # stage_objective = SDDP.stage_objective_value(node.stage_objective)
+        stage_objective = JuMP.objective_value(node.subproblem) - JuMP.value(bellman_term(node.bellman_function))
+    end
 
     # CHANGES TO SDDP.jl
     ####################################################################################
@@ -203,10 +193,6 @@ function solve_subproblem(
         objective, dual_values, intercept_factors, stochastic_intercept_tight = get_dual_solution(node, duality_handler)
     end
 
-    ####################################################################################
-    if node.post_optimize_hook !== nothing
-        node.post_optimize_hook(pre_optimize_ret)
-    end
     return (
         state = state,
         duals = dual_values,
@@ -407,19 +393,21 @@ function backward_pass(
                 scenario_path[1:index],
                 options.duality_handler,
             )
-            new_cuts = refine_bellman_function(
-                model,
-                node,
-                node.bellman_function,
-                options.risk_measures[node_index],
-                outgoing_state,
-                items.duals,
-                items.supports,
-                items.probability,
-                items.objectives,
-                items.intercept_factors,
-                items.stochastic_intercepts_tight,
-            )
+            TimerOutputs.@timeit model.timer_output "bellman_update" begin
+                new_cuts = refine_bellman_function(
+                    model,
+                    node,
+                    node.bellman_function,
+                    options.risk_measures[node_index],
+                    outgoing_state,
+                    items.duals,
+                    items.supports,
+                    items.probability,
+                    items.objectives,
+                    items.intercept_factors,
+                    items.stochastic_intercepts_tight,
+                )
+            end
             push!(cuts[node_index], new_cuts)
             if options.refine_at_similar_nodes
                 # Refine the bellman function at other nodes with the same
@@ -615,13 +603,6 @@ function forward_pass(
                options.cycle_discretization_delta
                 push!(starting_states, incoming_state_value)
             end
-            # TODO(odow):
-            # - A better way of randomly sampling a starting state.
-            # - Is is bad that we splice! here instead of just sampling? For
-            #   convergence it is probably bad, since our list of possible
-            #   starting states keeps changing, but from a computational
-            #   perspective, we don't want to keep a list of discretized points
-            #   in the state-space δ distance apart...
             incoming_state_value =
                 splice!(starting_states, rand(1:length(starting_states)))
         end
@@ -701,19 +682,34 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
    
     push!(
         options.log,
-        SDDP.Log(
-            model.ext[:iteration], #length(options.log) + 1,
+        LogLinearSDDP.Log(
+            model.ext[:iteration],
             bound,
             forward_trajectory.cumulative_value,
-            #forward_trajectory.sampled_states,
             time() - options.start_time,
             Distributed.myid(),
-            #TODO: total_cuts
+            model.ext[:total_cuts],
+            model.ext[:active_cuts],
             model.ext[:total_solves],
             duality_log_key(options.duality_handler),
             model.ext[:numerical_issue],
         ),
     )
+
+    push!(
+        options.sddp_log,
+        SDDP.Log(
+            model.ext[:iteration], 
+            bound, 
+            forward_trajectory.cumulative_value, 
+            time() - options.start_time, 
+            Distributed.myid(), 
+            model.ext[:total_solves], 
+            duality_log_key(options.duality_handler), 
+            model.ext[:numerical_issue],
+         ),
+    )
+
     has_converged, status =
     SDDP.convergence_test(model, options.log, options.stopping_rules)
     return SDDP.IterationResult(
@@ -783,7 +779,8 @@ function train(
     forward_pass_callback::Function = (x) -> nothing,
     post_iteration_callback = result -> nothing,
 )
-    function log_frequency_f(log::Vector{SDDP.Log})
+    
+    function log_frequency_f(log::Vector{LogLinearSDDP.Log})
         if mod(length(log), log_frequency) != 0
             return false
         end
@@ -832,7 +829,8 @@ function train(
     end
 
     log_file_handle = open(log_file, "a")
-    log = SDDP.Log[]
+    log = LogLinearSDDP.Log[]
+    sddp_log = SDDP.Log[]
 
     if print_level > 0
         SDDP.print_helper(print_banner, log_file_handle)
@@ -858,7 +856,7 @@ function train(
     end
 
     if print_level > 1
-        print_helper(print_parameters, log_file_handle, model.ext[:algo_params], model.ext[:problem_params], model.ext[:applied_solver], model.ext[:ar_process])
+        print_helper(print_parameters, log_file_handle, model.ext[:algo_params], model.ext[:problem_params], model.ext[:ar_process])
     end
 
     if print_level > 0
@@ -891,7 +889,21 @@ function train(
         for oracle in node.bellman_function.local_thetas
             oracle.deletion_minimum = cut_deletion_minimum
         end
+    
+        # CHANGES TO SDDP.jl
+        ####################################################################################
+        node.ext[:cut_cons] = Vector{JuMP.ConstraintRef}()
+        T = model.ext[:problem_params].number_of_stages
+        t = node.index
+        L = model.ext[:ar_process].dimension
+        node.ext[:scenario_factors] = ones(T-t, L)
     end
+    
+    # CHANGES TO SDDP.jl
+    ####################################################################################
+    model.ext[:total_cuts] = 0
+    model.ext[:active_cuts] = 0
+    
     dashboard_callback = if dashboard
         SDDP.launch_dashboard()
     else
@@ -911,6 +923,7 @@ function train(
         print_level,
         start_time = time(),
         log,
+        sddp_log,
         log_file_handle,
         log_frequency = log_frequency_f,
         forward_pass,
@@ -935,7 +948,7 @@ function train(
         # And close the dashboard callback if necessary.
         dashboard_callback(nothing, true)
     end
-    training_results = SDDP.TrainingResults(status, log)
+    training_results = SDDP.TrainingResults(status, sddp_log)
     model.most_recent_training_results = training_results
     if print_level > 0
         #SDDP.log_iteration(options; force_if_needed = true)
@@ -966,7 +979,6 @@ function train_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    applied_solver::LogLinearSDDP.AppliedSolver,
     ar_process::LogLinearSDDP.AutoregressiveProcess,
 )
 
@@ -978,7 +990,6 @@ function train_loglinear(
     model.ext[:algo_params] = algo_params
     model.ext[:problem_params] = problem_params
     model.ext[:ar_process] = ar_process
-    model.ext[:applied_solver] = applied_solver
 
     # Compute and store cut exponents
     TimerOutputs.@timeit model.timer_output "compute_cut_exponents" begin
@@ -994,7 +1005,7 @@ function train_loglinear(
     reset_bellman_function(model)
 
     # Set solvers
-    set_solver_for_model(model, algo_params, applied_solver)
+    set_solver_for_model(model, algo_params)
 
     # Use algo_params to define parameters for train() function that is based on SDDP.train()
     train(

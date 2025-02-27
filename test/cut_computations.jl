@@ -167,7 +167,7 @@ function test_compute_intercept_value_1D()
     ar_process, stages, realizations = create_autoregressive_data_1D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
 
     # Stage 3 - Realization 1
     t = 3
@@ -246,7 +246,7 @@ function test_compute_intercept_value_2D()
     ar_process, stages, realizations = create_autoregressive_data_2D()
     problem_params = LogLinearSDDP.ProblemParams(stages, realizations)
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
 
     ####################################################
     # Stage 3

@@ -39,7 +39,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             realizations = ar_process.parameters[t].eta
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref_1
             coupling_refs[2] = coupling_ref_2 
         end

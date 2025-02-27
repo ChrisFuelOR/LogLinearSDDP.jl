@@ -19,7 +19,7 @@ function initialize_process_state(
 )
 
     min_time_index = minimum(collect(keys(ar_process.history)))
-    max_dimension = get_max_dimension(ar_process)
+    max_dimension = ar_process.dimension
     process_state = Dict{Int64,Any}()
 
     # Determine the historical process states
@@ -40,45 +40,3 @@ function initialize_process_state(
 
     return
 end
-
-
-""" 
-Returns the maximum dimension of the random variables in the AR process over all stages.
-Usually, the model should be defined such that the process dimension is the same for all stages.
-"""
-function get_max_dimension(
-    ar_process::LogLinearSDDP.AutoregressiveProcess
-)
-
-    max_dimension = 0
-
-    for t in eachindex(ar_process.parameters)
-        if ar_process.parameters[t].dimension > max_dimension
-            max_dimension = ar_process.parameters[t].dimension
-        end
-    end
-
-    return max_dimension
-end
-
-
-
-function get_lag_dimensions(
-    ar_process::LogLinearSDDP.AutoregressiveProcess,
-    t::Int64,
-)
-
-    lag_dimensions = Vector{Int64}(undef, ar_process.lag_order)
-
-    for k in eachindex(lag_dimensions)
-        if t - k > 1
-            lag_dimensions[k] = ar_process.parameters[t-k].dimension
-        else
-            lag_dimensions[k] = get_max_dimension(ar_process)
-        end
-    end
-
-    return lag_dimensions
-
-end
-

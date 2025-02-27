@@ -17,7 +17,7 @@ function compute_cut_exponents(
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
     p = ar_process.lag_order
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
@@ -26,7 +26,7 @@ function compute_cut_exponents(
     for t in T:-1:2
         cut_exponents_stage = zeros(T, L, L, p)
         ar_process_stage = ar_process.parameters[t]
-        L_t = ar_process_stage.dimension
+        L_t = ar_process.dimension
 
         for τ in t:T
 
@@ -34,9 +34,9 @@ function compute_cut_exponents(
                 for ℓ in 1:L_t
                     for k in t-p:t-1
                         if k <= 1
-                            L_k = get_max_dimension(ar_process)
+                            L_k = ar_process.dimension
                         else
-                            L_k = ar_process.parameters[k].dimension
+                            L_k = ar_process.dimension
                         end 
                         for m in 1:L_k
                             cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
@@ -46,13 +46,13 @@ function compute_cut_exponents(
                 end
                 
             else
-                L_τ = ar_process.parameters[τ].dimension 
+                L_τ = ar_process.dimension
                 for ℓ in 1:L_τ
                     for k in t-p:t-1
                         if k <= 1
-                            L_k = get_max_dimension(ar_process)
+                            L_k = ar_process.dimension
                         else
-                            L_k = ar_process.parameters[k].dimension
+                            L_k = ar_process.dimension
                         end
                         for m in 1:L_k
                             if k == t-p
@@ -160,15 +160,15 @@ function compute_scenario_factors(
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
     p = ar_process.lag_order
     scenario_factors = ones(T-(t-1), L)
 
     for k in t-p:t-1
         if k <= 1
-            L_k = get_max_dimension(ar_process)
+            L_k = ar_process.dimension
         else
-            L_k = ar_process.parameters[k].dimension
+            L_k = ar_process.dimension
         end
 
         for m in 1:L_k
@@ -198,7 +198,7 @@ function compute_intercept_value(
     #Evaluate the intercept
     intercept_value = cut.deterministic_intercept
     for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
+        L_τ = ar_process.dimension
         for ℓ in 1:L_τ
             intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
@@ -218,7 +218,7 @@ function compute_intercept_value_tight(
 
     intercept_value = 0.0
     for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
+        L_τ = ar_process.dimension
         for ℓ in 1:L_τ
             intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
@@ -246,8 +246,7 @@ function evaluate_cut_intercept_tight(
     ar_process = model.ext[:ar_process]
     t = node.index
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
-
+    L = ar_process.dimension
     # Get exponents for the considered cut
     cut_exponents_stage = cut_exponents[t]
 
