@@ -204,7 +204,7 @@ function print_iteration_header(io)
     flush(io)
 end
 
-function print_iteration(io, log::SDDP.Log, start_time::Float64)
+function print_iteration(io, log::LogLinearSDDP.Log, start_time::Float64)
     print(io, rpad(Printf.@sprintf("%-5d", log.iteration), 6))
     print(io, "  ")
     print(io, lpad(Printf.@sprintf("%1.6e", log.bound), 13))
@@ -239,7 +239,7 @@ function print_iteration(io, log::SDDP.Log, start_time::Float64)
 end
 
 
-function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{SDDP.Log})
+function log_iteration(algo_params::LogLinearSDDP.AlgoParams, log_file_handle::Any, log::Vector{LogLinearSDDP.Log})
     if algo_params.print_level > 0 && mod(length(log), algo_params.log_frequency) == 0
         # Get time() after last iteration to compute iteration specific time
         if lastindex(log) > 1
