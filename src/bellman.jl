@@ -168,13 +168,10 @@ function _add_average_cut(
         for (key, dual) in dual_variables[i]
             πᵏ[key] += p * dual
         end
+    end
 
-        for τ in t:T
-            L_τ = model.ext[:ar_process].dimension
-            for ℓ in 1:L_τ
-                αᵏ[τ-t+1,ℓ] += p * intercept_factors[i][τ-t+1,ℓ]
-            end
-        end
+    TimerOutputs.@timeit model.timer_output "aggregate_cut_info" begin
+        aggregate_alpha!(αᵏ, intercept_factors, t, T, L, risk_adjusted_probability)
     end
 
     ####################################################################################
@@ -194,7 +191,8 @@ function _add_average_cut(
         uᵏ,
         model.ext[:iteration],
         obj_y,
-        belief_y,
+        belief_y;
+        model.ext[:algo_params].cut_selection,
     )
     return (
         theta = θᵏ,
@@ -204,4 +202,17 @@ function _add_average_cut(
         belief_y = belief_y,
         αᵏ = αᵏ,
     )
+end
+
+function aggregate_alpha!(
+    αᵏ::Array{Float64,2},
+    intercept_factors::Vector{Array{Float64,2}},
+    t::Int,
+    T::Int,
+    L::Int,
+    risk_adjusted_probability::Vector{Float64},
+    )
+    Tullio.@tullio αᵏ[τ-t+1,ℓ] = sum(risk_adjusted_probability[i] * intercept_factors[i][τ-t+1,ℓ] for i in eachindex(risk_adjusted_probability)) (τ in t:T, ℓ in 1:L)
+
+    return
 end
