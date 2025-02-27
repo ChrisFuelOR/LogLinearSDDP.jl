@@ -892,7 +892,6 @@ function train(
     
         # CHANGES TO SDDP.jl
         ####################################################################################
-        node.ext[:cut_cons] = Vector{JuMP.ConstraintRef}()
         T = model.ext[:problem_params].number_of_stages
         t = node.index
         L = model.ext[:ar_process].dimension

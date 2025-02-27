@@ -221,13 +221,6 @@ function test_get_dual_solution_1D()
     @test length(LogLinearSDDP.get_alphas(node)) == 1
     @test LogLinearSDDP.get_alphas(node)[1] == exp(1)
 
-    # NODE 2
-    ##################################################################################################
-
-
-    #@test get_existing_cuts_factor(node, ..., ..., ...) ==
-
-    #get_existing_cuts_factor(node, t+1, τ, ℓ)
 
 end
 

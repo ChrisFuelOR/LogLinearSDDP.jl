@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 function sample_scenario(
@@ -61,21 +61,21 @@ function sample_scenario(
                 noise_term[ℓ] = ar_process.history[1][ℓ]
             end
         else      
-            ar_process_stage = ar_process.parameters[node_index]
             # Compute the actual noise ξ using the formula for the log-linear AR process
             # Note: No matter how the noises are defined in parameterize in the model description, noise_term here is always 
             # a vector with component index ℓ (or an AbstractFloat).
-            noise_term = zeros(length(independent_noise_terms))
-            for ℓ in eachindex(noise_term)
-                t = node_index
-                intercept = ar_process_stage.intercept[ℓ]
-                independent_term = independent_noise_terms[ℓ]
-                error_term_factor = ar_process_stage.psi[ℓ]
-                coefficients = ar_process_stage.coefficients
-                lag_order = ar_process.lag_order
-                lag_dimensions = ar_process.dimension
-                noise_term[ℓ] = exp(intercept) * exp(independent_term * error_term_factor) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
+            # Further note that process_state is first converted to an array for more efficient computations.
+            noise_term = Vector{Float64}(undef, length(independent_noise_terms))
+            
+            TimerOutputs.@timeit graph.timer_output "process_state_to_array" begin
+                ps_array = Array{Float64,2}(undef, ar_process.dimension, ar_process.lag_order)
+                process_state_to_array!(ps_array, process_state, node.index)
             end
+
+            TimerOutputs.@timeit graph.timer_output "set_noise_terms" begin
+                set_noise_terms!(noise_term, node.index, ar_process.dimension, ar_process.lag_order, ar_process.parameters[node.index], collect(independent_noise_terms), ps_array)
+            end
+
         end
 
         ####################################################################################
@@ -118,6 +118,44 @@ function sample_scenario(
     )
 end
 
+function set_noise_terms!(
+    noise_term::Any,
+    t::Int64,
+    L::Int64,
+    p::Int64,
+    ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage,
+    independent_noise_terms::Vector{Float64},
+    process_state::Array{Float64,2},
+    )
+
+    coefficients = ar_process_stage.coefficients
+    
+    @turbo for ℓ in eachindex(noise_term)
+        expo = exp(ar_process_stage.intercept[ℓ] + independent_noise_terms[ℓ] * ar_process_stage.psi[ℓ])
+        noise_term[ℓ] = expo
+
+        for k in 1:p
+            for m in 1:L
+                noise_term[ℓ] *= process_state[m,k]^coefficients[ℓ,m,k]
+            end
+        end
+    end
+    return
+end
+
+function process_state_to_array!(
+    ps_array::Array{Float64,2},
+    process_state::Dict{Int64,Any},
+    t::Int64,
+)   
+    
+    for k in 1:size(ps_array,2)
+        for m in 1:size(ps_array,1)
+            ps_array[m,k] = process_state[t-k][m]
+        end
+    end
+    return
+end
 
 function update_process_state(
     graph::SDDP.PolicyGraph{T},
