@@ -711,7 +711,7 @@ function iteration(model::SDDP.PolicyGraph{T}, options::LogLinearSDDP.Options) w
     )
 
     has_converged, status =
-    SDDP.convergence_test(model, options.log, options.stopping_rules)
+    SDDP.convergence_test(model, options.sddp_log, options.stopping_rules)
     return SDDP.IterationResult(
         Distributed.myid(),
         bound,

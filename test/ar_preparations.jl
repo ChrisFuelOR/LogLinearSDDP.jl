@@ -25,6 +25,7 @@ function create_autoregressive_data_1D()
     dim = 1
 
     ar_history = Dict{Int64,Any}()
+    ar_history[0] = [1.0] 
     ar_history[1] = [3.0] 
 
     ar_parameters  = Dict{Int64, LogLinearSDDP.AutoregressiveProcessStage}()
@@ -32,14 +33,14 @@ function create_autoregressive_data_1D()
     intercept = zeros(dim)
     coefficients = 1/4 * ones(dim, dim, lag_order)
     eta = [-1.0, 1.0]
-    ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
+    ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta)
 
     intercept = zeros(dim)
     coefficients = 1/4 * ones(dim, dim, lag_order)
     eta = [-1.0, 1.0]
-    ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
+    ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta)
 
-    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+    ar_process = LogLinearSDDP.AutoregressiveProcess(dim, lag_order, ar_parameters, ar_history, false)
 
     return ar_process, stages, realizations
 end    
@@ -52,6 +53,7 @@ function create_autoregressive_data_2D()
     dim = 2
 
     ar_history = Dict{Int64,Any}()
+    ar_history[-1] = [1.0, 1.0]
     ar_history[0] = [4.0, 5.0]
     ar_history[1] = [4.0, 5.0] 
     
@@ -66,10 +68,10 @@ function create_autoregressive_data_2D()
     eta_2 = [-0.5, 0.0, 0.5]
     eta = vec(collect(Iterators.product(eta_1, eta_2)))
 
-    ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
-    ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta)
+    ar_parameters[2] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta)
+    ar_parameters[3] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta)
 
-    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+    ar_process = LogLinearSDDP.AutoregressiveProcess(dim, lag_order, ar_parameters, ar_history, false)
 
     return ar_process, stages, realizations
 end   

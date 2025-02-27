@@ -19,15 +19,15 @@ function initialize_process_state(
 )
 
     min_time_index = minimum(collect(keys(ar_process.history)))
-    max_dimension = ar_process.dimension
+    dim = ar_process.dimension
     process_state = Dict{Int64,Any}()
 
     # Determine the historical process states
     for t in min_time_index:0
         # Default case if not a sufficient amount of history is defined
-        process_state[t] = ones(max_dimension)
+        process_state[t] = ones(dim)
 
-        for ℓ in 1:max_dimension
+        for ℓ in 1:dim
             if haskey(ar_process.history, t) && length(ar_process.history[t]) >= ℓ && isa(ar_process.history[t][ℓ], AbstractFloat)
                 process_state[t][ℓ] = ar_process.history[t][ℓ]
             end
