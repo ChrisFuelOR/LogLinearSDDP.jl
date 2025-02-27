@@ -221,7 +221,7 @@ function test_get_dual_solution_1D()
     @test length(LogLinearSDDP.get_alphas(node)) == 1
     @test LogLinearSDDP.get_alphas(node)[1] == exp(1)
 
-
+    # TODO: IMPROVE THIS!
 end
 
 

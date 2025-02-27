@@ -144,16 +144,22 @@ struct ProblemParams
     number_of_stages::Int64
     number_of_realizations::Int64
     tree_seed::Union{Nothing,Int}
+    gurobi_coupling_index_start::Union{Nothing,Int}
+    gurobi_cut_index_start::Union{Nothing,Int}
 
     function ProblemParams(
         number_of_stages,
         number_of_realizations;
         tree_seed = nothing,
+        gurobi_coupling_index_start = nothing,
+        gurobi_cut_index_start = nothing,
     )
         return new(
             number_of_stages,
             number_of_realizations,
-            tree_seed
+            tree_seed,
+            gurobi_coupling_index_start,
+            gurobi_cut_index_start,
         )
     end
 end
