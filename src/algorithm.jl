@@ -894,7 +894,7 @@ function train(
         T = model.ext[:problem_params].number_of_stages
         t = node.index
         L = model.ext[:ar_process].dimension
-        node.ext[:scenario_factors] = ones(T-t, L)
+        node.ext[:scenario_factors] = ones(T-(t-1), L)
     end
     
     # CHANGES TO SDDP.jl

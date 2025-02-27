@@ -72,7 +72,7 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 
     # Evaluate the "stochastic" part of the intercept for the current noise in the backward pass
     TimerOutputs.@timeit model.timer_output "cut_intercept_tight" begin
-        stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+        stochastic_intercept_tight = evaluate_stochastic_cut_intercept_tight(node, α)
     end
 
     return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight

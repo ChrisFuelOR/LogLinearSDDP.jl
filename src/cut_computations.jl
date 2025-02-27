@@ -257,31 +257,30 @@ function compute_intercept_value(
 end
 
 
-function compute_intercept_value_tight(
+function compute_stochastic_intercept_value_tight(
     t::Int64,
-    T::Int64,
-    scenario_factors::Array{Float64,2},
     intercept_factors::Array{Float64,2},
-    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    scenario_factors::Array{Float64,2},
+    T::Int64,
+    L::Int64,
 )
 
+    #Evaluate the intercept (without its stochastic part)
     intercept_value = 0.0
-    for τ in t:T
-        L_τ = ar_process.dimension
-        for ℓ in 1:L_τ
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+    @turbo for ℓ in 1:L
+        for τ in t:T
+            intercept_value += intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 
     return intercept_value
-
 end
 
 """ 
 Evaluation the cut intercept for the about to be created cut at the state of construction (point of tightness)
 """
 
-function evaluate_cut_intercept_tight(
+function evaluate_stochastic_cut_intercept_tight(
     node::SDDP.Node,
     intercept_factors::Array{Float64,2},
 )
@@ -294,21 +293,29 @@ function evaluate_cut_intercept_tight(
     process_state = node.ext[:process_state]
     ar_process = model.ext[:ar_process]
     t = node.index
+
     T = problem_params.number_of_stages
+    p = ar_process.lag_order
     L = ar_process.dimension
+
     # Get exponents for the considered cut
     cut_exponents_stage = cut_exponents[t]
 
     # Get process state for the considered cut
     process_state = node.ext[:process_state]
 
+    TimerOutputs.@timeit model.timer_output "process_state_to_array" begin
+        ps_array = Array{Float64,2}(undef, ar_process.dimension, ar_process.lag_order)
+        LogLinearSDDP.process_state_to_array!(ps_array, process_state, t)
+    end
+
     # First compute scenario-specific factors
     TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-        scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+        compute_scenario_factors!(node.ext[:scenario_factors], ps_array, cut_exponents_stage, t, T, p, L)
     end
 
     #Evaluate the stochastic part of the intercept
-    intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
+    intercept_value = compute_stochastic_intercept_value_tight(t, intercept_factors, node.ext[:scenario_factors], T, L)
 
     return intercept_value
 end
