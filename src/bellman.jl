@@ -30,7 +30,7 @@ function _add_cut(
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
 
     TimerOutputs.@timeit model.timer_output "construct_cut_object" begin
-       cut = LogLinearSDDP.Cut(πᵏ, uᵏ, θᵏ - uᵏ, αᵏ, xᵏ, nothing, nothing, 1, iteration)
+       cut = LogLinearSDDP.Cut(πᵏ, θᵏ - uᵏ, uᵏ, αᵏ, xᵏ, nothing, nothing, 1, iteration)
     end
     model.ext[:total_cuts] += 1
 

@@ -121,6 +121,7 @@ function evaluate_cut_intercepts(
                 adapt_intercepts(node, node.bellman_function.global_theta.cuts, t+1, node.ext[:scenario_factors], problem_params, ar_process)
             end
         end
+
     end
 
     return
@@ -140,7 +141,7 @@ function adapt_intercepts(
 
     for cut in cuts
         TimerOutputs.@timeit model.timer_output "intercept_value" begin    
-            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params.number_of_stages)
+            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params.number_of_stages, ar_process.dimension)
         end
 
         TimerOutputs.@timeit model.timer_output "fix_intercept" begin   
@@ -163,17 +164,16 @@ function adapt_intercepts_gurobi(
 
     for cut_index in eachindex(cuts)
         TimerOutputs.@timeit model.timer_output "intercept_value" begin    
-            intercept_value = compute_intercept_value2b(t, cuts[cut_index], scenario_factors, problem_params, ar_process)
+            intercept_value = compute_intercept_value(t, cuts[cut_index], scenario_factors, problem_params.number_of_stages, ar_process.dimension)
         end
 
         #x = Gurobi.c_column(JuMP.backend(node.subproblem), JuMP.index(cuts[cut_index].cut_intercept_variable))
-        Infiltrator.@infiltrate
         x = Gurobi.c_column(JuMP.backend(node.subproblem), MOI.VariableIndex(start_index + cut_index))
         Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "LB", x, intercept_value) 
         Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "UB", x, intercept_value) 
 
         TimerOutputs.@timeit model.timer_output "fix_intercept" begin   
-            JuMP.fix(cut.cut_intercept_variable, intercept_value)
+            JuMP.fix(cuts[cut_index].cut_intercept_variable, intercept_value)
         end
     end
 end
@@ -242,11 +242,12 @@ function compute_intercept_value(
     cut::LogLinearSDDP.Cut,
     scenario_factors::Array{Float64,2},
     T::Int64,
+    L::Int64,
 )
 
     #Evaluate the intercept
     intercept_value = cut.deterministic_intercept
-    @turbo for ℓ in 1:4
+    @turbo for ℓ in 1:L
         for τ in t:T
             intercept_value += cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
