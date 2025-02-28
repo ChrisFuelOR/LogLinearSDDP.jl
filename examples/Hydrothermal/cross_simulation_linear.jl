@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 import LogLinearSDDP
@@ -57,8 +57,10 @@ function cross_sample_scenario(
             for ℓ in eachindex(noise_term)
                 independent_term = independent_noise_terms[ℓ]
                 noise_term[ℓ] = process_state[t-1][ℓ] * ar_process_stage.coefficients[ℓ,1] * exp(independent_term) + ar_process_stage.coefficients[ℓ,2] * exp(independent_term)
-                if noise_term[ℓ] < 0
-                    noise_term[ℓ] = - noise_term[ℓ]
+                if noise_term[ℓ] < 0 
+                    # TODO
+                    # noise_term[ℓ] = - noise_term[ℓ]
+                    noise_term[ℓ] = 0
                 end
             end
         end

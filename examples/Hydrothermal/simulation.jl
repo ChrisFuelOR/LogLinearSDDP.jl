@@ -8,7 +8,7 @@ function read_model_std(file_name)
     if startswith(file_name, "Linearized")
         df = read_model_linear(file_name)
     else
-        df = read_model(file_name)
+        df = read_model_log_linear(file_name)
     end
     stds = df[:, "Sigma"]
     return stds
@@ -208,7 +208,7 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         file_name = file_path * policy_approach * "_" * simulation_approach * "_inflows_" * reservoir_names[k] * ".txt"
         f = open(file_name, "w")
 
-        # Get volume data for given reservoir
+        # Get inflow data for given reservoir
         column_names = [Symbol(i) for i in 1:120]
         inflow_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
         for i in eachindex(simulation_results)
@@ -221,6 +221,7 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
             end    
             push!(inflow_df, inflow)
         end
+        Infiltrator.@infiltrate
 
         # mean
         for stage in 1:120
@@ -237,6 +238,12 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         # 0.95 quantile
         for stage in 1:120
             println(f, "(", stage, ",", round(Statistics.quantile(inflow_df[!, Symbol(stage)], 0.95), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # minimum (to rule out negative inflows)
+        for stage in 1:120
+            println(f, "(", stage, ",", round(minimum(inflow_df[!, Symbol(stage)]), digits = 2), ")")
         end
         println(f, "###################")
 

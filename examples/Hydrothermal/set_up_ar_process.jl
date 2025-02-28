@@ -150,12 +150,14 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
             df = data[ℓ]  
 
             # Get coefficients
-            coefficients = parse_coefficients(df[month, "Corr_coefficients"])
+            current_coefficients = parse_coefficients(df[month, "Corr_coefficients"])
+            for k in eachindex(current_coefficients)
+                coefficients[ℓ, k] = current_coefficients[k]
+            end
         end
 
         # Get eta data        
         eta = get_realization_data(eta_df, t, number_of_realizations)
-
         ar_parameters[t] = LinearAutoregressiveProcessStage(coefficients, eta)
     end
    
