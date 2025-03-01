@@ -167,14 +167,13 @@ function adapt_intercepts_gurobi(
             intercept_value = compute_intercept_value(t, cuts[cut_index], scenario_factors, problem_params.number_of_stages, ar_process.dimension)
         end
 
-        #x = Gurobi.c_column(JuMP.backend(node.subproblem), JuMP.index(cuts[cut_index].cut_intercept_variable))
-        x = Gurobi.c_column(JuMP.backend(node.subproblem), MOI.VariableIndex(start_index + cut_index))
-        Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "LB", x, intercept_value) 
-        Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "UB", x, intercept_value) 
-
         TimerOutputs.@timeit model.timer_output "fix_intercept" begin   
-            JuMP.fix(cuts[cut_index].cut_intercept_variable, intercept_value)
+            #x = Gurobi.c_column(JuMP.backend(node.subproblem), JuMP.index(cuts[cut_index].cut_intercept_variable))
+            x = Gurobi.c_column(JuMP.backend(node.subproblem), MOI.VariableIndex(start_index + cut_index))
+            Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "LB", x, intercept_value) 
+            Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "UB", x, intercept_value) 
         end
+
     end
 end
 

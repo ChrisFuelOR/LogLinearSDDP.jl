@@ -221,7 +221,6 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
             end    
             push!(inflow_df, inflow)
         end
-        Infiltrator.@infiltrate
 
         # mean
         for stage in 1:120
