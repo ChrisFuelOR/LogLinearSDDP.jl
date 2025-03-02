@@ -121,11 +121,11 @@ LOGLINEAR MODEL OPTIONS are
 """
 function run_model_starter()
 
-    run_model(11111, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(22222, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(11111, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(22222, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(33333, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(444444, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(55555, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
 
 end
 

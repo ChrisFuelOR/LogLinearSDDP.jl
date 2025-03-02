@@ -225,20 +225,15 @@ function sample_backward_noise_terms(
     # Differentiation between one- and multi-dimensional noise, because noise.term has different type in both cases.
     for i in eachindex(all_independent_noises)
         independent_noise = all_independent_noises[i]
+        noise_values = zeros(ar_process.dimension)
 
-        noise_dimension = length(independent_noise.term)
-        noise_values = zeros(noise_dimension)
+        TimerOutputs.@timeit graph.timer_output "process_state_to_array" begin
+                ps_array = Array{Float64,2}(undef, ar_process.dimension, ar_process.lag_order)
+                process_state_to_array!(ps_array, process_state, node.index)
+        end
 
-        for ℓ in eachindex(noise_values)
-            t = node.index
-            intercept = ar_process_stage.intercept[ℓ]
-            independent_value = independent_noise.term[ℓ]
-            error_term_factor = ar_process_stage.psi[ℓ]
-            coefficients = ar_process_stage.coefficients
-            lag_order = ar_process.lag_order
-            lag_dimensions = ar_process.dimension
-
-            noise_values[ℓ] = exp(intercept) * exp(independent_value * error_term_factor) * prod(process_state[t-k][m]^coefficients[ℓ,m,k] for k in 1:lag_order for m in 1:lag_dimensions[k])
+        TimerOutputs.@timeit graph.timer_output "set_noise_terms" begin
+            set_noise_terms!(noise_values, node.index, ar_process.dimension, ar_process.lag_order, ar_process.parameters[node.index], collect(independent_noise.term), ps_array)
         end
 
         # Note: No matter how the noises are defined in parameterize in the model description, noise_values here is always a vector containing all components.
