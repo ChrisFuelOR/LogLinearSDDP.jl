@@ -40,7 +40,7 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations, gurobi_coupling_index_start = 0, gurobi_cut_index_start = 9, gurobi_fix_start = 167)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(10)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
         log_file = log_file, silent = true, model_approach = model_approach, run_description = run_description)
 
     # CREATE AND RUN MODEL
@@ -122,17 +122,17 @@ LOGLINEAR MODEL OPTIONS are
 """
 function run_model_starter()
 
-    #run_model(11111, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(11111, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
     run_model(22222, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    # run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    # run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
-    # run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
 
-    # run_model(11111, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    # run_model(22222, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    # run_model(33333, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    # run_model(444444, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    # run_model(55555, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(11111, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(22222, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(33333, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(444444, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    run_model(55555, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
 
 end
 
