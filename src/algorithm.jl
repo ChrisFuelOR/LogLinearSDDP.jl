@@ -325,6 +325,7 @@ function backward_pass(
             prepare_backward_pass(model, options.duality_handler, options)
     end
     # TODO(odow): improve storage type.
+    model.ext[:phase] = :backward
     cuts = Dict{T,Vector{Any}}(index => Any[] for index in keys(model.nodes))
     for index in length(scenario_path):-1:1
         outgoing_state = sampled_states[index]
@@ -546,6 +547,7 @@ function forward_pass(
     options::LogLinearSDDP.Options,
     pass::SDDP.DefaultForwardPass,
 ) where {T}
+    model.ext[:phase] = :forward
     # First up, sample a scenario. Note that if a cycle is detected, this will
     # return the cycle node as well.
     TimerOutputs.@timeit model.timer_output "sample_scenario" begin

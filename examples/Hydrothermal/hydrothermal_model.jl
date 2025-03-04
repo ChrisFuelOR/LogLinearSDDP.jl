@@ -226,11 +226,14 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             JuMP.fix(inflow[3], ω[3])
             JuMP.fix(inflow[4], ω[4])
 
-            print(f, t, "; ")
-            for i in 1:4
-                print(f, round(ω[i], digits = 2), ";")
+
+            if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                print(f, t, "; ")
+                for i in 1:4
+                    print(f, round(ω[i], digits = 2), ";")
+                end
+                println(f)
             end
-            println(f)
         end
 
         if algo_params.silent
