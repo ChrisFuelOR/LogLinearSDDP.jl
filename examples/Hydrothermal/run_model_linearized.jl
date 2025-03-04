@@ -83,7 +83,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     
     # In-sample simulation
     simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, problem_params, model_directory, algo_params.simulation_regime)
-    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "_in_sample")
+    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "in_sample")
 
     # ----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation
