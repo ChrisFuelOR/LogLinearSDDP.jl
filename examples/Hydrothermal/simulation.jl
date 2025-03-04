@@ -139,16 +139,22 @@ function get_out_of_sample_realizations_multivariate_linear(number_of_realizatio
     )
 end
 
-function extended_simulation_analysis(simulation_results::Any, file_path::String, policy_approach::String, simulation_approach::String)
+function extended_simulation_analysis(simulation_results::Any, file_path::String, problem_params::LogLinearSDDP.ProblemParams, policy_approach::String, simulation_approach::String)
 
-    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS
+    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS (ONLY FOR FIRST 60 STAGES)
     ############################################################################
     # Declare file name
     file_name = file_path * policy_approach * "_" * simulation_approach * "_cum_distrib.txt"
     f = open(file_name, "w")
 
-    objectives = map(simulation_results) do simulation
-        return sum(stage[:stage_objective] for stage in simulation)
+    if problem_params.number_of_stages == 120
+        objectives = map(simulation_results) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+    else
+        objectives = map(simulation_results) do simulation
+            return sum(stage[:stage_objective] for stage in simulation)
+        end
     end
 
     distrib = StatsBase.ecdf(objectives)
@@ -169,7 +175,7 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         f = open(file_name, "w")
 
         # Get volume data for given reservoir
-        column_names = [Symbol(i) for i in 1:120]
+        column_names = [Symbol(i) for i in 1:problem_params.number_of_stages]
         volume_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
         for i in eachindex(simulation_results)
             outgoing_volume = map(simulation_results[i]) do node
@@ -179,19 +185,19 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         end
 
         # mean
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.mean(volume_df[!, Symbol(stage)]), digits = 2), ")")
         end
         println(f, "###################")
 
         # 0.05 quantile
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.05), digits = 2), ")")
         end
         println(f, "###################")
 
         # 0.95 quantile
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.95), digits = 2), ")")
         end
         println(f, "###################")
@@ -209,7 +215,7 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         f = open(file_name, "w")
 
         # Get inflow data for given reservoir
-        column_names = [Symbol(i) for i in 1:120]
+        column_names = [Symbol(i) for i in 1:problem_params.number_of_stages]
         inflow_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
         for i in eachindex(simulation_results)
             inflow = map(simulation_results[i]) do node
@@ -223,25 +229,25 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
         end
 
         # mean
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.mean(inflow_df[!, Symbol(stage)]), digits = 2), ")")
         end
         println(f, "###################")
 
         # 0.05 quantile
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.quantile(inflow_df[!, Symbol(stage)], 0.05), digits = 2), ")")
         end
         println(f, "###################")
 
         # 0.95 quantile
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(Statistics.quantile(inflow_df[!, Symbol(stage)], 0.95), digits = 2), ")")
         end
         println(f, "###################")
 
         # minimum (to rule out negative inflows)
-        for stage in 1:120
+        for stage in 1:problem_params.number_of_stages
             println(f, "(", stage, ",", round(minimum(inflow_df[!, Symbol(stage)]), digits = 2), ")")
         end
         println(f, "###################")
@@ -255,44 +261,56 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
     file_name = file_path * policy_approach * "_" * simulation_approach * "_data.txt"
     f = open(file_name, "w")
 
-    # Get volume data for given reservoir
-    column_names = [Symbol(i) for i in 1:120]
+    # Get data
+    deficit_unit_cost = [1142.8, 2465.4, 5152.46, 5845.54]
+    column_names = [Symbol(i) for i in 1:problem_params.number_of_stages]
     value_df = DataFrames.DataFrame([name => Vector{Vector{Float64}}() for name in column_names])
     for i in eachindex(simulation_results)
         outgoing_values = map(simulation_results[i]) do node
             gen = sum(node[:gen][j] for j in 1:95)
             hydro_gen = sum(node[:hydro_gen][k] for k in 1:4)
-            deficit = sum(node[:deficit_part][k,i] for i in 1:4 for k in 1:5)
+            deficit = sum(node[:deficit_part][k,j] for j in 1:4 for k in 1:5)
+            deficit_cost = sum(deficit_unit_cost[j] * node[:deficit_part][k,j] for j in 1:4 for k in 1:5) 
             exchange = sum(node[:exchange][k,l] for l in 1:5 for k in 1:5)
             spillage = sum(node[:spillage][k] for k in 1:4)
-            return [gen, hydro_gen, deficit, exchange, spillage]
+            return [gen, hydro_gen, deficit, deficit_cost, exchange, spillage]
         end    
         push!(value_df, outgoing_values)
     end
+   
+    # mean
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        println(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ")")
+    end
+    println(f, "###################")
 
-    # compute and log mean
-    for stage in 1:120
-        gen_sum = 0.0
-        hydro_gen_sum = 0.0
-        deficit_sum = 0.0
-        exchange_sum = 0.0
-        spillage_sum = 0.0
+    # 0.05 quantile
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        println(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ")")
+    end
+    println(f, "###################")
 
-        for i in 1:DataFrames.nrow(value_df)
-            gen_sum += value_df[!, Symbol(stage)][i][1] 
-            hydro_gen_sum += value_df[!, Symbol(stage)][i][2] 
-            deficit_sum += value_df[!, Symbol(stage)][i][3] 
-            exchange_sum += value_df[!, Symbol(stage)][i][4] 
-            spillage_sum += value_df[!, Symbol(stage)][i][5] 
-        end
-
-        gen_avg = gen_sum/DataFrames.nrow(value_df)
-        hydro_gen_avg = hydro_gen_sum/DataFrames.nrow(value_df)
-        deficit_avg = deficit_sum/DataFrames.nrow(value_df)
-        exchange_avg = exchange_sum/DataFrames.nrow(value_df)
-        spillage_avg = spillage_sum/DataFrames.nrow(value_df)
-
-        println(f, "(", stage, ",", round(gen_avg, digits = 2), ",", round(hydro_gen_avg, digits = 2), ",", round(deficit_avg, digits = 2), ",", round(exchange_avg, digits = 2), ",", round(spillage_avg, digits = 2), ")")
+    # 0.95 quantile
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        println(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ")")
     end
     println(f, "###################")
 

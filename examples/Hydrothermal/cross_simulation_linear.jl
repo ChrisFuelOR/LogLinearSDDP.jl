@@ -283,12 +283,13 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return cross_simulate_linear(model, algo_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return cross_simulate_linear(model, algo_params, problem_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
 end
 
@@ -296,6 +297,7 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
@@ -308,6 +310,7 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
@@ -335,6 +338,22 @@ function cross_simulate_linear(
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
     LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+
+    if problem_params.number_of_stages == 120
+        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
+        ############################################################################
+        objectives = map(simulations) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+
+        μ, ci = SDDP.confidence_interval(objectives)
+        # get last lower bound again
+        lower_bound = LogLinearSDDP.calculate_bound(model)
+
+        # LOGGING OF SIMULATION RESULTS
+        ############################################################################
+        LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    end
 
     return simulations
 end

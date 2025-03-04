@@ -30,21 +30,22 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     ###########################################################################################################
     number_of_stages = 120
     number_of_realizations = 100
-    simulation_replications = 2000
+    simulation_replications = 5
     ###########################################################################################################
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
-    log_file = file_path * "LogLinearSDDP.log"
+    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier
+    ispath(file_path) || mkdir(file_path)
+    log_file = file_path * "/LogLinearSDDP.log"
     run_description = ""
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations, gurobi_coupling_index_start = 0, gurobi_cut_index_start = 9, gurobi_fix_start = 167)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(1000)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(10)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
         log_file = log_file, silent = true, model_approach = model_approach, run_description = run_description)
 
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    f = open(file_path * "inflows.txt", "w")
+    f = open(file_path * "/inflows.txt", "w")
     ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach), String(model_approach))
     model = model_definition(ar_process, problem_params, algo_params, f)
 
@@ -58,8 +59,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     model.ext[:simulation_attributes] = [:level, :inflow, :spillage, :gen, :exchange, :deficit_part, :hydro_gen]
     
     # In-sample simulation
-    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), algo_params.simulation_regime)
-    extended_simulation_analysis(simulation_results, file_path, String(model_approach), "_in_sample")
+    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, ar_process, String(model_approach), algo_params.simulation_regime)
+    extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), "_in_sample")
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation
@@ -68,8 +69,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
         return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach))
     end
     simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, ar_process, String(model_approach), simulation_loglinear)
-    extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach))
+    simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, ar_process, String(model_approach), simulation_loglinear)
+    extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), String(model_approach))
 
     #----------------------------------------------------------------------------------------------------------
     # Out-of-sample simulation (alternative log-linear model)
@@ -82,8 +83,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
             return get_out_of_sample_realizations_loglinear(number_of_realizations, stage, String(model_approach_alt))
         end
         simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
-        simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, loglin_ar_process, String(model_approach_alt), simulation_loglinear)
-        extended_simulation_analysis(simulation_results, file_path, String(model_approach), String(model_approach_alt))
+        simulation_results = LogLinearSDDP.simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, String(model_approach_alt), simulation_loglinear)
+        extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), String(model_approach_alt))
     end
 
     # SIMULATION USING A LINEAR PROCESS
@@ -104,8 +105,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
         simulation_linear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_linear, number_of_replications = simulation_replications)
 
         # Using the sample data and the process data perform a simulation
-        simulation_results = cross_simulate_linear(model, algo_params, lin_ar_process, model_directory_lin, simulation_linear)
-        extended_simulation_analysis(simulation_results, file_path, String(model_approach), model_directory_lin)
+        simulation_results = cross_simulate_linear(model, algo_params, problem_params, lin_ar_process, model_directory_lin, simulation_linear)
+        extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), model_directory_lin)
     end
 
     return
@@ -121,11 +122,17 @@ LOGLINEAR MODEL OPTIONS are
 """
 function run_model_starter()
 
-    run_model(11111, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    run_model(22222, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    run_model(33333, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    run_model(444444, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
-    run_model(55555, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    #run_model(11111, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    run_model(22222, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(33333, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(444444, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+    # run_model(55555, :custom_model, [:bic_model], ["fitted_model", "shapiro_model"])
+
+    # run_model(11111, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    # run_model(22222, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    # run_model(33333, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    # run_model(444444, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
+    # run_model(55555, :bic_model, [:custom_model], ["fitted_model", "shapiro_model"])
 
 end
 

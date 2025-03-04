@@ -187,18 +187,20 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 end
 
 
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
@@ -211,6 +213,7 @@ end
 function simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
@@ -239,6 +242,22 @@ function simulate_loglinear(
     ############################################################################
     log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
+    if problem_params.number_of_stages == 120
+        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
+        ############################################################################
+        objectives = map(simulations) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+
+        μ, ci = SDDP.confidence_interval(objectives)
+        # get last lower bound again
+        lower_bound = calculate_bound(model)
+
+        # LOGGING OF SIMULATION RESULTS
+        ############################################################################
+        log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    end
+
     return simulations
 end
 
@@ -262,17 +281,19 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return simulate_linear(model, algo_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return simulate_linear(model, algo_params, problem_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 end
 
 
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
@@ -284,6 +305,7 @@ end
 function simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
@@ -310,6 +332,22 @@ function simulate_linear(
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
     log_simulation_results(algo_params, μ, ci, lower_bound, description)
+
+    if problem_params.number_of_stages == 120
+        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
+        ############################################################################
+        objectives = map(simulations) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+
+        μ, ci = SDDP.confidence_interval(objectives)
+        # get last lower bound again
+        lower_bound = SDDP.calculate_bound(model)
+
+        # LOGGING OF SIMULATION RESULTS
+        ############################################################################
+        log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    end
 
     return simulations
 end
