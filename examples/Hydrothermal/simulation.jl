@@ -141,21 +141,32 @@ end
 
 function extended_simulation_analysis(simulation_results::Any, file_path::String, problem_params::LogLinearSDDP.ProblemParams, policy_approach::String, simulation_approach::String)
 
-    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS (ONLY FOR FIRST 60 STAGES)
+    # GET TOTAL COST FOR ALL REPLICATIONS AND STORE (ONLY FOR FIRST 60 STAGES)
     ############################################################################
-    # Declare file name
-    file_name = file_path * policy_approach * "_" * simulation_approach * "_cum_distrib.txt"
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_total_cost.txt"
     f = open(file_name, "w")
+
+    objectives_all_stages = map(simulation_results) do simulation
+        return sum(stage[:stage_objective] for stage in simulation)
+    end
 
     if problem_params.number_of_stages == 120
         objectives = map(simulation_results) do simulation
             return sum(simulation[stage][:stage_objective] for stage in 1:60)
         end
     else
-        objectives = map(simulation_results) do simulation
-            return sum(stage[:stage_objective] for stage in simulation)
-        end
+        objectives = objectives_all_stages
     end
+
+    for i in eachindex(objectives)
+        println(f, objectives[i], ", ", objectives_all_stages[i])
+    end
+    close(f)
+
+    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS (ONLY FOR FIRST 60 STAGES)
+    ############################################################################
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_cum_distrib.txt"
+    f = open(file_name, "w")
 
     distrib = StatsBase.ecdf(objectives)
     stepsize = round((maximum(objectives)-minimum(objectives))/100, digits=0)
