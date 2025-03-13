@@ -32,9 +32,9 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * model_directory * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier
+    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
     ispath(file_path) || mkdir(file_path)
-    log_file = file_path * "/LinearizedSDDP.log"
+    log_file = file_path * "LinearizedSDDP.log"
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
@@ -60,7 +60,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
 
     # CREATE AND RUN MODEL
     ###########################################################################################################
-    f = open(file_path * "/inflows_lin.txt", "w")
+    f = open(file_path * "inflows_lin.txt", "w")
     ar_process = set_up_ar_process_linear(number_of_stages, number_of_realizations, model_directory, "bic_model")
     model = model_definition(ar_process, problem_params, algo_params, f)  
     Random.seed!(algo_params.forward_pass_seed)

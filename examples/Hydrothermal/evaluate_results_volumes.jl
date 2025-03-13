@@ -22,18 +22,19 @@ function evaluate_results_volumes()
         #RunConfig(11111, "custom", "in_sample", "SE", "IterLimit", "mean", "blue"),
         #RunConfig(11111, "fitted", "in_sample", "SE", "IterLimit", "mean", "green!70!black"),
         #RunConfig(11111, "shapiro", "in_sample", "SE", "IterLimit", "mean", "cyan"),
-        RunConfigVolumes(11111, "bic", "shapiro", "SE", "IterLimit", "mean", "blue"),
-        RunConfigVolumes(11111, "custom", "shapiro", "SE", "IterLimit", "mean", "red"),
-        RunConfigVolumes(11111, "fitted", "shapiro", "SE", "IterLimit", "mean", "green!70!black"),
-        RunConfigVolumes(11111, "shapiro", "shapiro", "SE", "IterLimit", "mean", "cyan"),    
+        RunConfigVolumes(11111, "shapiro", "bic", "SE", "IterLimit", "q1", "blue"),
+        RunConfigVolumes(11111, "shapiro", "custom", "SE", "IterLimit", "q1", "red"),
+        RunConfigVolumes(11111, "shapiro", "fitted", "SE", "IterLimit", "q1", "green!70!black"),
+        RunConfigVolumes(11111, "shapiro", "shapiro", "SE", "IterLimit", "q1", "cyan"),    
+        RunConfigVolumes(11111, "shapiro", "in_sample", "SE", "IterLimit", "q1", "magenta"),
     )
 
     # Define max number of stages
     number_of_stages = 60
 
     # File path for LaTeX plots
-    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Volumes.tex"
-    create_latex_plots_starter(file_path_latex)
+    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Volumes_Sha_All_SE_q1.tex"
+    create_latex_plots_starter(file_path_latex, number_of_stages)
 
     # Dataframe to store volume data
     volumes_df = DataFrame()

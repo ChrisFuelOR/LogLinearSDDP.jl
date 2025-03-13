@@ -27,38 +27,47 @@ function evaluate_results_inflows()
         # RunConfigInflows(11111, "bic", "fitted", "SE", "IterLimit", "mean", "green!70!black"),
         # RunConfigInflows(11111, "bic", "shapiro", "SE", "IterLimit", "mean", "cyan"),
 
-        RunConfigInflows(11111, "bic", "bic", "SE", "IterLimit", "mean", "blue"),
-        RunConfigInflows(11111, "custom", "custom", "SE", "IterLimit", "mean", "red"),
-        RunConfigInflows(11111, "fitted", "fitted", "SE", "IterLimit", "mean", "green!70!black"),
-        RunConfigInflows(11111, "shapiro", "shapiro", "SE", "IterLimit", "mean", "cyan"),    
-        
-        # RunConfig(11111, "bic", "in_sample", "N", "IterLimit", "q1", "red"),
-        # RunConfig(11111, "custom", "in_sample", "N", "IterLimit", "q1", "blue"),
-        # RunConfig(11111, "fitted", "in_sample", "N", "IterLimit", "q1", "green!70!black"),
-        # RunConfig(11111, "shapiro", "in_sample", "N", "IterLimit", "q1", "black"),
-        # RunConfig(11111, "bic", "bic", "N", "IterLimit", "q1", "magenta"),
-        # RunConfig(11111, "bic", "custom", "N", "IterLimit", "q1", "cyan"),
-        # RunConfig(11111, "bic", "fitted", "N", "IterLimit", "q1", "green"),
-        # RunConfig(11111, "bic", "shapiro", "N", "IterLimit", "q1", "gray"),
+        #RunConfigInflows(33333, "bic", "bic", "SE", "IterLimit", "mean", "blue"),
+        #RunConfigInflows(33333, "custom", "custom", "SE", "IterLimit", "mean", "red"),
+        RunConfigInflows(33333, "fitted", "fitted", "SE", "IterLimit", "mean", "green!70!black"),
+        #RunConfigInflows(33333, "shapiro", "shapiro", "SE", "IterLimit", "mean", "cyan"),    
 
-        # RunConfig(11111, "bic", "in_sample", "N", "IterLimit", "q2", "red"),
-        # RunConfig(11111, "custom", "in_sample", "N", "IterLimit", "q2", "blue"),
-        # RunConfig(11111, "fitted", "in_sample", "N", "IterLimit", "q2", "green!70!black"),
-        # RunConfig(11111, "shapiro", "in_sample", "N", "IterLimit", "q2", "black"),
-        # RunConfig(11111, "bic", "bic", "N", "IterLimit", "q2", "magenta"),
-        # RunConfig(11111, "bic", "custom", "N", "IterLimit", "q2", "cyan"),
-        # RunConfig(11111, "bic", "fitted", "N", "IterLimit", "q2", "green"),
-        # RunConfig(11111, "bic", "shapiro", "N", "IterLimit", "q2", "gray"),
+        #RunConfigInflows(33333, "bic", "in_sample", "SE", "IterLimit", "mean", "blue"),
+        #RunConfigInflows(33333, "custom", "in_sample", "SE", "IterLimit", "mean", "red"),
+        RunConfigInflows(33333, "fitted", "in_sample", "SE", "IterLimit", "mean", "green!70!black"),
+        #RunConfigInflows(33333, "shapiro", "in_sample", "SE", "IterLimit", "mean", "blue"),  
+
+        RunConfigInflows(55555, "fitted", "fitted", "SE", "IterLimit", "mean", "magenta"),    
+        RunConfigInflows(55555, "fitted", "in_sample", "SE", "IterLimit", "mean", "red"),  
+
+
+        # RunConfig(11111, "bic", "in_sample", "SE", "IterLimit", "q1", "red"),
+        # RunConfig(11111, "custom", "in_sample", "SE", "IterLimit", "q1", "blue"),
+        # RunConfig(11111, "fitted", "in_sample", "SE", "IterLimit", "q1", "green!70!black"),
+        # RunConfig(11111, "shapiro", "in_sample", "SE", "IterLimit", "q1", "black"),
+        # RunConfig(11111, "bic", "bic", "SE", "IterLimit", "q1", "magenta"),
+        # RunConfig(11111, "bic", "custom", "SE", "IterLimit", "q1", "cyan"),
+        # RunConfig(11111, "bic", "fitted", "SE", "IterLimit", "q1", "green"),
+        # RunConfig(11111, "bic", "shapiro", "SE", "IterLimit", "q1", "gray"),
+
+        # RunConfig(11111, "bic", "in_sample", "SE", "IterLimit", "q2", "red"),
+        # RunConfig(11111, "custom", "in_sample", "SE", "IterLimit", "q2", "blue"),
+        # RunConfig(11111, "fitted", "in_sample", "SE", "IterLimit", "q2", "green!70!black"),
+        # RunConfig(11111, "shapiro", "in_sample", "SE", "IterLimit", "q2", "black"),
+        # RunConfig(11111, "bic", "bic", "SE", "IterLimit", "q2", "magenta"),
+        # RunConfig(11111, "bic", "custom", "SE", "IterLimit", "q2", "cyan"),
+        # RunConfig(11111, "bic", "fitted", "SE", "IterLimit", "q2", "green"),
+        # RunConfig(11111, "bic", "shapiro", "SE", "IterLimit", "q2", "gray"),
     )
 
     # Define max number of stages
-    number_of_stages = 60
+    number_of_stages = 120
 
     # Dataframe to store inflow data
     inflow_df = DataFrame()
 
     # File path for LaTeX plots
-    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Inflows.tex"
+    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Inflows_33333.tex"
     create_latex_plots_starter(file_path_latex, number_of_stages)
 
     # Iterate over runs and read data from CSV files
@@ -91,13 +100,13 @@ function evaluate_results_inflows()
             aux_string2 = "_model"
         end
 
-        file_name = "C:/Users/cg4102/Documents/julia_logs/" * dir_name * "/Runs server 2025/Run_" * run.model_name_run * "_model_" * string(run.seed) * "/" * run.model_name_run * "_model_" * run.model_name_sim * aux_string2 * "_inflows_" * run.reservoir * ".txt"
+        file_name = "C:/Users/cg4102/Documents/julia_logs/" * dir_name * "/Runs server 2025/Cut-sharing Iterations/Run_" * run.model_name_run * "_model_" * string(run.seed) * "/" * run.model_name_run * "_model_" * run.model_name_sim * aux_string2 * "_inflows_" * run.reservoir * ".txt"
 
         # Read data from CSV files
         inflow_df_run = read_txt_file_inflows(file_name, run.statistic)
         
         # Make column identifiable
-        column_name = Symbol(run.model_name_run * "_" * run.model_name_sim * "_" * run.reservoir * "_" * run.statistic)
+        column_name = Symbol(run.model_name_run * "_" * run.model_name_sim * "_" * run.reservoir * "_" * run.statistic * "_" * string(run.seed))
         rename!(inflow_df_run, :InflowValue => column_name)
         
         # Add to plot
@@ -112,7 +121,7 @@ function evaluate_results_inflows()
     end
 
     create_latex_plots_finisher(file_path_latex)
-
+    Infiltrator.@infiltrate
 end
 
 

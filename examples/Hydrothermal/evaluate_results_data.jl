@@ -17,14 +17,15 @@ function evaluate_results_data()
 
     # Define runs that should be considered
     runs_to_consider = (
-        #RunConfig(11111, "bic", "in_sample", "SE", "IterLimit", "mean", "red"),
-        #RunConfig(11111, "custom", "in_sample", "SE", "IterLimit", "mean", "blue"),
-        #RunConfig(11111, "fitted", "in_sample", "SE", "IterLimit", "mean", "green!70!black"),
-        #RunConfig(11111, "shapiro", "in_sample", "SE", "IterLimit", "mean", "cyan"),
-        RunConfigData(11111, "bic", "shapiro", "IterLimit", "mean", "blue"),
-        RunConfigData(11111, "custom", "shapiro", "IterLimit", "mean", "red"),
+        RunConfigData(11111, "bic", "shapiro", "IterLimit", "mean", "red"),
+        RunConfigData(11111, "custom", "shapiro", "IterLimit", "mean", "blue"),
         RunConfigData(11111, "fitted", "shapiro", "IterLimit", "mean", "green!70!black"),
-        RunConfigData(11111, "shapiro", "shapiro", "IterLimit", "mean", "cyan"),    
+        RunConfigData(11111, "shapiro", "shapiro", "IterLimit", "mean", "cyan"),
+        #RunConfigData(11111, "custom", "bic", "IterLimit", "mean", "blue"),
+        #RunConfigData(11111, "custom", "custom", "IterLimit", "mean", "red"),
+        #RunConfigData(11111, "custom", "fitted", "IterLimit", "mean", "green!70!black"),
+        #RunConfigData(11111, "custom", "shapiro", "IterLimit", "mean", "cyan"),    
+        #RunConfigData(11111, "custom", "in_sample", "IterLimit", "mean", "black"),    
     )
 
     # Define max number of stages
@@ -53,20 +54,23 @@ function evaluate_results_data()
             aux_string2 = "_model"
         end
 
-        file_name = "C:/Users/cg4102/Documents/julia_logs/" * dir_name * "/Runs server 2025/Run_" * run.model_name_run * "_model_" * string(run.seed) * "/" * run.model_name_run * "_model_" * run.model_name_sim * aux_string2 * "_data.txt"
+        file_name = "C:/Users/cg4102/Documents/julia_logs/" * dir_name * "/Runs server 2025/Cut-sharing New - Iterations/Run_" * run.model_name_run * "_model_" * string(run.seed) * "/" * run.model_name_run * "_model_" * run.model_name_sim * aux_string2 * "_data.txt"
 
         # Read data from CSV files
         df_run = read_txt_file_data(file_name, run.statistic)
-        
-        for name in ["Gen", "HydGen", "Deficit", "Exchange", "Spillage"]      
-        # name in ["Gen", "HydGen", "Deficit", "DeficitCost", "Exchange", "Spillage"]            
+       
+        df_run = select!(df_run, [:DeficitCost])
+
+        for name in ["DeficitCost"]
+        #for name in ["Gen", "HydGen", "Deficit", "Exchange", "Spillage"]      
+        # name in ["Gen", "HydGen", "Deficit", "DeficitCost", "Exchange", "Spillage"]                     
 
             # Make column identifiable
             column_name = Symbol(name * "_" * run.model_name_run * "_" * run.model_name_sim * "_" * run.statistic)
             rename!(df_run, Symbol(name) => column_name)
         
             # Get plot name
-            file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/" * lowercase(name) * ".tex"
+            file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/" * lowercase(name) * "_All_Sha_mean.tex"
 
             # Get axis limits
             axis_limits = [0.0, Float64(number_of_stages), 0.0, 0.0]
@@ -79,7 +83,7 @@ function evaluate_results_data()
             elseif name == "Deficit"
                 axis_limits[4] = 2000.0
             elseif name == "DeficitCost"
-                axis_limits[4] = 10000.0
+                axis_limits[4] = 10000000.0
             elseif name == "Exchange"
                 axis_limits[3] = 5000.0
                 axis_limits[4] = 15000.0
@@ -143,13 +147,13 @@ function read_txt_file_data(file_name::String, statistic::String)
     rename!(df, :Column4 => :Deficit)
 
     # Deficit Cost
-    #rename!(df, :Column5 => :DeficitCost)
+    rename!(df, :Column5 => :DeficitCost)
 
     # Exchange
-    rename!(df, :Column5 => :Exchange)
+    rename!(df, :Column6 => :Exchange)
 
     # Spillage
-    rename!(df, :Column6 => :Spillage)
+    rename!(df, :Column7 => :Spillage)
     df.Spillage .= replace.(df.Spillage, r"\)" => "")
     df.Spillage = parse.(Float64, df.Spillage)
 
