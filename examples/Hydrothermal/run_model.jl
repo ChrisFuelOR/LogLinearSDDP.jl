@@ -114,7 +114,7 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
     simulation_results = historical_simulate_for_loglinear(model, algo_params, problem_params, String(model_approach), simulation_historical)
-    extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), String(model_approach))
+    extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), "historical")
 
     return
 end

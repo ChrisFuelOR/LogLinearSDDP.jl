@@ -148,7 +148,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
     simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, model_directory, simulation_historical)
-    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, model_directory)
+    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "historical")
 
     return
 end
