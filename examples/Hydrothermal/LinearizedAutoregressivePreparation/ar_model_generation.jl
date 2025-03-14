@@ -132,7 +132,7 @@ function prepare_ar_model()
     output_directory = "fitted_model"
 
     # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
-    for system_number in 4:4
+    for system_number in 1:4
         system_name = system_names[system_number]
         file_name = directory_name * "/" * file_names[system_number]
         output_file_name = output_directory * "/model_lin_" * String(system_name) * ".txt"   

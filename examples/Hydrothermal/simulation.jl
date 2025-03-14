@@ -329,3 +329,23 @@ function extended_simulation_analysis(simulation_results::Any, file_path::String
 
     return
 end
+
+function get_historical_sample_paths(number_of_stages::Int64)
+
+    df_SE = read_historical_simulation_data("HistoricalPreparation/historical_simulation_data/SE.txt")
+    df_S = read_historical_simulation_data("HistoricalPreparation/historical_simulation_data/S.txt")
+    df_NE = read_historical_simulation_data("HistoricalPreparation/historical_simulation_data/NE.txt")
+    df_N = read_historical_simulation_data("HistoricalPreparation/historical_simulation_data/N.txt")
+
+    all_historical_scenarios = Vector{Vector{Tuple{Int64,Vector{Float64}}}}()
+
+    for scenario_path_index in 1:70
+        historical_scenario = Vector{Tuple{Int64,Vector{Float64}}}()
+        for stage in 1:number_of_stages
+            push!(historical_scenario, (stage, [df_SE[stage, Symbol(scenario_path_index)], df_S[stage, Symbol(scenario_path_index)], df_NE[stage, Symbol(scenario_path_index)], df_N[stage, Symbol(scenario_path_index)]]))
+        end
+        push!(all_historical_scenarios, historical_scenario)
+    end
+
+    return all_historical_scenarios
+end

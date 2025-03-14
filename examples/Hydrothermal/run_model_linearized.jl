@@ -21,6 +21,7 @@ include("hydrothermal_model_linearized.jl")
 include("set_up_ar_process.jl")
 include("simulation.jl")
 include("cross_simulation_loglinear.jl")
+include("historical_simulation_linear.jl")
 
 
 function run_model(forward_pass_seed::Int, model_directory::String, model_directories_alternative::Vector{String}, model_directories_loglin::Vector{String})
@@ -38,7 +39,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(15)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
     # ADDITIONAL LOGGING TO SDDP.jl
     ###########################################################################################################
@@ -137,10 +138,17 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
         end
         simulation_loglinear = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_loglinear, number_of_replications = simulation_replications)
 
-        # Using the sample data and the process data perform a simulation
+        # Using the sample data and the process data to perform a simulation
         simulation_results = cross_simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, model_directory_loglin, simulation_loglinear)
         extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, model_directory_loglin)
     end
+
+    # SIMULATION USING HISTORICAL DATA
+    ###########################################################################################################
+    sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
+    simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
+    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, model_directory, simulation_historical)
+    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, model_directory)
 
     return
 end

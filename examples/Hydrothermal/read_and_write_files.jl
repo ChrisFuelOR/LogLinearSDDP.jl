@@ -107,3 +107,13 @@ function parse_coefficients(coefficients::Any)
 
     return output_coefficients
 end
+
+""" Reads stored historical sample paths."""
+function read_historical_simulation_data(file_name)
+    f = open(file_name)
+    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
+    df = DataFrames.select!(df, DataFrames.Not([:Column71]))
+    DataFrames.rename!(df, [Symbol(i) for i in 1:70])    
+    close(f)
+    return df
+end

@@ -20,8 +20,8 @@ import Dates
 include("hydrothermal_model.jl")
 include("set_up_ar_process.jl")
 include("simulation.jl")
-include("cross_simulation_loglinear.jl")
 include("cross_simulation_linear.jl")
+include("historical_simulation_loglinear.jl")
 
 
 function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approaches_alternative::Vector{Symbol}, model_directories_lin::Vector{String})
@@ -29,8 +29,8 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
     number_of_stages = 120
-    number_of_realizations = 5
-    simulation_replications = 20
+    number_of_realizations = 100
+    simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
     file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
@@ -40,7 +40,7 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations, gurobi_coupling_index_start = 0, gurobi_cut_index_start = 9, gurobi_fix_start = 167)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(50)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, 
         log_file = log_file, silent = true, model_approach = model_approach, run_description = run_description)
 
     # CREATE AND RUN MODEL
@@ -108,6 +108,13 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
         simulation_results = cross_simulate_linear(model, algo_params, problem_params, lin_ar_process, model_directory_lin, simulation_linear)
         extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), model_directory_lin)
     end
+
+    # SIMULATION USING HISTORICAL DATA
+    ###########################################################################################################
+    sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
+    simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
+    simulation_results = historical_simulate_for_loglinear(model, algo_params, problem_params, String(model_approach), simulation_historical)
+    extended_simulation_analysis(simulation_results, file_path, problem_params, String(model_approach), String(model_approach))
 
     return
 end

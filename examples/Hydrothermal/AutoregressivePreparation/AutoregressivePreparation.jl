@@ -3,7 +3,6 @@ module AutoregressivePreparation
 import CSV
 import Distributions
 import DataFrames
-import Distributions
 using GLM
 import HypothesisTests
 using Plots; pgfplotsx()#; pgfplotsx() gr()

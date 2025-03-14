@@ -2,85 +2,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 import LogLinearSDDP
 import SDDP
 
-
 include("simulation.jl")
 
-function solve_subproblem_cross(
-    model::SDDP.PolicyGraph{T},
-    node::SDDP.Node{T},
-    state::Dict{Symbol,Float64},
-    noise,
-    scenario_path::Vector{Tuple{T,S}};
-    duality_handler::Union{Nothing,SDDP.AbstractDualityHandler},
-) where {T,S}
-    SDDP._initialize_solver(node; throw_error = false)
-    # Parameterize the model. First, fix the value of the incoming state
-    # variables. Then parameterize the model depending on `noise`. Finally,
-    # set the objective.
-    SDDP.set_incoming_state(node, state)
 
-    # Use adapted parameterize function instead of the one stored in the node
-    # to fix the inflows to the realization of the loglinear process.
-    for ℓ in 1:4
-        if node.index == 1
-            JuMP.set_normalized_rhs(node.subproblem[:inflow_model][ℓ], noise[ℓ])
-        else
-            JuMP.fix(node.subproblem[:inflow][ℓ].out, noise[ℓ], force=true)
-            if JuMP.is_fixed(node.subproblem[:inflow_noise][ℓ])
-                JuMP.unfix(node.subproblem[:inflow_noise][ℓ])
-            end
-        end
-    end
-
-    SDDP.set_objective(node)
-  
-    JuMP.optimize!(node.subproblem)
-    if haskey(model.ext, :total_solves)
-        model.ext[:total_solves] += 1
-    else
-        model.ext[:total_solves] = 1
-    end
-
-    if JuMP.primal_status(node.subproblem) == JuMP.MOI.INTERRUPTED
-        throw(InterruptException())
-    end
-    if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
-        SDDP.attempt_numerical_recovery(model, node)
-    end
-    state = SDDP.get_outgoing_state(node)
-    stage_objective = SDDP.stage_objective_value(node.stage_objective)
-    objective, dual_values = SDDP.get_dual_solution(node, duality_handler)
-    
-    return (
-        state = state,
-        duals = dual_values,
-        objective = objective,
-        stage_objective = stage_objective,
-    )
-end
-
-
-function _cross_simulate_ll(
+function _historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
 SDDP._initialize_solver(model; throw_error = false)
     return map(
-        i -> _cross_simulate_ll(model, loglin_ar_process, variables; kwargs...),
+        i -> _historical_simulate_loglinear(model, variables; kwargs...),
         1:number_replications,
     )
 end
@@ -88,9 +32,8 @@ end
 
 # Internal function: helper to conduct a single simulation. Users should use the
 # documented, user-facing function SDDP.simulate instead.
-function _cross_simulate_ll(
+function _historical_simulate_loglinear(
     model::SDDP.PolicyGraph{T},
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     variables::Vector{Symbol};
     sampling_scheme::SDDP.AbstractSamplingScheme,
     custom_recorders::Dict{Symbol,Function},
@@ -99,12 +42,8 @@ function _cross_simulate_ll(
     incoming_state::Dict{Symbol,Float64},
 ) where {T}
 
-    # Initialize process state for the loglinear process
-    LogLinearSDDP.initialize_process_state(model, loglin_ar_process)
-    model.ext[:ar_process] = loglin_ar_process
-
     # Sample a scenario path.
-    scenario_path, _ = LogLinearSDDP.sample_scenario(model, loglin_ar_process, sampling_scheme, true)
+    scenario_path, _ = SDDP.sample_scenario(model, sampling_scheme)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
@@ -140,7 +79,7 @@ function _cross_simulate_ll(
             current_belief = Dict(node_index => 1.0)
         end
         # Solve the subproblem.
-        subproblem_results = solve_subproblem_cross(
+        subproblem_results = LogLinearSDDP.solve_subproblem(
             model,
             node,
             incoming_state,
@@ -195,37 +134,16 @@ function _cross_simulate_ll(
         # Set outgoing state as the incoming state for the next node.
         incoming_state = copy(subproblem_results.state)
     end
-
     return simulation
 end
 
 
 """
-Perform a simulation of the policy model with `number_replications` replications
-using the sampling scheme `sampling_scheme`.
-
-Returns a vector with one element for each replication. Each element is a vector
-with one-element for each node in the scenario that was sampled. Each element in
-that vector is a dictionary containing information about the subproblem that was
-solved.
-
-In that dictionary there are four special keys:
- - :node_index, which records the index of the sampled node in the policy model
- - :noise_term, which records the noise observed at the node
- - :stage_objective, which records the stage-objective of the subproblem
- - :bellman_term, which records the cost/value-to-go of the node.
-The sum of :stage_objective + :bellman_term will equal the objective value of
-the solved subproblem.
-
-In addition to the special keys, the dictionary will contain the result of
-`JuMP.value(subproblem[key])` for each `key` in `variables`. This is
-useful to obtain the primal value of the state and control variables.
-
-For more complicated data, the `custom_recorders` keyword argument can be used.
+Perform a simulation of the policy model with 70 different historical "samples"
+of 120 stages.
 """
-function cross_simulate_ll(
+function historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
@@ -235,10 +153,9 @@ function cross_simulate_ll(
     parallel_scheme::SDDP.AbstractParallelScheme = SDDP.Serial(),
     incoming_state::Dict{String,Float64} = SDDP._initial_state(model),
 )
-    return _cross_simulate_ll(
+    return _historical_simulate_loglinear(
         model,
         parallel_scheme,
-        loglin_ar_process,
         number_replications,
         variables;
         sampling_scheme = sampling_scheme,
@@ -250,25 +167,24 @@ function cross_simulate_ll(
 end
 
 
-function cross_simulate_loglinear(
+function historical_simulate_for_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return cross_simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return historical_simulate_loglinear(model, algo_params, problem_params, description, simulation_regime.sampling_scheme)
 
 end
 
 
-function cross_simulate_loglinear(
+function historical_simulate_for_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
@@ -277,22 +193,20 @@ function cross_simulate_loglinear(
 end
 
 
-function cross_simulate_loglinear(
+function historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
-    number_of_replications::Int64,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
+    sampling_scheme::SDDP.Historical,
     )
 
     # SIMULATE THE MODEL
     ############################################################################
     if haskey(model.ext, :simulation_attributes)
-        simulations = cross_simulate_ll(model, loglin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+        simulations = historical_simulate_loglinear(model, 70, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
     else
-        simulations = cross_simulate_ll(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+        simulations = historical_simulate_loglinear(model, 70, sampling_scheme=sampling_scheme)
     end  
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
@@ -303,7 +217,7 @@ function cross_simulate_loglinear(
 
     μ, ci = SDDP.confidence_interval(objectives)
     # get last lower bound again
-    lower_bound = SDDP.calculate_bound(model)
+    lower_bound = LogLinearSDDP.calculate_bound(model)
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
@@ -318,7 +232,7 @@ function cross_simulate_loglinear(
 
         μ, ci = SDDP.confidence_interval(objectives)
         # get last lower bound again
-        lower_bound = SDDP.calculate_bound(model)
+        lower_bound = LogLinearSDDP.calculate_bound(model)
 
         # LOGGING OF SIMULATION RESULTS
         ############################################################################
@@ -327,3 +241,4 @@ function cross_simulate_loglinear(
 
     return simulations
 end
+
