@@ -87,7 +87,7 @@ end
 
 # Internal function: helper to conduct a single simulation. Users should use the
 # documented, user-facing function SDDP.simulate instead.
-function _historical_simulate_for_linear(
+function _historical_simulate_linear(
     model::SDDP.PolicyGraph{T},
     variables::Vector{Symbol};
     sampling_scheme::SDDP.AbstractSamplingScheme,
