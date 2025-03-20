@@ -8,9 +8,11 @@ import DataFrames
 import CSV
 import Dates
 
+const GRB_ENV = Gurobi.Env()
+
 function read_data(file_name::String, first_line_number::Int, number_of_rows::Int)
 
-    df = CSV.read(file_name, header=false, skipto=first_line_number, limit=number_of_rows, delim=";", DataFrame)
+    df = CSV.read(file_name, header=false, skipto=first_line_number, limit=number_of_rows, delim=";", DataFrames.DataFrame)
     return df
 end
 
@@ -25,11 +27,11 @@ function closest_node(nodes::Dict{String, SDDP.Node{String}}, previous_node::Uni
     minimum_dist = Inf
 
     for child in children
-        @assert length(model.nodes[child.term].noise_terms) == 1
+        @assert length(nodes[child.term].noise_terms) == 1
 
         dist = 0.0
         # Compute distance from child to noise
-        for (key, value) in model.nodes[child.term].noise_terms[1].term
+        for (key, value) in nodes[child.term].noise_terms[1].term
             dist += (value - noise[key])^2
             #println(key, ", ", value, ", ", noise[key])
         end
@@ -47,7 +49,6 @@ function closest_node(nodes::Dict{String, SDDP.Node{String}}, previous_node::Uni
 end    
 
 
-
 function get_hydrothermal_model_markov(nodes_per_stage::Int)
 
     if nodes_per_stage == 10
@@ -58,17 +59,10 @@ function get_hydrothermal_model_markov(nodes_per_stage::Int)
         Error("Nodes per stage must be 10 or 100")
     end
 
-    model = SDDP.MSPFormat.read_from_file(file_identifier)
+    model = SDDP.MSPFormat.read_from_file(file_identifier, bound = 0.0)
 
     return model
 end
-
-
-#loglin_ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach_alt), "bic_model")
-#LogLinearSDDP.initialize_process_state(model, loglin_ar_process)
-#Random.seed!(12345+algo_params.forward_pass_seed) 
-
-
 
 
 function get_inflows_for_forward_pass(model::SDDP.PolicyGraph, model_approach::String, seed::Int, number_of_iterations::Int, number_of_stages::Int)
@@ -143,10 +137,9 @@ function starter()
     # CREATE AND RUN MODEL
     ###########################################################################################################
     model = get_hydrothermal_model_markov(number_of_markov_nodes)
-    JuMP.set_optimizer(model, Gurobi.Optimizer)
+    JuMP.set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV))
     all_sample_paths = get_inflows_for_forward_pass(model, model_approach, forward_pass_seed, number_of_replications, number_of_stages)
     sampling_scheme_fp = SDDP.Historical(all_sample_paths)
-    Infiltrator.@infiltrate
 
     # Train model
     SDDP.train(
@@ -160,9 +153,7 @@ function starter()
         log_every_seconds = 0.0
     )
 
-    #TODO: Direct mode?
-
-    close(f)
+    close(log_f)
 
 end
 

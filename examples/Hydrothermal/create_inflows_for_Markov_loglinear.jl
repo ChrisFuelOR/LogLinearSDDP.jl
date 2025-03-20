@@ -7,8 +7,9 @@ function clean_up_inflow_data()
     model_approach = "fitted_model"
     seed = 11111
 
-    filename_input = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Time/Run_" * model_approach * "_" * string(seed) * "/inflows_lin.txt"
-    filename_output = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Time/Run_" * model_approach * "_" * string(seed) * "/inflows_lin_cleaned.txt"
+    path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Time/"
+    filename_input = path * "Run_" * model_approach * "_" * string(seed) * "/inflows_lin.txt"
+    filename_output = path * "Run_" * model_approach * "_" * string(seed) * "/inflows_lin_cleaned.txt"
     f = open(filename_output, "w")
 
     df = CSV.read(filename_input, header=false, delim=";", DataFrame)
