@@ -7,10 +7,7 @@
 
 module LogLinearSDDP
 
-import Reexport
-Reexport.@reexport using SDDP
-
-#import SDDP
+import SDDP
 import JuMP
 import MathOptInterface
 import Revise
