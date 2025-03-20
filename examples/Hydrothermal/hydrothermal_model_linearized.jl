@@ -32,6 +32,7 @@ struct Reservoir
     init_level::Float64 # in MWmonth
 end
 
+const GRB_ENV = Gurobi.Env()
 
 """ 
 This long-term hydrothermal model covers a simplified version of the Brazilian power system, which is represented by 5 subsystems with 95 thermal generators and 4 energy equivalent reservoirs.
@@ -174,7 +175,7 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
 
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
-        optimizer = Gurobi.Optimizer,
+        optimizer = () -> Gurobi.Optimizer(GRB_ENV),
         sense = :Min,
         lower_bound = 0.0,
     )  do subproblem, t
