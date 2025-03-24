@@ -19,8 +19,8 @@ import Dates
 
 #include("set_up_ar_process.jl")
 include("simulation.jl")
-#include("cross_simulation_loglinear.jl")
-#include("historical_simulation_linear.jl")
+include("historical_simulation_linear.jl")
+include("markov.jl")
 
 function run_model(forward_pass_seed::Int, forward_pass_model::String, models_sim::Vector{String})
     
@@ -41,6 +41,11 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     model = get_hydrothermal_model_markov(number_of_markov_nodes)
     JuMP.set_optimizer(model, () -> Gurobi.Optimizer(GRB_ENV))
 
+    run_description = "MC-SDDP: " * string(number_of_markov_nodes) * " nodes, " * forward_pass_model
+    problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
+    simulation_regime = LogLinearSDDP.NoSimulation()
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
+
     if forward_pass_model == "lattice"
         sampling_scheme_fp = SDDP.InSampleMonteCarlo()
         Random.seed!(algo_params.forward_pass_seed)
@@ -48,11 +53,6 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
         all_sample_paths = get_inflows_for_forward_pass(model, model_approach, forward_pass_seed, number_of_replications, number_of_stages)
         sampling_scheme_fp = SDDP.Historical(all_sample_paths)
     end
-
-    run_description = "MC-SDDP: " * string(number_of_markov_nodes) * " nodes, " * forward_pass_model
-    problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
-    simulation_regime = LogLinearSDDP.NoSimulation()
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
 
     # ADDITIONAL LOGGING TO SDDP.jl
     ###########################################################################################################
@@ -72,12 +72,9 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     println(log_f, algo_params)
     close(log_f)
 
-
     ###########################################################################################################
     # RUNNING THE MODEL
     ###########################################################################################################
-    # TODO: f = open(file_path * "inflows_lin.txt", "w")
-
     # Train model
     SDDP.train(
         model,
@@ -89,37 +86,38 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
         run_numerical_stability_report = algo_params.run_numerical_stability_report,
         log_every_seconds = 0.0
     )
-    close(f)
-
+    close(log_f)
 
     ###########################################################################################################
     # SIMULATION
     ###########################################################################################################
-    model.ext[:simulation_attributes] = [:level, :inflow, :spillage, :gen, :exchange, :deficit_part, :hydro_gen]
 
     # In-sample simulation
     # ----------------------------------------------------------------------------------------------------------
     """ We always perform an in-sample simulation using the lattice here, even if the forward pass model is not the lattice.
     Otherwise it is not an "in-sample-simulation" but very similar to the out-of-sample simulation."""
-
-    # TODO Prepare in-sample data
-    # TODO Perform simulation
-    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "in_sample")
+    simulation = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
+    simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, problem_params, "markov", simulation)
+    extended_simulation_analysis_markov(simulation_results, file_path, problem_params, "markov", "in_sample")
 
     # Out-of-sample simulation
     # ----------------------------------------------------------------------------------------------------------
     for model_sim in models_sim
-        # TODO Prepare out-of-sample data
-        # TODO Perform simulation
-        extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, model_sim)
+        all_sample_paths_sim = get_inflows_for_simulation(model, model_sim, forward_pass_seed, simulation_replications, number_of_stages)
+        sampling_scheme = SDDP.Historical(all_sample_paths_sim)
+        simulation = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme, number_of_replications = simulation_replications)
+        simulation_results = LogLinearSDDP.simulate_linear(model, algo_params, problem_params, model_sim, simulation)
+        extended_simulation_analysis_markov(simulation_results, file_path, problem_params, "markov", model_sim)
     end
 
     # Simulation using historical data
     # ----------------------------------------------------------------------------------------------------------
-    sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
+    all_sample_paths_hist = get_inflows_historical(model, number_of_stages)
+    sampling_scheme_historical = SDDP.Historical(all_sample_paths_hist) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
-    # TODO Perform simulation
-    extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "historical")   
+    Infiltrator.@infiltrate
+    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, "markov", simulation_historical)
+    extended_simulation_analysis_markov(simulation_results, file_path, problem_params, "markov", "historical")   
 
     return
 end
@@ -128,6 +126,28 @@ end
 """ We do not use the BIC model here, as it is not Markovian."""
 function run_model_starter()    
     run_model(11111, "lattice", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(22222, "lattice", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(33333, "lattice", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(444444, "lattice", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(55555, "lattice", ["custom_model", "fitted_model", "shapiro_model"])
+
+    run_model(11111, "custom_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(22222, "custom_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(33333, "custom_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(444444, "custom_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(55555, "custom_model", ["custom_model", "fitted_model", "shapiro_model"])
+
+    run_model(11111, "fitted_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(22222, "fitted_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(33333, "fitted_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(444444, "fitted_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(55555, "fitted_model", ["custom_model", "fitted_model", "shapiro_model"])
+
+    run_model(11111, "shapiro_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(22222, "shapiro_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(33333, "shapiro_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(444444, "shapiro_model", ["custom_model", "fitted_model", "shapiro_model"])
+    run_model(55555, "shapiro_model", ["custom_model", "fitted_model", "shapiro_model"])
 end
 
 

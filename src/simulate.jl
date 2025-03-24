@@ -308,7 +308,7 @@ function simulate_linear(
     problem_params::LogLinearSDDP.ProblemParams,
     description::String,
     number_of_replications::Int64,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
+    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo,SDDP.Historical},
     )
 
     # SIMULATE THE MODEL

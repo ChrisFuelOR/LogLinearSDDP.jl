@@ -104,6 +104,115 @@ function get_inflows_for_forward_pass(model::SDDP.PolicyGraph, model_approach::S
 end
 
 
+function get_inflows_for_simulation(model::SDDP.PolicyGraph, model_approach::String, seed::Int, number_of_replications::Int, number_of_stages::Int)
+
+    file_name = "MarkovPreparation/inflows_oos_" * model_approach * "_" * string(seed) * ".txt"
+
+    # Read data from CSV files
+    df = read_data(file_name, 1, number_of_replications * number_of_stages)
+
+    # Initialize vector
+    all_sample_paths = Vector{Vector{Tuple{String,Dict{String,Float64}}}}()
+
+    # Construct vector of sample paths
+    for scenario_path_index in 1:number_of_replications
+        # Construct a single sample path
+        sample_path = Vector{Tuple{String,Dict{String,Float64}}}()
+        previous_node = nothing
+        for stage in 1:number_of_stages
+            closest_node_index = Inf
+            row = (scenario_path_index - 1) * number_of_stages + stage
+            @assert df[row, :Column1] == stage
+
+            realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
+            closest_node_index = closest_node(model.nodes, previous_node, realization)
+            # println(stage, ",", closest_node_index)
+
+            push!(sample_path, (closest_node_index, realization))
+            previous_node = model.nodes[closest_node_index]
+        end
+        push!(all_sample_paths, sample_path)
+    end
+
+    return all_sample_paths
+end
+
+
+function get_inflows_historical(model::SDDP.PolicyGraph, number_of_stages::Int)
+
+    file_name = "MarkovPreparation/inflows_historical.txt"
+
+    # Read data from CSV files
+    df = read_data(file_name, 1, 70 * number_of_stages)
+
+    # Initialize vector
+    all_sample_paths = Vector{Vector{Tuple{String,Dict{String,Float64}}}}()
+
+    # Construct vector of sample paths
+    for scenario_path_index in 1:70
+        # Construct a single sample path
+        sample_path = Vector{Tuple{String,Dict{String,Float64}}}()
+        previous_node = nothing
+        for stage in 1:number_of_stages
+            closest_node_index = Inf
+            row = (scenario_path_index - 1) * number_of_stages + stage
+            @assert df[row, :Column1] == stage
+
+            realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
+            closest_node_index = closest_node(model.nodes, previous_node, realization)
+            # println(stage, ",", closest_node_index)
+
+            push!(sample_path, (closest_node_index, realization))
+            previous_node = model.nodes[closest_node_index]
+        end
+        push!(all_sample_paths, sample_path)
+    end
+
+    return all_sample_paths
+end
+
+
+function extended_simulation_analysis_markov(simulation_results::Any, file_path::String, problem_params::LogLinearSDDP.ProblemParams, policy_approach::String, simulation_approach::String)
+
+    # GET TOTAL COST FOR ALL REPLICATIONS AND STORE (ONLY FOR FIRST 60 STAGES)
+    ############################################################################
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_total_cost.txt"
+    f = open(file_name, "w")
+
+    objectives_all_stages = map(simulation_results) do simulation
+        return sum(stage[:stage_objective] for stage in simulation)
+    end
+
+    if problem_params.number_of_stages == 120
+        objectives = map(simulation_results) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+    else
+        objectives = objectives_all_stages
+    end
+
+    for i in eachindex(objectives)
+        println(f, objectives[i], ", ", objectives_all_stages[i])
+    end
+    close(f)
+
+    # GET EMPIRICAL CUMULATIVE DISTRIBUTION OF COSTS (ONLY FOR FIRST 60 STAGES)
+    ############################################################################
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_cum_distrib.txt"
+    f = open(file_name, "w")
+
+    distrib = StatsBase.ecdf(objectives)
+    stepsize = round((maximum(objectives)-minimum(objectives))/100, digits=0)
+    for x in minimum(objectives)-stepsize:stepsize:maximum(objectives)+stepsize
+        y = distrib(x)
+        println(f, "(", round(x, digits = 0), ",", round(y, digits = 2), ")")
+    end
+    close(f)
+
+    return
+end
+
+
 function starter()
     # PARAMETER SET-UP
     ###########################################################################################################
@@ -163,8 +272,5 @@ function starter()
 
 end
 
-starter()
+# starter()
 
-# TODO: generate inflows to seed and write to file: for FP
-# TODO: generate inflows to seed and write to file: for OOS
-# TODO: analogously: get_inflows_for_out_of_sample_simulation()
