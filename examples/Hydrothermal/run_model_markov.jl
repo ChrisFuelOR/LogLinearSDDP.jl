@@ -19,7 +19,7 @@ import Dates
 
 #include("set_up_ar_process.jl")
 include("simulation.jl")
-include("historical_simulation_linear.jl")
+include("historical_simulation_Markov.jl")
 include("markov.jl")
 
 function run_model(forward_pass_seed::Int, forward_pass_model::String, models_sim::Vector{String})
@@ -44,7 +44,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     run_description = "MC-SDDP: " * string(number_of_markov_nodes) * " nodes, " * forward_pass_model
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.NoSimulation()
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
 
     if forward_pass_model == "lattice"
         sampling_scheme_fp = SDDP.InSampleMonteCarlo()
@@ -71,7 +71,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     println(log_f, "RUN DESCRIPTION")
     println(log_f, algo_params)
     close(log_f)
-
+ 
     ###########################################################################################################
     # RUNNING THE MODEL
     ###########################################################################################################
@@ -91,6 +91,8 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     ###########################################################################################################
     # SIMULATION
     ###########################################################################################################
+    model.ext[:simulation_attributes] = [:v_1, :v_2, :v_3, :v_4, :gd_1_1, :gd_1_2, :gd_1_3, :gd_1_4, :gd_2_1, :gd_2_2, :gd_2_3, :gd_2_4, :gd_3_1, :gd_3_2, :gd_3_3, :gd_3_4, :gd_4_1, :gd_4_2, :gd_4_3, :gd_4_4,
+    :th_1, :th_2, :th_3, :th_4, :s_1, :s_2, :s_3, :s_4, :q_1, :q_2, :q_3, :q_4, :f_12, :f_13, :f_15, :f_21, :f_31, :f_35, :f_45, :f_51, :f_53, :f_54]  
 
     # In-sample simulation
     # ----------------------------------------------------------------------------------------------------------

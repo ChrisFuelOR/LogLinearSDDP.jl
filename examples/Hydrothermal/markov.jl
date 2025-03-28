@@ -208,6 +208,110 @@ function extended_simulation_analysis_markov(simulation_results::Any, file_path:
     end
     close(f)
 
+    # OBTAINING HYDRO RESERVOIR LEVELS
+    ############################################################################
+    reservoir_names = ["SE", "S", "NE", "N"]
+
+    for k in 1:4
+        # Declare file name
+        file_name = file_path * policy_approach * "_" * simulation_approach * "_volumes_" * reservoir_names[k] * ".txt"
+        f = open(file_name, "w")
+
+        volume_sym = Symbol("v_" * string(k))
+
+        # Get volume data for given reservoir
+        column_names = [Symbol(i) for i in 1:problem_params.number_of_stages]
+        volume_df = DataFrames.DataFrame([name => Float64[] for name in column_names])
+        for i in eachindex(simulation_results)
+            outgoing_volume = map(simulation_results[i]) do node
+                return node[volume_sym].out
+            end    
+            push!(volume_df, outgoing_volume)
+        end
+
+        # mean
+        for stage in 1:problem_params.number_of_stages
+            println(f, "(", stage, ",", round(Statistics.mean(volume_df[!, Symbol(stage)]), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.05 quantile
+        for stage in 1:problem_params.number_of_stages
+            println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.05), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        # 0.95 quantile
+        for stage in 1:problem_params.number_of_stages
+            println(f, "(", stage, ",", round(Statistics.quantile(volume_df[!, Symbol(stage)], 0.95), digits = 2), ")")
+        end
+        println(f, "###################")
+
+        close(f)
+    end
+
+    # OBTAINING COST-RELEVANT VARIABLES
+    ############################################################################
+    # Declare file name
+    file_name = file_path * policy_approach * "_" * simulation_approach * "_data.txt"
+    f = open(file_name, "w")
+
+    # Get data
+    deficit_unit_cost = [1142.8, 2465.4, 5152.46, 5845.54]
+    column_names = [Symbol(i) for i in 1:problem_params.number_of_stages]
+    value_df = DataFrames.DataFrame([name => Vector{Vector{Float64}}() for name in column_names])
+    for i in eachindex(simulation_results)
+        outgoing_values = map(simulation_results[i]) do node
+            gen = node[:th_1] + node[:th_2] + node[:th_3] + node[:th_4]
+            hydro_gen = node[:q_1] + node[:q_2] + node[:q_3] + node[:q_4]
+            exchange = sum(node[exchange_var] for exchange_var in [:f_12, :f_13, :f_15, :f_21, :f_31, :f_35, :f_45, :f_51, :f_53, :f_54])
+            spillage = node[:s_1] + node[:s_2] + node[:s_3] + node[:s_4]
+            deficit = sum(node[deficit_var] for deficit_var in [:gd_1_1, :gd_1_2, :gd_1_3, :gd_1_4, :gd_2_1, :gd_2_2, :gd_2_3, :gd_2_4, :gd_3_1, :gd_3_2, :gd_3_3, :gd_3_4, :gd_4_1, :gd_4_2, :gd_4_3, :gd_4_4])
+            deficit_cost = sum(deficit_unit_cost[1] * node[deficit_var] for deficit_var in [:gd_1_1, :gd_2_1, :gd_3_1, :gd_4_1]) +  sum(deficit_unit_cost[2] * node[deficit_var] for deficit_var in [:gd_1_2, :gd_2_2, :gd_3_2, :gd_4_2]) +  sum(deficit_unit_cost[3] * node[deficit_var] for deficit_var in [:gd_1_3, :gd_2_3, :gd_3_3, :gd_4_3]) + +  sum(deficit_unit_cost[4] * node[deficit_var] for deficit_var in [:gd_1_4, :gd_2_4, :gd_3_4, :gd_4_4])
+
+            return [gen, hydro_gen, deficit, deficit_cost, exchange, spillage]
+        end    
+        push!(value_df, outgoing_values)
+    end
+   
+    # mean
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        print(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ",")
+        println(f, round(Statistics.mean([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)]), digits = 2), ")")
+    end
+    println(f, "###################")
+
+    # 0.05 quantile
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ",")
+        println(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)], 0.05), digits = 2), ")")
+    end
+    println(f, "###################")
+
+    # 0.95 quantile
+    for stage in 1:problem_params.number_of_stages
+        print(f, "(", stage, ",", )
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][1] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][2] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][3] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][4] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        print(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][5] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ",")
+        println(f, round(Statistics.quantile([value_df[!, Symbol(stage)][j][6] for j in 1:DataFrames.nrow(value_df)], 0.95), digits = 2), ")")
+    end
+    println(f, "###################")
+
+    close(f)
+
     return
 end
 
