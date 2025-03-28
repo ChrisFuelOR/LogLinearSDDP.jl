@@ -44,13 +44,13 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     run_description = "MC-SDDP: " * string(number_of_markov_nodes) * " nodes, " * forward_pass_model
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.NoSimulation()
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.IterationLimit(100)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
 
     if forward_pass_model == "lattice"
         sampling_scheme_fp = SDDP.InSampleMonteCarlo()
         Random.seed!(algo_params.forward_pass_seed)
     else
-        all_sample_paths = get_inflows_for_forward_pass(model, model_approach, forward_pass_seed, number_of_replications, number_of_stages)
+        all_sample_paths = get_inflows_for_forward_pass(model, forward_pass_model, forward_pass_seed, 1000, number_of_stages)
         sampling_scheme_fp = SDDP.Historical(all_sample_paths)
     end
 
@@ -115,10 +115,8 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     all_sample_paths_hist = get_inflows_historical(model, number_of_stages)
     sampling_scheme_historical = SDDP.Historical(all_sample_paths_hist) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
-    Infiltrator.@infiltrate
     simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, "markov", simulation_historical)
     extended_simulation_analysis_markov(simulation_results, file_path, problem_params, "markov", "historical")   
-
     return
 end
 

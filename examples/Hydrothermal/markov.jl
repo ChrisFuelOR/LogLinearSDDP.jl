@@ -92,7 +92,7 @@ function get_inflows_for_forward_pass(model::SDDP.PolicyGraph, model_approach::S
 
             realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
             closest_node_index = closest_node(model.nodes, previous_node, realization)
-            # println(stage, ",", closest_node_index)
+            #println(stage, ", ", closest_node_index, ", ", realization, ", ", model.nodes[closest_node_index].noise_terms[1])
 
             push!(sample_path, (closest_node_index, realization))
             previous_node = model.nodes[closest_node_index]
@@ -126,7 +126,6 @@ function get_inflows_for_simulation(model::SDDP.PolicyGraph, model_approach::Str
 
             realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
             closest_node_index = closest_node(model.nodes, previous_node, realization)
-            # println(stage, ",", closest_node_index)
 
             push!(sample_path, (closest_node_index, realization))
             previous_node = model.nodes[closest_node_index]

@@ -16,6 +16,60 @@ import SDDP
 include("simulation.jl")
 
 
+function solve_subproblem_historical(
+    model::SDDP.PolicyGraph{T},
+    node::SDDP.Node{T},
+    state::Dict{Symbol,Float64},
+    noise,
+    scenario_path::Vector{Tuple{T,S}};
+    duality_handler::Union{Nothing,SDDP.AbstractDualityHandler},
+) where {T,S}
+    SDDP._initialize_solver(node; throw_error = false)
+    # Parameterize the model. First, fix the value of the incoming state
+    # variables. Then parameterize the model depending on `noise`. Finally,
+    # set the objective.
+    SDDP.set_incoming_state(node, state)
+
+    # Use adapted parameterize function instead of the one stored in the node
+    # to fix the inflows to the realization of the loglinear process.
+    for ℓ in 1:4
+        if node.index == 1
+            JuMP.set_normalized_rhs(node.subproblem[:inflow_model][ℓ], noise[ℓ])
+        else
+            JuMP.fix(node.subproblem[:inflow][ℓ].out, noise[ℓ], force=true)
+            if JuMP.is_fixed(node.subproblem[:inflow_noise][ℓ])
+                JuMP.unfix(node.subproblem[:inflow_noise][ℓ])
+            end
+        end
+    end
+
+    SDDP.set_objective(node)
+  
+    JuMP.optimize!(node.subproblem)
+    if haskey(model.ext, :total_solves)
+        model.ext[:total_solves] += 1
+    else
+        model.ext[:total_solves] = 1
+    end
+
+    if JuMP.primal_status(node.subproblem) == JuMP.MOI.INTERRUPTED
+        throw(InterruptException())
+    end
+    if JuMP.primal_status(node.subproblem) != JuMP.MOI.FEASIBLE_POINT
+        SDDP.attempt_numerical_recovery(model, node)
+    end
+    state = SDDP.get_outgoing_state(node)
+    stage_objective = SDDP.stage_objective_value(node.stage_objective)
+    objective, dual_values = SDDP.get_dual_solution(node, duality_handler)
+    
+    return (
+        state = state,
+        duals = dual_values,
+        objective = objective,
+        stage_objective = stage_objective,
+    )
+end
+
 function _historical_simulate_linear(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
@@ -80,7 +134,7 @@ function _historical_simulate_linear(
             current_belief = Dict(node_index => 1.0)
         end
         # Solve the subproblem.
-        subproblem_results = SDDP.solve_subproblem(
+        subproblem_results = solve_subproblem_historical(
             model,
             node,
             incoming_state,
