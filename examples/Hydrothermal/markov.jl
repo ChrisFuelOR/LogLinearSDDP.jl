@@ -358,7 +358,6 @@ function starter()
     all_sample_paths = get_inflows_for_forward_pass(model, model_approach, forward_pass_seed, number_of_replications, number_of_stages)
     sampling_scheme_fp = SDDP.Historical(all_sample_paths)
 
-    Infiltrator.@infiltrate
     # Train model
     SDDP.train(
         model,
