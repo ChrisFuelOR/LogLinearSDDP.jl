@@ -49,8 +49,6 @@ function run_model(forward_pass_seed::Int, model_approach::Symbol, model_approac
     ar_process = set_up_ar_process_loglinear(number_of_stages, number_of_realizations, String(model_approach), String(model_approach))
     model = model_definition(ar_process, problem_params, algo_params, f)
 
-    Infiltrator.@infiltrate
-
     # Train model
     Random.seed!(algo_params.forward_pass_seed)
     LogLinearSDDP.train_loglinear(model, algo_params, problem_params, ar_process)
