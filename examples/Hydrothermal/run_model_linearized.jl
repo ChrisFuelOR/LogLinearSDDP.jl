@@ -33,13 +33,13 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * model_directory * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
+    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing Final Run (2h)/" * file_identifier * "/"
     ispath(file_path) || mkdir(file_path)
     log_file = file_path * "LinearizedSDDP.log"
     ###########################################################################################################
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.Simulation(sampling_scheme = SDDP.InSampleMonteCarlo(), number_of_replications = simulation_replications)
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(7200)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false)
   
     # ADDITIONAL LOGGING TO SDDP.jl
     ###########################################################################################################

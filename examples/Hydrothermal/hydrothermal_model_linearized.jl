@@ -234,11 +234,14 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
                 JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process_stage.coefficients[3,1] * exp(ω[3]))
                 JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process_stage.coefficients[4,1] * exp(ω[4]))
 
-                print(f, t, "; ")
-                for i in 1:4
-                    print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                    print(f, t, "; ")
+                    for i in 1:4
+                        print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                    end
+                    println(f)
                 end
-                println(f)
+
             end
         end
 
