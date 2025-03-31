@@ -208,6 +208,15 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
         if t == 1
             # Fixed value for first stage
             JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.history[k])
+
+            if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                print(f, t, "; ")
+                for i in 1:4
+                    print(f, round(ar_process.history[i], digits = 2), ";")
+                end
+                println(f)
+            end
+
         else
             # Expanding the state
             # This has to be modeled with setting the left-hand-side coefficients using set_normalized_coefficient, as otherwise two variables are multiplied, which leads to a non-convex problem.
