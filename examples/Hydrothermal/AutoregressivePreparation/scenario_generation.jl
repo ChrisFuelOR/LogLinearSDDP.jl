@@ -60,16 +60,16 @@ function history_generation(model_directory::String)
     historic_data = [historic_data_SE, historic_data_S, historic_data_NE, historic_data_N]
 
     # Read AR model data for all four reservoir systems
-    model_SE = read_model_loglinear(model_directory * "/" * "model_SE.txt")
-    model_S = read_model_loglinear(model_directory * "/" * "model_S.txt")
-    model_NE = read_model_loglinear(model_directory * "/" * "model_NE.txt")
-    model_N = read_model_loglinear(model_directory * "/" * "model_N.txt")
+    model_SE = read_model_log_linear(model_directory * "/" * "model_SE.txt")
+    model_S = read_model_log_linear(model_directory * "/" * "model_S.txt")
+    model_NE = read_model_log_linear(model_directory * "/" * "model_NE.txt")
+    model_N = read_model_log_linear(model_directory * "/" * "model_N.txt")
     models = [model_SE, model_S, model_NE, model_N]
 
     all_months = [12,11,10,9,8,7,6,5,4,3,2,1]
 
     # Prepare output file
-    output_file_name = model_directory * "/" * "history_nonlinear.txt"
+    output_file_name = model_directory * "/" * "history_nonlinearssss.txt"
     f = open(output_file_name, "w")
     
     # Prepare storing AR history (in addition to output to file)
@@ -109,6 +109,7 @@ function history_generation(model_directory::String)
                 # Compute the required value for eta
                 ar_history_stage[ℓ] = exp(intercept) * exp(psi * realization) * prod(ar_history[t-k][ℓ] ^ coefficients[k, ℓ, ℓ] for k in 1:lag_order)
                 
+                Infiltrator.@infiltrate
             else
                 # Get historical value 
                 ar_history_stage[ℓ] = historic_data[ℓ][month]               

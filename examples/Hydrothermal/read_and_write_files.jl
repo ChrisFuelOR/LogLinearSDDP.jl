@@ -51,7 +51,7 @@ function read_sigma_data(
 end
 
 function read_model_std(file_name)
-    df = read_model(file_name)
+    df = read_model_log_linear(file_name)
     stds = df[:, "Sigma"]
     return stds
 end
