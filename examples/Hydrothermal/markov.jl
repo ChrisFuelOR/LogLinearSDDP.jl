@@ -124,7 +124,7 @@ function get_inflows_for_simulation(model::SDDP.PolicyGraph, model_approach::Str
             row = (scenario_path_index - 1) * number_of_stages + stage
             @assert df[row, :Column1] == stage
 
-            realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
+            realization = Dict("PLANT_1" => round(df[row, :Column2], digits=2), "PLANT_2" => round(df[row, :Column3], digits=2), "PLANT_3" => round(df[row, :Column4], digits=2), "PLANT_4" => round(df[row, :Column5], digits=2))
             closest_node_index = closest_node(model.nodes, previous_node, realization)
 
             push!(sample_path, (closest_node_index, realization))
