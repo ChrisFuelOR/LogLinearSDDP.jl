@@ -11,6 +11,7 @@
 
 import LogLinearSDDP
 import SDDP
+import MathOptInterface
 
 
 include("simulation.jl")
@@ -79,6 +80,22 @@ function _historical_simulate_linear(
         else
             current_belief = Dict(node_index => 1.0)
         end
+
+        if node_index == "0"
+            # Parameterize is not automatically defined for the first-stage node.
+            # Therefore, do it manually here.
+            equality_constraints = JuMP.all_constraints(node.subproblem, JuMP.AffExpr, MathOptInterface.EqualTo{Float64})
+            relevant_constraints_indices = [2, 5, 8, 11]
+            initial_reservoir_levels = [59419.3, 5874.9, 12859.2, 5271.5]
+
+            for i in eachindex(relevant_constraints_indices)
+                JuMP.set_normalized_rhs(
+                    equality_constraints[relevant_constraints_indices[i]],
+                    round(initial_reservoir_levels[i] + noise["PLANT_" * string(i)], digits=2),
+                )
+            end
+        end
+
         # Solve the subproblem.
         subproblem_results = SDDP.solve_subproblem(
             model,
@@ -88,6 +105,7 @@ function _historical_simulate_linear(
             scenario_path[1:depth],
             duality_handler = duality_handler,
         )
+
         # Add the stage-objective
         cumulative_value += subproblem_results.stage_objective
         # Record useful variables from the solve.
