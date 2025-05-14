@@ -48,7 +48,7 @@ function evaluate_results_volumes()
 
     # Define seeds that should be considered
     seeds_to_consider = [11111, 22222, 33333, 444444, 55555]
-    #seeds_to_consider = [55555]
+    #seeds_to_consider = [11111]
 
     # Define runs that should be considered
     runs_to_consider = (
@@ -67,13 +67,39 @@ function evaluate_results_volumes()
         # RunConfigVolumes("MC-SDDP_shapiro", "custom", "SE", "mean", "orange"),
 
         #RunConfigVolumes("bic", "historical", "SE", "mean", "red"),
-        RunConfigVolumes("custom", "historical", "S", "mean", "blue"),
+        #RunConfigVolumes("custom", "historical", "SE", "mean", "blue"),
         #RunConfigVolumes("fitted", "historical", "SE", "mean", "green!70!black"),
-        RunConfigVolumes("shapiro", "historical", "S", "mean", "cyan"),
-        RunConfigVolumes("MC-SDDP_lattice", "historical", "S", "mean", "magenta"),
+        #RunConfigVolumes("shapiro", "historical", "SE", "mean", "cyan"),
+        #RunConfigVolumes("MC-SDDP_lattice", "historical", "SE", "mean", "magenta"),
         #RunConfigVolumes("MC-SDDP_custom", "historical", "SE", "mean", "brown!80!black"),
         #RunConfigVolumes("MC-SDDP_fitted", "historical", "SE", "mean", "black"),
         #RunConfigVolumes("MC-SDDP_shapiro", "historical", "SE", "mean", "orange"),
+
+        # RunConfigVolumes("custom", "historical", "NE", "mean", "blue, thick"),
+        # RunConfigVolumes("shapiro", "historical", "NE", "mean", "cyan, thick, dashed"),
+        # RunConfigVolumes("MC-SDDP_lattice", "historical", "NE", "mean", "magenta, thick, dash dot"),
+
+        # RunConfigVolumes("custom", "historical", "NE", "q1", "blue"),
+        # RunConfigVolumes("shapiro", "historical", "NE", "q1", "cyan, dashed"),
+        # RunConfigVolumes("MC-SDDP_lattice", "historical", "NE", "q1", "magenta, dash dot"),
+
+        # RunConfigVolumes("custom", "historical", "NE", "q2", "blue"),
+        # RunConfigVolumes("shapiro", "historical", "NE", "q2", "cyan, dashed"),
+        # RunConfigVolumes("MC-SDDP_lattice", "historical", "NE", "q2", "magenta, dash dot"),
+
+        RunConfigVolumes("custom", "shapiro", "SE", "mean", "blue, thick"),
+        RunConfigVolumes("shapiro", "shapiro", "SE", "mean", "cyan, thick, dashed"),
+        RunConfigVolumes("MC-SDDP_lattice", "shapiro", "SE", "mean", "magenta, thick, dash dot"),
+
+        RunConfigVolumes("custom", "shapiro", "SE", "q1", "blue"),
+        RunConfigVolumes("shapiro", "shapiro", "SE", "q1", "cyan, dashed"),
+        RunConfigVolumes("MC-SDDP_lattice", "shapiro", "SE", "q1", "magenta, dash dot"),
+
+        RunConfigVolumes("custom", "shapiro", "SE", "q2", "blue"),
+        RunConfigVolumes("shapiro", "shapiro", "SE", "q2", "cyan, dashed"),
+        RunConfigVolumes("MC-SDDP_lattice", "shapiro", "SE", "q2", "magenta, dash dot"),
+
+
     )
 
     # Cut selection?
@@ -83,7 +109,7 @@ function evaluate_results_volumes()
     number_of_stages = 60
 
     # Output file path for LaTeX plots
-    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Volumes_Hist_q1_NoCS.tex"
+    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Volumes_Comparison_OOS_Lin_SE_NoCS.tex"
     create_latex_plots_starter(file_path_latex, number_of_stages)
 
     # Create DataFrame
@@ -97,9 +123,9 @@ function evaluate_results_volumes()
         run = runs_to_consider[run_index]
 
         if cut_selection_flag
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h)/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run (2h)/"
         else
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h) - NoCS/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run - NoCS (2h)/"
         end
 
         df_run = DataFrame()

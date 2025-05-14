@@ -3,7 +3,7 @@ using Infiltrator
 using CSV
 using Statistics
 
-struct RunConfigData
+struct RunConfigBoxplot
     model_name_run::String
     model_name_sim::String
     cut_selection::Bool
@@ -26,23 +26,23 @@ function evaluate_results_boxplot()
 
     # Define runs that should be considered
     runs_to_consider = (
-        RunConfigData("bic", "custom", true, "mean"),
-        RunConfigData("custom", "custom", true, "mean"),
-        RunConfigData("fitted", "custom", false, "mean"),
-        RunConfigData("shapiro", "custom", false, "mean"),
-        RunConfigData("MC-SDDP_lattice", "custom", false, "mean"),
-        RunConfigData("MC-SDDP_custom", "custom", false, "mean"),
-        RunConfigData("MC-SDDP_fitted", "custom", false, "mean"),
-        RunConfigData("MC-SDDP_shapiro", "custom", false, "mean"),
+        RunConfigBoxplot("bic", "historical", true, "mean"),
+        RunConfigBoxplot("custom", "historical", true, "mean"),
+        RunConfigBoxplot("fitted", "historical", true, "mean"),
+        RunConfigBoxplot("shapiro", "historical", true, "mean"),
+        RunConfigBoxplot("MC-SDDP_lattice", "historical", true, "mean"),
+        RunConfigBoxplot("MC-SDDP_custom", "historical", true, "mean"),
+        RunConfigBoxplot("MC-SDDP_fitted", "historical", true, "mean"),
+        RunConfigBoxplot("MC-SDDP_shapiro", "historical", true, "mean"),
     )
 
     # Full number of stages or half of stages
     only_half_of_stages = true
 
     # Construct output file name
-    output_dir = "C:/Users/cg4102/Documents/Forschung/Benders Decomposition & Extensions/SDDP/Cut-sharing Paper - 2023/VSCode - Cut-sharing/OPRE-style-file-2024/Bilder_Numerik/Boxplot_NoCS/"
-    output_file_name_1 = output_dir * "data_long_" * "oos_lin.csv"
-    output_file_name_2 = output_dir * "data_short_" * "oos_lin.csv"
+    output_dir = "C:/Users/cg4102/Documents/Forschung/Benders Decomposition & Extensions/SDDP/Cut-sharing Paper - 2023/VSCode - Cut-sharing/OPRE-style-file-2024/Bilder_Numerik/Boxplot_CS/"
+    output_file_name_1 = output_dir * "data_long_" * "hist.csv"
+    output_file_name_2 = output_dir * "data_short_" * "hist.csv"
     f_1 = open(output_file_name_1, "w")
     f_2 = open(output_file_name_2, "w")
 
@@ -57,9 +57,9 @@ function evaluate_results_boxplot()
         run = runs_to_consider[run_index]
 
         if run.cut_selection
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h)/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run (2h)/"
         else
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h) - NoCS/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run - NoCS (2h)/"
         end
 
         # Create DataFrame

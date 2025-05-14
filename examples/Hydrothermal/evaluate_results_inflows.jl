@@ -52,24 +52,45 @@ function evaluate_results_inflows()
 
     # Define runs that should be considered
     runs_to_consider = (
-        #RunConfigInflows("bic", "in_sample", "SE", "q1", "red"),
-        #RunConfigInflows("custom", "in_sample", "SE", "q1", "blue"),
-        #RunConfigInflows("fitted", "in_sample", "SE", "q1", "green!70!black"),
-        #RunConfigInflows("shapiro", "in_sample", "SE", "q1", "cyan"),
-        RunConfigInflows("bic", "historical", "SE", "mean", "red"),
-        RunConfigInflows("custom", "historical", "SE", "mean", "blue"),
-        RunConfigInflows("fitted", "historical", "SE", "mean", "green!70!black"),
-        RunConfigInflows("shapiro", "historical", "SE", "mean", "cyan"),
+        #RunConfigInflows("bic", "in_sample", "SE", "mean", "red"),
+        #RunConfigInflows("custom", "in_sample", "SE", "mean", "blue"),
+        #RunConfigInflows("fitted", "in_sample", "SE", "mean", "green!70!black"),
+        #RunConfigInflows("shapiro", "in_sample", "SE", "mean", "cyan"),
+        #RunConfigInflows("bic", "bic", "SE", "mean", "red"),
+        #RunConfigInflows("custom", "custom", "SE", "mean", "blue"),
+        #RunConfigInflows("fitted", "fitted", "SE", "mean", "green!70!black"),
+        #RunConfigInflows("shapiro", "shapiro", "SE", "mean", "cyan"),
+
+        # RunConfigInflows("custom", "in_sample", "NE", "mean", "blue"),
+        # RunConfigInflows("custom", "custom", "NE", "mean", "blue"),
+        # RunConfigInflows("custom", "in_sample", "NE", "q1", "blue"),
+        # RunConfigInflows("custom", "custom", "NE", "q1", "blue"),
+        # RunConfigInflows("custom", "in_sample", "NE", "q2", "blue"),
+        # RunConfigInflows("custom", "custom", "NE", "q2", "blue"),
+
+        RunConfigInflows("shapiro", "in_sample", "NE", "mean", "blue"),
+        RunConfigInflows("shapiro", "shapiro", "NE", "mean", "blue"),
+        RunConfigInflows("shapiro", "in_sample", "NE", "q1", "blue"),
+        RunConfigInflows("shapiro", "shapiro", "NE", "q1", "blue"),
+        RunConfigInflows("shapiro", "in_sample", "NE", "q2", "blue"),
+        RunConfigInflows("shapiro", "shapiro", "NE", "q2", "blue"),
+
+        # RunConfigInflows("custom", "in_sample", "SE", "mean", "blue"),
+        # RunConfigInflows("custom", "in_sample", "SE", "q1", "blue"),
+        # RunConfigInflows("custom", "in_sample", "SE", "q2", "blue"),
+        # RunConfigInflows("shapiro", "in_sample", "SE", "mean", "cyan"),
+        # RunConfigInflows("shapiro", "in_sample", "SE", "q1", "cyan"),
+        # RunConfigInflows("shapiro", "in_sample", "SE", "q2", "cyan"),
     )
 
     # Cut selection?
-    cut_selection_flag = false
+    cut_selection_flag = true
 
     # Considered number of stages
     number_of_stages = 60
 
     # Output file path for LaTeX plots
-    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Inflow_Comparison_NoCS.tex"
+    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/Inflow_Comparison_NE_Lin_Sha.tex"
     create_latex_plots_starter(file_path_latex, number_of_stages)
 
     # Create DataFrame
@@ -83,9 +104,9 @@ function evaluate_results_inflows()
         run = runs_to_consider[run_index]
 
         if cut_selection_flag
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h)/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run (2h)/"
         else
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h) - NoCS/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run - NoCS (2h)/"
         end
 
         df_run = DataFrame()

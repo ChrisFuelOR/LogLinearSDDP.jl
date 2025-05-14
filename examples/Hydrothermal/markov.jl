@@ -263,6 +263,7 @@ function extended_simulation_analysis_markov(simulation_results::Any, file_path:
     for i in eachindex(simulation_results)
         outgoing_values = map(simulation_results[i]) do node
             gen = node[:th_1] + node[:th_2] + node[:th_3] + node[:th_4]
+            # gen has been wrong in my experiments; gen = gen - deficit gives the correct value
             hydro_gen = node[:q_1] + node[:q_2] + node[:q_3] + node[:q_4]
             exchange = sum(node[exchange_var] for exchange_var in [:f_12, :f_13, :f_15, :f_21, :f_31, :f_35, :f_45, :f_51, :f_53, :f_54])
             spillage = node[:s_1] + node[:s_2] + node[:s_3] + node[:s_4]

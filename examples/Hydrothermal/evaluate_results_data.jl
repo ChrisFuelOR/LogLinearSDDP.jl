@@ -79,26 +79,50 @@ function evaluate_results_data()
         # RunConfigData("MC-SDDP_shapiro", "custom", "mean", "orange"),
 
         #RunConfigData("bic", "historical", "mean", "red"),
-        RunConfigData("custom", "historical", "mean", "blue"),
+        #RunConfigData("custom", "historical", "q1", "blue"),
         #RunConfigData("fitted", "historical", "mean", "green!70!black"),
-        RunConfigData("shapiro", "historical", "mean", "cyan"),
-        RunConfigData("MC-SDDP_lattice", "historical", "mean", "magenta"),
+        #RunConfigData("shapiro", "historical", "q1", "cyan"),
+        #RunConfigData("MC-SDDP_lattice", "historical", "q1", "magenta"),
         #RunConfigData("MC-SDDP_custom", "historical", "mean", "brown!80!black"),
         #RunConfigData("MC-SDDP_fitted", "historical", "mean", "black"),
         #RunConfigData("MC-SDDP_shapiro", "historical", "mean", "orange"),
+
+        # RunConfigData("custom", "historical", "mean", "blue, thick"),
+        # RunConfigData("shapiro", "historical", "mean", "cyan, thick, dashed"),
+        # RunConfigData("MC-SDDP_lattice", "historical", "mean", "magenta, thick, dash dot"),
+
+        # RunConfigData("custom", "historical", "q1", "blue"),
+        # RunConfigData("shapiro", "historical", "q1", "cyan, dashed"),
+        # RunConfigData("MC-SDDP_lattice", "historical", "q1", "magenta, dash dot"),
+
+        # RunConfigData("custom", "historical", "q2", "blue"),
+        # RunConfigData("shapiro", "historical", "q2", "cyan, dashed"),
+        # RunConfigData("MC-SDDP_lattice", "historical", "q2", "magenta, dash dot"),
+
+        RunConfigData("custom", "shapiro", "mean", "blue, thick"),
+        RunConfigData("shapiro", "shapiro", "mean", "cyan, thick, dashed"),
+        RunConfigData("MC-SDDP_lattice", "shapiro", "mean", "magenta, thick, dash dot"),
+
+        RunConfigData("custom", "shapiro", "q1", "blue"),
+        RunConfigData("shapiro", "shapiro", "q1", "cyan, dashed"),
+        RunConfigData("MC-SDDP_lattice", "shapiro", "q1", "magenta, dash dot"),
+
+        RunConfigData("custom", "shapiro", "q2", "blue"),
+        RunConfigData("shapiro", "shapiro", "q2", "cyan, dashed"),
+        RunConfigData("MC-SDDP_lattice", "shapiro", "q2", "magenta, dash dot"),
     )
 
     # Property to analyze
     property = "HydGen"
 
     # Cut selection?
-    cut_selection_flag = false
+    cut_selection_flag = true
 
     # Considered number of stages
     number_of_stages = 60
 
     # Output file path for LaTeX plots
-    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/" * property * "_blub.tex"
+    file_path_latex = "C:/Users/cg4102/Documents/julia_plots/Cut_sharing 2025/" * property * "_Comparison_Lin_CS.tex"
     create_latex_plots_starter(file_path_latex, number_of_stages, property)
 
     # Create DataFrame
@@ -112,9 +136,9 @@ function evaluate_results_data()
         run = runs_to_consider[run_index]
 
         if cut_selection_flag
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h)/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run (2h)/"
         else
-            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Final Run (2h) - NoCS/"
+            input_dir_1 = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/Runs server 2025/Cut-sharing Re-Run - NoCS (2h)/"
         end
 
         df_run = DataFrame()
