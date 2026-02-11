@@ -23,7 +23,7 @@ using Git
 using Tullio
 using LoopVectorization
 
-const MOI = MathOptInterface #TODO
+const MOI = MathOptInterface
 
 const GURB_ENV = Ref{Gurobi.Env}()
 #const ws = GAMS.GAMSWorkspace()

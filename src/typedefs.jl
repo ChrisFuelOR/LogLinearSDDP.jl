@@ -2,14 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 """ 
 MAIN DOCUMENTATION [SHOULD LATER BE MOVED TO A PROPER DOC FILE]
 ###########################################################################
 
-This package is intended for using a special version of SDDP for multistage
+This code is intended for using a special version of SDDP for multistage
 stochastic linear problems with log-linear autoregressive uncertainty in the
 right-hand side.
 
