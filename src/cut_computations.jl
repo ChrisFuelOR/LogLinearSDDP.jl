@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 """ 
@@ -22,7 +22,6 @@ function compute_cut_exponents(
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
     
-    #println("Θ(t, τ, ℓ, m, k), cut_exponents[t, τ, ℓ, m, t-k), k is stage, t-k is lag.")
     for t in T:-1:2
         cut_exponents_stage = zeros(T, L, L, p)
         ar_process_stage = ar_process.parameters[t]
@@ -34,7 +33,6 @@ function compute_cut_exponents(
                     for k in t-p:t-1
                         for m in 1:L
                             cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
-                            #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                         end
                     end
                 end
@@ -49,14 +47,12 @@ function compute_cut_exponents(
                                     value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,p] = value
-                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             else
                                 value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
                                 for ν in 1:L
                                     value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,t-k] = value
-                                #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             end
                         end
                     end
@@ -72,8 +68,6 @@ function compute_cut_exponents(
 
     return cut_exponents
 end
-
-#TODO: If we sum about more values than that, what happens? Are the added values guaranteed to be 0? Does that match the description in the paper?
 
 
 """ 

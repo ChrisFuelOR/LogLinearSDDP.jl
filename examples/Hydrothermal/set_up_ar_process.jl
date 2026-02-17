@@ -32,7 +32,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
     # File information
-    overall_directory = "AutoregressivePreparation"
+    overall_directory = "PreparationAutoregressive"
 
     # Read AR model data for all four reservoir systems
     data_SE = read_model_log_linear(overall_directory * "/" * model_directory * "/model_SE.txt")
@@ -62,7 +62,7 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
     ar_history = Dict{Int64,Any}()
     
     # Read history data and store in AR history
-    history_data = read_history_data("AutoregressivePreparation/" * history_dir_name * "/history_nonlinear.txt")
+    history_data = read_history_data("PreparationAutoregressive/" * history_dir_name * "/history_nonlinear.txt")
     for t in -11:1
         row = t+12
         ar_history[t] = [history_data[row,"History_SE"], history_data[row,"History_S"], history_data[row,"History_NE"], history_data[row,"History_N"]]
@@ -115,7 +115,7 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
     # Main configuration
     # ---------------------------------------------------------------------------------------------------------
     # File information
-    overall_directory = "LinearizedAutoregressivePreparation"
+    overall_directory = "PreparationAutoregressiveLinearized"
 
     # Read AR model data for all four reservoir systems
     data_SE = read_model_linear(overall_directory * "/" * model_directory * "/model_lin_SE.txt")
@@ -133,7 +133,7 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
     # ---------------------------------------------------------------------------------------------------------
     # define also ξ₁
     # Read history data and store in AR history
-    history_data = read_history_data("AutoregressivePreparation/" * history_dir_name * "/history_nonlinear.txt")
+    history_data = read_history_data("PreparationAutoregressive/" * history_dir_name * "/history_nonlinear.txt")
     ar_history = [last(history_data)["History_SE"], last(history_data)["History_S"], last(history_data)["History_NE"], last(history_data)["History_N"]]
 
     # Process definition

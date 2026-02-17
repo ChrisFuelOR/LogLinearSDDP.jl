@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2026: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 function sample_scenario(
@@ -39,20 +39,6 @@ function sample_scenario(
 
         # Get the current process state
         process_state = node.ext[:process_state]
-
-        # # JUST FOR TESTING
-        # if node_index == 2
-        #     independent_noise_terms = 1.0
-        # elseif node_index == 3
-        #     independent_noise_terms = -2.0
-        # end
-
-        # # JUST FOR TESTING
-        # if node_index == 2
-        #     independent_noise_terms = (3/4, -0.5)
-        # elseif node_index == 3
-        #     independent_noise_terms = (3/4, 0.0)
-        # end
 
         # First stage is deterministic
         if node_index == 1

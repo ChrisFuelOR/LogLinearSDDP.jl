@@ -1,0 +1,4 @@
+include("PreparationAutoregressiveLinearized.jl")
+import .PreparationAutoregressiveLinearized
+
+PreparationAutoregressiveLinearized.validate_ar_cross_model()

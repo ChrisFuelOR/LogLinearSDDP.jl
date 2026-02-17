@@ -1,0 +1,4 @@
+include("PreparationAutoregressiveLinearized.jl")
+import .PreparationAutoregressiveLinearized
+
+PreparationAutoregressiveLinearized.prepare_ar_model()

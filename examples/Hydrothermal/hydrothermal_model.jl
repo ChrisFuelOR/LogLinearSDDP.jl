@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 import SDDP
@@ -228,13 +228,13 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             JuMP.fix(inflow[3], ω[3])
             JuMP.fix(inflow[4], ω[4])
 
-            if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
-                print(f, t, "; ")
-                for i in 1:4
-                    print(f, round(ω[i], digits = 2), ";")
-                end
-                println(f)
-            end
+            # if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+            #     print(f, t, "; ")
+            #     for i in 1:4
+            #         print(f, round(ω[i], digits = 2), ";")
+            #     end
+            #     println(f)
+            # end
         end
 
         if algo_params.silent

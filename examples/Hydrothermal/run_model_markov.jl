@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 import SDDP
@@ -17,9 +17,8 @@ import CSV
 import Random
 import Dates
 
-#include("set_up_ar_process.jl")
-include("simulation.jl")
-include("historical_simulation_Markov.jl")
+include("Simulation/simulation.jl")
+include("Simulation/historical_simulation_Markov.jl")
 include("markov.jl")
 
 function run_model(forward_pass_seed::Int, forward_pass_model::String, models_sim::Vector{String})
@@ -27,7 +26,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     # MAIN MODEL AND RUN PARAMETERS    
     ###########################################################################################################
     number_of_stages = 120
-    number_of_realizations = 100 #TODO: required?
+    number_of_realizations = 100
     number_of_markov_nodes = 100
     simulation_replications = 2000
     ###########################################################################################################
@@ -44,7 +43,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     run_description = "MC-SDDP: " * string(number_of_markov_nodes) * " nodes, " * forward_pass_model
     problem_params = LogLinearSDDP.ProblemParams(number_of_stages, number_of_realizations)
     simulation_regime = LogLinearSDDP.NoSimulation()
-    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(3600)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
+    algo_params = LogLinearSDDP.AlgoParams(stopping_rules = [SDDP.TimeLimit(7200)], forward_pass_seed = forward_pass_seed, simulation_regime = simulation_regime, log_file = log_file, silent = false, run_description = run_description)
 
     if forward_pass_model == "lattice"
         sampling_scheme_fp = SDDP.InSampleMonteCarlo()

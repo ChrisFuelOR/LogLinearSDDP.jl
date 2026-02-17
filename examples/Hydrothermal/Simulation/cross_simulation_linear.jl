@@ -9,17 +9,113 @@
 # Copyright (c) 2017-2026: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
-function _simulate(
+import LogLinearSDDP
+import SDDP
+
+include("simulation.jl")
+
+function cross_sample_scenario(
+    graph::SDDP.PolicyGraph{T},
+    lin_ar_process::LinearAutoregressiveProcess,
+    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo{T}},
+    keep_full_history::Bool = false,
+) where {T}
+    max_depth = min(sampling_scheme.max_depth, sampling_scheme.rollout_limit())
+    # Storage for our scenario. Each tuple is (node_index, noise.term).
+    scenario_path = Tuple{T,Any}[]
+    # We only use visited_nodes if terminate_on_cycle=true. Just initialize anyway.
+    visited_nodes = Set{T}()
+    # Begin by sampling a node from the children of the root node.
+    node_index = something(
+        sampling_scheme.initial_node,
+        SDDP.sample_noise(SDDP.get_root_children(sampling_scheme, graph)),
+    )::T
+    while true
+        node = graph[node_index]
+
+        # Get the realizations for the stagewise independent term η
+        all_independent_noises = SDDP.get_noise_terms(sampling_scheme, node, node_index)
+        children = SDDP.get_children(sampling_scheme, node, node_index)
+
+        # Sample an independent noise term (vector/tuple of index ℓ or a single AbstractFloat)
+        independent_noise_terms = SDDP.sample_noise(all_independent_noises)
+
+        # Get the current process state
+        process_state = node.ext[:process_state]
+
+        # First stage is deterministic
+        if node_index == 1
+            noise_term = zeros(length(independent_noise_terms))
+            for ℓ in eachindex(noise_term)    
+                noise_term[ℓ] = lin_ar_process.history[ℓ]
+            end
+        else      
+            t = node_index
+            ar_process_stage = lin_ar_process.parameters[t]
+            # Compute the actual noise ξ using the formula for the linearized AR process
+            noise_term = zeros(length(independent_noise_terms))
+            for ℓ in eachindex(noise_term)
+                independent_term = independent_noise_terms[ℓ]
+                noise_term[ℓ] = process_state[t-1][ℓ] * ar_process_stage.coefficients[ℓ,1] * exp(independent_term) + ar_process_stage.coefficients[ℓ,2] * exp(independent_term)
+                if noise_term[ℓ] < 0 
+                    # TODO
+                    # noise_term[ℓ] = - noise_term[ℓ]
+                    noise_term[ℓ] = 0
+                end
+            end
+        end
+        ####################################################################################
+
+        push!(scenario_path, (node_index, noise_term))
+        # Termination conditions:
+        if length(children) == 0
+            # 1. Our node has no children, i.e., we are at a leaf node.
+            return scenario_path, false
+        elseif sampling_scheme.terminate_on_cycle && node_index in visited_nodes
+            # 2. terminate_on_cycle = true and we have detected a cycle.
+            return scenario_path, true
+        elseif 0 < sampling_scheme.max_depth <= length(scenario_path)
+            # 3. max_depth > 0 and we have explored max_depth number of nodes.
+            return scenario_path, false
+        elseif sampling_scheme.terminate_on_dummy_leaf &&
+               rand() < 1 - sum(child.probability for child in children)
+            # 4. we sample a "dummy" leaf node in the next step due to the
+            # probability of the child nodes summing to less than one.
+            return scenario_path, false
+        end
+        # We only need to store a list of visited nodes if we want to terminate
+        # due to the presence of a cycle.
+        if sampling_scheme.terminate_on_cycle
+            push!(visited_nodes, node_index)
+        end
+        # Sample a new node to transition to.
+        node_index = SDDP.sample_noise(children)::T
+
+        # CHANGES TO SDDP.jl
+        ####################################################################################
+        # Store the updated dict as the process state for the following stage (node)
+        graph[node_index].ext[:process_state] = LogLinearSDDP.update_process_state(graph, lin_ar_process.lag_order, node_index, process_state, noise_term, keep_full_history)
+        ####################################################################################
+
+    end
+    # Throw an error because we should never end up here.
+    return error(
+        "Internal SDDP error: something went wrong sampling a scenario.",
+    )
+end
+
+
+function _cross_simulate(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
 SDDP._initialize_solver(model; throw_error = false)
     return map(
-        i -> _simulate(model, loglin_ar_process, variables; kwargs...),
+        i -> _cross_simulate(model, lin_ar_process, variables; kwargs...),
         1:number_replications,
     )
 end
@@ -27,9 +123,9 @@ end
 
 # Internal function: helper to conduct a single simulation. Users should use the
 # documented, user-facing function SDDP.simulate instead.
-function _simulate(
+function _cross_simulate(
     model::SDDP.PolicyGraph{T},
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     variables::Vector{Symbol};
     sampling_scheme::SDDP.AbstractSamplingScheme,
     custom_recorders::Dict{Symbol,Function},
@@ -39,7 +135,7 @@ function _simulate(
 ) where {T}
 
     # Sample a scenario path.
-    scenario_path, _ = sample_scenario(model, loglin_ar_process, sampling_scheme, true)
+    scenario_path, _ = cross_sample_scenario(model, lin_ar_process, sampling_scheme, true)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
@@ -75,7 +171,7 @@ function _simulate(
             current_belief = Dict(node_index => 1.0)
         end
         # Solve the subproblem.
-        subproblem_results = solve_subproblem(
+        subproblem_results = LogLinearSDDP.solve_subproblem(
             model,
             node,
             incoming_state,
@@ -157,9 +253,9 @@ useful to obtain the primal value of the state and control variables.
 
 For more complicated data, the `custom_recorders` keyword argument can be used.
 """
-function simulate(
+function cross_simulate(
     model::SDDP.PolicyGraph,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
@@ -169,10 +265,10 @@ function simulate(
     parallel_scheme::SDDP.AbstractParallelScheme = SDDP.Serial(),
     incoming_state::Dict{String,Float64} = SDDP._initial_state(model),
 )
-    return _simulate(
+    return _cross_simulate(
         model,
         parallel_scheme,
-        loglin_ar_process,
+        lin_ar_process,
         number_replications,
         variables;
         sampling_scheme = sampling_scheme,
@@ -184,24 +280,25 @@ function simulate(
 end
 
 
-function simulate_loglinear(
+function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return cross_simulate_linear(model, algo_params, problem_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+
 end
 
 
-function simulate_loglinear(
+function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
@@ -210,11 +307,11 @@ function simulate_loglinear(
 end
 
 
-function simulate_loglinear(
+function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
     sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
@@ -223,9 +320,9 @@ function simulate_loglinear(
     # SIMULATE THE MODEL
     ############################################################################
     if haskey(model.ext, :simulation_attributes)
-        simulations = simulate(model, loglin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+        simulations = cross_simulate(model, lin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
     else
-        simulations = simulate(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+        simulations = cross_simulate(model, lin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
     end  
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
@@ -236,11 +333,11 @@ function simulate_loglinear(
 
     μ, ci = SDDP.confidence_interval(objectives)
     # get last lower bound again
-    lower_bound = calculate_bound(model)
+    lower_bound = LogLinearSDDP.calculate_bound(model)
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     if problem_params.number_of_stages == 120
         # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
@@ -251,102 +348,11 @@ function simulate_loglinear(
 
         μ, ci = SDDP.confidence_interval(objectives)
         # get last lower bound again
-        lower_bound = calculate_bound(model)
+        lower_bound = LogLinearSDDP.calculate_bound(model)
 
         # LOGGING OF SIMULATION RESULTS
         ############################################################################
-        log_simulation_results(algo_params, μ, ci, lower_bound, description)
-    end
-
-    return simulations
-end
-
-
-function log_simulation_results(
-    algo_params::LogLinearSDDP.AlgoParams,
-    μ::Float64,
-    ci::Float64,
-    lower_bound::Float64,
-    description::String,
-)
-
-    log_file_handle = open(algo_params.log_file, "a")
-    LogLinearSDDP.print_helper(LogLinearSDDP.print_simulation, log_file_handle, algo_params, μ, ci, lower_bound, description)
-    close(log_file_handle)
-
-    return
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    simulation_regime::LogLinearSDDP.Simulation
-    )
-
-    return simulate_linear(model, algo_params, problem_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    simulation_regime::LogLinearSDDP.NoSimulation,
-    )
-
-    return
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    number_of_replications::Int64,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo,SDDP.Historical},
-    )
-
-    # SIMULATE THE MODEL
-    ############################################################################
-    if haskey(model.ext, :simulation_attributes)
-        simulations = SDDP.simulate(model, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
-    else
-        simulations = SDDP.simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
-    end
-
-    # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
-    ############################################################################
-    objectives = map(simulations) do simulation
-        return sum(stage[:stage_objective] for stage in simulation)
-    end
-
-    μ, ci = SDDP.confidence_interval(objectives)
-    # get last lower bound again
-    lower_bound = SDDP.calculate_bound(model)
-
-    # LOGGING OF SIMULATION RESULTS
-    ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound, description)
-
-    if problem_params.number_of_stages == 120
-        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
-        ############################################################################
-        objectives = map(simulations) do simulation
-            return sum(simulation[stage][:stage_objective] for stage in 1:60)
-        end
-
-        μ, ci = SDDP.confidence_interval(objectives)
-        # get last lower bound again
-        lower_bound = SDDP.calculate_bound(model)
-
-        # LOGGING OF SIMULATION RESULTS
-        ############################################################################
-        log_simulation_results(algo_params, μ, ci, lower_bound, description)
+        LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
     end
 
     return simulations

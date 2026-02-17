@@ -9,17 +9,22 @@
 # Copyright (c) 2017-2026: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
-function _simulate(
+import LogLinearSDDP
+import SDDP
+
+include("simulation.jl")
+
+
+function _historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
     ::SDDP.Serial,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64,
     variables::Vector{Symbol};
     kwargs...,
 )
 SDDP._initialize_solver(model; throw_error = false)
     return map(
-        i -> _simulate(model, loglin_ar_process, variables; kwargs...),
+        i -> _historical_simulate_loglinear(model, variables; kwargs...),
         1:number_replications,
     )
 end
@@ -27,9 +32,8 @@ end
 
 # Internal function: helper to conduct a single simulation. Users should use the
 # documented, user-facing function SDDP.simulate instead.
-function _simulate(
+function _historical_simulate_loglinear(
     model::SDDP.PolicyGraph{T},
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     variables::Vector{Symbol};
     sampling_scheme::SDDP.AbstractSamplingScheme,
     custom_recorders::Dict{Symbol,Function},
@@ -39,7 +43,7 @@ function _simulate(
 ) where {T}
 
     # Sample a scenario path.
-    scenario_path, _ = sample_scenario(model, loglin_ar_process, sampling_scheme, true)
+    scenario_path, _ = SDDP.sample_scenario(model, sampling_scheme)
 
     # Storage for the simulation results.
     simulation = Dict{Symbol,Any}[]
@@ -75,7 +79,7 @@ function _simulate(
             current_belief = Dict(node_index => 1.0)
         end
         # Solve the subproblem.
-        subproblem_results = solve_subproblem(
+        subproblem_results = LogLinearSDDP.solve_subproblem(
             model,
             node,
             incoming_state,
@@ -135,31 +139,11 @@ end
 
 
 """
-Perform a simulation of the policy model with `number_replications` replications
-using the sampling scheme `sampling_scheme`.
-
-Returns a vector with one element for each replication. Each element is a vector
-with one-element for each node in the scenario that was sampled. Each element in
-that vector is a dictionary containing information about the subproblem that was
-solved.
-
-In that dictionary there are four special keys:
- - :node_index, which records the index of the sampled node in the policy model
- - :noise_term, which records the noise observed at the node
- - :stage_objective, which records the stage-objective of the subproblem
- - :bellman_term, which records the cost/value-to-go of the node.
-The sum of :stage_objective + :bellman_term will equal the objective value of
-the solved subproblem.
-
-In addition to the special keys, the dictionary will contain the result of
-`JuMP.value(subproblem[key])` for each `key` in `variables`. This is
-useful to obtain the primal value of the state and control variables.
-
-For more complicated data, the `custom_recorders` keyword argument can be used.
+Perform a simulation of the policy model with 70 different historical "samples"
+of 120 stages.
 """
-function simulate(
+function historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     number_replications::Int64 = 1,
     variables::Vector{Symbol} = Symbol[];
     sampling_scheme::SDDP.AbstractSamplingScheme = SDDP.InSampleMonteCarlo(),
@@ -169,10 +153,9 @@ function simulate(
     parallel_scheme::SDDP.AbstractParallelScheme = SDDP.Serial(),
     incoming_state::Dict{String,Float64} = SDDP._initial_state(model),
 )
-    return _simulate(
+    return _historical_simulate_loglinear(
         model,
         parallel_scheme,
-        loglin_ar_process,
         number_replications,
         variables;
         sampling_scheme = sampling_scheme,
@@ -184,24 +167,24 @@ function simulate(
 end
 
 
-function simulate_loglinear(
+function historical_simulate_for_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return historical_simulate_loglinear(model, algo_params, problem_params, description, simulation_regime.sampling_scheme)
+
 end
 
 
-function simulate_loglinear(
+function historical_simulate_for_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
+    lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
     )
@@ -210,22 +193,20 @@ function simulate_loglinear(
 end
 
 
-function simulate_loglinear(
+function historical_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
     problem_params::LogLinearSDDP.ProblemParams,
-    loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
-    number_of_replications::Int64,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo},
+    sampling_scheme::SDDP.Historical,
     )
 
     # SIMULATE THE MODEL
     ############################################################################
     if haskey(model.ext, :simulation_attributes)
-        simulations = simulate(model, loglin_ar_process, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
+        simulations = historical_simulate_loglinear(model, 70, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
     else
-        simulations = simulate(model, loglin_ar_process, number_of_replications, sampling_scheme=sampling_scheme)
+        simulations = historical_simulate_loglinear(model, 70, sampling_scheme=sampling_scheme)
     end  
 
     # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
@@ -236,11 +217,11 @@ function simulate_loglinear(
 
     μ, ci = SDDP.confidence_interval(objectives)
     # get last lower bound again
-    lower_bound = calculate_bound(model)
+    lower_bound = LogLinearSDDP.calculate_bound(model)
 
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
 
     if problem_params.number_of_stages == 120
         # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
@@ -251,102 +232,11 @@ function simulate_loglinear(
 
         μ, ci = SDDP.confidence_interval(objectives)
         # get last lower bound again
-        lower_bound = calculate_bound(model)
+        lower_bound = LogLinearSDDP.calculate_bound(model)
 
         # LOGGING OF SIMULATION RESULTS
         ############################################################################
-        log_simulation_results(algo_params, μ, ci, lower_bound, description)
-    end
-
-    return simulations
-end
-
-
-function log_simulation_results(
-    algo_params::LogLinearSDDP.AlgoParams,
-    μ::Float64,
-    ci::Float64,
-    lower_bound::Float64,
-    description::String,
-)
-
-    log_file_handle = open(algo_params.log_file, "a")
-    LogLinearSDDP.print_helper(LogLinearSDDP.print_simulation, log_file_handle, algo_params, μ, ci, lower_bound, description)
-    close(log_file_handle)
-
-    return
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    simulation_regime::LogLinearSDDP.Simulation
-    )
-
-    return simulate_linear(model, algo_params, problem_params, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    simulation_regime::LogLinearSDDP.NoSimulation,
-    )
-
-    return
-end
-
-
-function simulate_linear(
-    model::SDDP.PolicyGraph,
-    algo_params::LogLinearSDDP.AlgoParams,
-    problem_params::LogLinearSDDP.ProblemParams,
-    description::String,
-    number_of_replications::Int64,
-    sampling_scheme::Union{SDDP.InSampleMonteCarlo,SDDP.OutOfSampleMonteCarlo,SDDP.Historical},
-    )
-
-    # SIMULATE THE MODEL
-    ############################################################################
-    if haskey(model.ext, :simulation_attributes)
-        simulations = SDDP.simulate(model, number_of_replications, model.ext[:simulation_attributes], sampling_scheme=sampling_scheme)
-    else
-        simulations = SDDP.simulate(model, number_of_replications, sampling_scheme=sampling_scheme)
-    end
-
-    # OBTAINING BOUNDS AND CONFIDENCE INTERVAL
-    ############################################################################
-    objectives = map(simulations) do simulation
-        return sum(stage[:stage_objective] for stage in simulation)
-    end
-
-    μ, ci = SDDP.confidence_interval(objectives)
-    # get last lower bound again
-    lower_bound = SDDP.calculate_bound(model)
-
-    # LOGGING OF SIMULATION RESULTS
-    ############################################################################
-    log_simulation_results(algo_params, μ, ci, lower_bound, description)
-
-    if problem_params.number_of_stages == 120
-        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
-        ############################################################################
-        objectives = map(simulations) do simulation
-            return sum(simulation[stage][:stage_objective] for stage in 1:60)
-        end
-
-        μ, ci = SDDP.confidence_interval(objectives)
-        # get last lower bound again
-        lower_bound = SDDP.calculate_bound(model)
-
-        # LOGGING OF SIMULATION RESULTS
-        ############################################################################
-        log_simulation_results(algo_params, μ, ci, lower_bound, description)
+        LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
     end
 
     return simulations

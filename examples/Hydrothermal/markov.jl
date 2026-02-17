@@ -1,3 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
+################################################################################
+
 import SDDP
 import LogLinearSDDP
 import Gurobi
@@ -57,9 +64,9 @@ end
 function get_hydrothermal_model_markov(nodes_per_stage::Int)
 
     if nodes_per_stage == 10
-        file_identifier = "(12_0)_10"
+        file_identifier = "PreparationMarkov/(12_0)_10"
     elseif nodes_per_stage == 100
-        file_identifier = "(12_0)_100"
+        file_identifier = "PreparationMarkov/(12_0)_100"
     else
         Error("Nodes per stage must be 10 or 100")
     end
@@ -72,7 +79,7 @@ end
 
 function get_inflows_for_forward_pass(model::SDDP.PolicyGraph, model_approach::String, seed::Int, number_of_iterations::Int, number_of_stages::Int)
     
-    file_name = "MarkovPreparation/inflows_fp_" * model_approach * "_" * string(seed) * ".txt"
+    file_name = "PreparationMarkov/inflows_fp_" * model_approach * "_" * string(seed) * ".txt"
 
     # Read data from CSV files
     df = read_data(file_name, 1, number_of_iterations * number_of_stages)
@@ -106,7 +113,7 @@ end
 
 function get_inflows_for_simulation(model::SDDP.PolicyGraph, model_approach::String, seed::Int, number_of_replications::Int, number_of_stages::Int)
 
-    file_name = "MarkovPreparation/inflows_oos_" * model_approach * "_" * string(seed) * ".txt"
+    file_name = "PreparationMarkov/inflows_oos_" * model_approach * "_" * string(seed) * ".txt"
 
     # Read data from CSV files
     df = read_data(file_name, 1, number_of_replications * number_of_stages)
@@ -139,7 +146,7 @@ end
 
 function get_inflows_historical(model::SDDP.PolicyGraph, number_of_stages::Int)
 
-    file_name = "MarkovPreparation/inflows_historical.txt"
+    file_name = "PreparationMarkov/inflows_historical.txt"
 
     # Read data from CSV files
     df = read_data(file_name, 1, 70 * number_of_stages)
