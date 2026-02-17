@@ -2,47 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2026: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
-
-""" 
-LOGGING
-###########################################################################
-At the beginning, the following things are logged.
-    > BANNER
-        >> see function print_banner()
-    > MODEL RUN PARAMETERS
-        >> file path, git status, datetime and run description
-        >> model run configuration, i.e. main model parameters (number of stages, realizations, used seeds),
-            properties of the AR process, used solvers, algorithmic parameters (used stopping rule)
-        >> see function print_parameters()
-    > MODEL STATISTICS (borrowed from SDDP.jl)
-        >> problem size, subproblem structure
-        >> problem options
-        >> numerical_stability report
-    > HEADER FOR ITERATION LOGGING
-        >> see function print_iteration_header()
-
-After each iteration, the following things are logged.
-    > ITERATION RESULTS
-        >> iteration number
-        >> lower bound, statistical upper bound / simulation result, gap (only for checks using deterministic models)
-        >> total time, iteration time
-        >> subproblem size (variables, constraints, added cuts) and finished solves
-        >> see functions log_iteration() and print_iteration()
-
-At the end, the following things are logged.
-    > SDDP RESULT FOOTER
-        >> result summary containing solution status, total time, lower bound, statistical upper bound / simulation value, numerical issue report
-        >> see function print_footer()
-    > TIMING SUMMARY
-        >> table including the times and memory allocation for different subroutines of SDDP
-
-"""
 
 struct Log
     iteration::Int64

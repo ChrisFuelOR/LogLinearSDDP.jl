@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 import SDDP
@@ -19,9 +19,9 @@ import Dates
 
 include("hydrothermal_model_linearized.jl")
 include("set_up_ar_process.jl")
-include("simulation.jl")
-include("cross_simulation_loglinear.jl")
-include("historical_simulation_linear.jl")
+include("Simulation/simulation.jl")
+include("Simulation/cross_simulation_loglinear.jl")
+include("Simulation/historical_simulation_linear.jl")
 
 
 function run_model(forward_pass_seed::Int, model_directory::String, model_directories_alternative::Vector{String}, model_directories_loglin::Vector{String})
@@ -33,7 +33,8 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * model_directory * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing Final Run (2h)/" * file_identifier * "/"
+    file_path = "C:/Users/cg4102/Documents/julia_logs/" * file_identifier * "/"
+    #file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing Final Run (2h)/" * file_identifier * "/"
     ispath(file_path) || mkdir(file_path)
     log_file = file_path * "LinearizedSDDP.log"
     ###########################################################################################################
@@ -147,7 +148,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     ###########################################################################################################
     sampling_scheme_historical = SDDP.Historical(get_historical_sample_paths(problem_params.number_of_stages)) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
-    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, model_directory, simulation_historical)
+    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, "historical", simulation_historical)
     extended_simulation_analysis(simulation_results, file_path, problem_params, model_directory, "historical")
 
     return
@@ -156,7 +157,7 @@ end
 
 """ 
 LINEAR MODEL OPTIONS are
-> shapiro_model, fitted_model, msppy_model
+> shapiro_model, fitted_model
 
 LOGLINEAR MODEL OPTIONS are
 > custom_model, bic_model

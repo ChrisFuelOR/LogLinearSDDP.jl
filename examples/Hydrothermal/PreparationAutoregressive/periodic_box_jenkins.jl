@@ -1,0 +1,372 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
+################################################################################
+
+""" Analysis and tests of residuals for autocorrelation. """
+function periodic_autocorrelation_tests(
+    month::Int64,
+    all_residuals::DataFrames.DataFrame,
+    monthly_model::MonthlyModelStorage,
+    with_plots::Bool
+    )
+
+    monthly_residuals = all_residuals[:, month]   
+    years = length(monthly_residuals)
+    
+    # Plot the standardized monthly residuals
+    ###########################################################################################################
+    if with_plots
+        time_series_plot(monthly_residuals/Statistics.std(monthly_residuals))
+    end
+
+    # Analyze sample periodic residual ACF (RACF)
+    """ Note that we do not consider the periodic residual PACF here."""
+    ###########################################################################################################
+    # The maximum number of lags to be considered is number of observations / 4, according to Box & Jenkins.
+    max_lag = Int(floor(length(monthly_residuals) / 4))
+    periodic_racf = Float64[]
+
+    for lag in 1:max_lag
+        # Get correct month corresponding to lag
+        lag_month = month - lag > 0 ? month - lag : Int(12 - mod((lag - month), 12))
+        lag_year_offset = month - lag > 0 ? 0 : Int(ceil((lag - month + 1)/12))
+
+        # Get required standard deviations of the residuals
+        std_month = Statistics.std(all_residuals[:, month])
+        std_lag_month = Statistics.std(all_residuals[:, lag_month])
+
+        # Compute sample periodic RACF
+        periodic_rac = 1/((years-lag_year_offset) * std_month * std_lag_month) * sum(all_residuals[year,month] * all_residuals[year-lag_year_offset, lag_month] for year in 1+lag_year_offset:years)
+        push!(periodic_racf, periodic_rac)
+    end
+
+    if with_plots
+        pacf_plot(periodic_racf[1:max_lag], [1/sqrt(years) for i in 1:max_lag])
+    end
+
+    # NOTE: No Breusch-Godfrey test, since it is not clear which regressor matrix to use
+
+    # Simple Portmanteau test from Hipel & McLeod (small sample properties have to be taken carefully)
+    ###########################################################################################################
+    test_statistic = years * sum(periodic_racf[k]^2 for k in 1:max_lag)
+    dof = max_lag - monthly_model.lag_order
+    p_value = HypothesisTests.pvalue(Distributions.Chisq(dof), test_statistic; tail=:right)
+    println("Portmanteau test for lag: ", max_lag, ", p-value = ", round(p_value,digits=3), ", ", p_value < 0.05 ? "reject h_0 (no autocorrelation)" : "fail to reject h_0 (no autocorrelation)")
+
+    test_statistic = years * sum(periodic_racf[k]^2 for k in 1:12)
+    dof = 12 - monthly_model.lag_order
+    p_value = HypothesisTests.pvalue(Distributions.Chisq(12 - monthly_model.lag_order), test_statistic; tail=:right)
+    println("Portmanteau test for lag: ", 12, ", p-value = ", round(p_value,digits=3), ", ", p_value < 0.05 ? "reject h_0 (no autocorrelation)" : "fail to reject h_0 (no autocorrelation)")
+
+    return test_statistic, dof
+end
+
+""" Execute validation tests, especially for residuals."""
+function periodic_model_validation_tests(
+    all_monthly_models::Vector{MonthlyModelStorage},
+    all_residuals::DataFrames.DataFrame,
+    with_plots::Bool
+    )
+
+    overall_test_statistic = 0.0
+    overall_dof = 0
+
+    for month in 1:12
+        println("MONTH: ", month)
+
+        # Get monthly model
+        monthly_model = all_monthly_models[month]
+
+        # (1) Goodness of fit
+        println("> GOODNESS OF FIT")
+        goodness_of_fit(monthly_model.fitted_model)
+
+        # (2) Model significance
+        println("> SIGNIFICANCE")
+        significance_tests(monthly_model.fitted_model, monthly_model.lag_order)
+
+        # (3) Autocorrelation of residuals
+        println("> AUTOCORRELATION OF RESIDUALS")
+        test_statistic, dof = periodic_autocorrelation_tests(month, all_residuals, monthly_model, with_plots)
+        overall_test_statistic += test_statistic
+        overall_dof += dof
+
+        # (4) Heteroscedasticity of residuals
+        heteroscedasticity_tests(all_residuals[:, Symbol(month)], with_plots)
+
+        # (5) Normal distribution of residuals
+        println("> NORMAL DISTRIBUTION OF RESIDUALS")
+        normality_tests(all_residuals[:, Symbol(month)], with_plots)
+
+        println()
+    end
+
+    # Portmanteau test over all periods
+    println("OVERALL: ")
+    p_value = HypothesisTests.pvalue(Distributions.Chisq(overall_dof), overall_test_statistic; tail=:right)
+    println("Portmanteau test for lag: ", 12, ", p-value = ", round(p_value,digits=3), ", ", p_value < 0.05 ? "reject h_0 (no autocorrelation)" : "fail to reject h_0 (no autocorrelation)")
+
+    return
+end
+
+function autocorrelation_tests(residuals::Vector{Float64}, with_plots::Bool)
+    # Plot the standardized residuals
+    ###########################################################################################################
+    if with_plots
+        time_series_plot(residuals/Statistics.std(residuals))
+    end
+
+    # Analyze ACF/PACF of the residuals
+    ###########################################################################################################
+    # The maximum number of lags to be considered is number of observations / 4, according to Box & Jenkins.
+    max_lag = Int(floor(length(residuals) / 4))
+    acf = StatsBase.autocor(residuals, [i for i=1:max_lag])
+    pacf = StatsBase.pacf(residuals, [i for i=1:max_lag])
+
+    if with_plots
+        pacf_plot(acf[1:max_lag], [1/sqrt(length(residuals)) for i in 1:max_lag])
+        pacf_plot(pacf[1:max_lag], [1/sqrt(length(residuals)) for i in 1:max_lag])
+    end
+
+    # NOTE: No Breusch-Godfrey test, since it is not clear which regressor matrix to use
+    return
+end
+
+""" Execute validation tests, especially for residuals."""
+function model_validation_tests(
+    all_residuals::Vector{Float64},
+    with_plots::Bool
+    )
+
+    # (1) Autocorrelation of residuals
+    println("> AUTOCORRELATION OF RESIDUALS")
+    autocorrelation_tests(all_residuals, with_plots)
+
+    # (2) Heteroscedasticity of residuals
+    heteroscedasticity_tests(all_residuals, with_plots)
+
+    # (3) Normal distribution of residuals
+    println("> NORMAL DISTRIBUTION OF RESIDUALS")
+    normality_tests(all_residuals, with_plots)
+
+    return
+end
+
+""" Fit a monthly model as part of a PAR model, given a month and a lag order."""
+function model_fitting(df::DataFrames.DataFrame, month::Int64, lag_order::Int64)
+
+    # Get data for regressand
+    Y = copy(df[!, month])
+    
+    # Prepare data (if not all lags are in same year, delete offset number of years from Y)
+    year_offset = 0
+    if month - lag_order <= 0
+        year_offset = Int(ceil((lag_order - month + 1)/12))
+        Y = deleteat!(Y, [i for i in 1:year_offset])
+    end
+    
+    # Construct DataFrame for fitting
+    df_for_fitting = DataFrames.DataFrame()
+    DataFrames.insertcols!(df_for_fitting, :Y => Y)
+
+    # Iterate over lags
+    for lag in 1:lag_order
+        # Get correct month corresponding to lag
+        lag_month = month - lag > 0 ? month - lag : Int(12 - mod((lag - month), 12))
+        lag_year_offset = month - lag > 0 ? 0 : Int(ceil((lag - month + 1)/12))
+        @assert lag_year_offset <= year_offset
+
+        # Get regressor time series
+        X = copy(df[!, lag_month]) 
+
+        # Prepare data (if not all lags are in same year, delete first or last year for Y)
+        if year_offset > 0
+            last_elements = [length(X)-i for i in lag_year_offset:-1:1]
+            first_elements = [i for i in 1:year_offset-lag_year_offset]
+            X = deleteat!(X, [first_elements; last_elements])
+        end
+
+        #println(month, ", ", lag, ", ", lag_month, ", ", lag_year_offset, ", ", year_offset)
+
+        # Create column for lag data
+        DataFrames.insertcols!(df_for_fitting, Symbol(lag) => X)
+    end
+
+    # Fitting the model using OLS (include all columns in df_for_fitting as regressors, but the one called :Y)
+    ols_result = GLM.lm(GLM.term(:Y)~sum(GLM.term.(names(df_for_fitting[:,Not(:Y)]))), df_for_fitting)
+    return ols_result, df_for_fitting, year_offset
+end
+
+""" Model identification - Compute and plot the periodic ACF for each month and lag."""
+function model_identification_periodic_acf(acv_df::DataFrames.DataFrame, max_lag::Int64, years::Int64, with_plots::Bool)
+    
+    for month in 1:12
+        periodic_acf = Float64[]
+        standard_errors = Float64[]
+        
+        for lag in 1:max_lag
+            # Identify the correct month for the given lag
+            lag_month = month - lag > 0 ? month - lag : Int(12 - mod((lag - month), 12))
+
+            # Compute the periodic ACF
+            periodic_autocor = acv_df[month, Symbol(lag)] / sqrt(acv_df[month, Symbol(0)] * acv_df[lag_month, Symbol(0)])
+            push!(periodic_acf, periodic_autocor)
+
+            # Compute the standard error (for model identification; Bartlett's formula)
+            standard_error = 1/sqrt(years) * sqrt(1 + 2 * sum(periodic_acf[i]^2 for i in 1:lag))
+            push!(standard_errors, standard_error)
+        end
+
+        # Plot the periodic ACF if required
+        if with_plots
+            pacf_plot(periodic_acf, standard_errors)
+        end
+    end
+end
+
+""" Fitting several models with different lag order (1 to 12). Compute AIC/BIC and choose the best lag order.
+Estimate the periodic PACF and use it for lag order analysis.
+
+I don't really know how we can estimate the periodic PACF for higher lag orders without fitting extremely many models.
+The StatsBase.pacf function does not seem to help, as it is not clear which data exactly to put as an argument.
+"""
+function model_identification_fitting(train_data::DataFrames.DataFrame, max_lag::Int64, years::Int64, with_plots::Bool)
+
+    best_lag_orders_aic = Float64[]
+    best_lag_orders_bic = Float64[]
+
+    # For each month, fit AR models for different lag orders (up to a full year) to compute periodic PACF and BIC
+    for month in 1:12
+        periodic_pacf = Float64[]
+        standard_errors = Float64[]
+
+        lowest_bic = Inf
+        best_lag_order_bic = 0
+        lowest_aic = Inf
+        best_lag_order_aic = 0
+
+        println()
+        #println("##############################################################################") 
+        for lag_order in 1:max_lag         
+            #print("MODEL IDENTIFICATION - PAR MODEL FOR MONTH ", month, " AND LAG ORDER ", lag_order)
+            fitted_model, _ = model_fitting(train_data, month, lag_order)
+
+            # The estimator for the periodic PACF is the regression coefficient at lag "lag_order"
+            periodic_pac = GLM.coef(fitted_model)[1+lag_order]
+            push!(periodic_pacf, periodic_pac)
+
+            # Compute the standard error (for model identification; Bartlett's formula)
+            standard_error = 1/sqrt(years) * sqrt(1 + 2 * sum(periodic_pacf[i]^2 for i in 1:lag_order))
+            push!(standard_errors, standard_error)
+
+            # Compute the AIC
+            aic = GLM.aic(fitted_model)
+            #println()
+            #println("   - AIC: ", round(aic, digits=2))
+
+            # Compute the BIC
+            bic = GLM.bic(fitted_model)
+            #println("   - BIC: ", round(bic, digits=2))
+
+            # best AIC/BIC updates
+            if bic < lowest_bic
+                lowest_bic = bic
+                best_lag_order_bic = lag_order
+            end
+            if aic < lowest_aic
+                lowest_aic = aic
+                best_lag_order_aic = lag_order
+            end
+
+        end
+        
+        push!(best_lag_orders_aic, best_lag_order_aic)
+        push!(best_lag_orders_bic, best_lag_order_bic)
+        println("BEST LAG_ORDER: ", best_lag_order_bic, ",", best_lag_order_aic)
+
+        # Plot the periodic PACF if required
+        if with_plots
+            pacf_plot(periodic_pacf, standard_errors)
+        end
+    end
+
+    return best_lag_orders_aic, best_lag_orders_bic
+end
+
+
+""" Perform the box-jenkins method using periodic models."""
+function box_jenkins_periodic(
+    train_data::DataFrames.DataFrame,
+    acv_df::DataFrames.DataFrame,
+    μ::Vector{Float64},
+    σ::Vector{Float64},
+    identification_method::Symbol, with_plots::Bool
+    )
+
+    # Setting parameters
+    years = DataFrames.nrow(train_data)
+    max_lag = Int(floor(years/4)) #12
+    
+    all_monthly_models = MonthlyModelStorage[]  
+    all_residuals = DataFrames.DataFrame()
+   
+    # Get overview on data
+    DataFrames.describe(train_data)
+    
+    # Model identification
+    #######################################################################################     
+    # Compute and plot periodic ACF
+    model_identification_periodic_acf(acv_df, max_lag, years, with_plots)
+
+    # Fit several models with different lag order and estimate AIC/BIC and periodic PACF, respectively
+    best_lag_order_aic, best_lag_order_bic = model_identification_fitting(train_data, max_lag, years, with_plots)
+    
+    # Model fitting: Use identified lag_order (or default value 1) and fit a model
+    #######################################################################################
+    custom_lag_orders = [1,1,1,1,1,1,1,1,1,1,1,1]
+    #custom_lag_orders = [1,6,1,1,1,1,1,1,1,2,1,1]
+    for month in 1:12
+        if identification_method == :bic
+            lag_order = Int(best_lag_order_bic[month])
+        elseif identification_method == :aic
+            lag_order = Int(best_lag_order_aic[month])
+        elseif identification_method == :custom
+            lag_order = custom_lag_orders[month]
+        end
+
+        println()
+        println("PAR model for month ", month, " and lag order ", lag_order)
+        println("--------------------------------------------------------------------------")
+
+        println("MODEL FITTING")
+        fitted_model, data_for_fitting, year_offset = model_fitting(train_data, month, lag_order)
+        residuals = GLM.residuals(fitted_model)
+        # studentized: residuals = GLM.residuals(fitted_model) / StatsBase.std(GLM.residuals(fitted_model))
+
+        # Store model information for validation, forecasts and usage in SDDP
+        regressor_matrix = Matrix(DataFrames.select!(data_for_fitting, DataFrames.Not([:Y])))
+        push!(all_monthly_models, MonthlyModelStorage(μ[month], σ[month], fitted_model, lag_order, regressor_matrix, year_offset))
+
+        offset_vector = [0.0 for i in 1:year_offset]
+        DataFrames.insertcols!(all_residuals, Symbol(month) => [offset_vector; residuals])
+
+        # print fitting results
+        println(GLM.coeftable(fitted_model))     
+    end
+
+    # Model validation: Diagnostic tests
+    #######################################################################################
+    # Compute 
+
+    println("MODEL VALIDATION - PERIODIC")
+    periodic_model_validation_tests(all_monthly_models, all_residuals, with_plots)
+    
+    println()
+    println("MODEL VALIDATION - ACROSS ALL PERIODS")
+    model_validation_tests(data_frame_to_vector(all_residuals), with_plots)
+
+    return all_monthly_models
+end

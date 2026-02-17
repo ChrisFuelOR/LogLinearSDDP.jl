@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 import SDDP
@@ -14,7 +14,7 @@ import Revise
 import DataFrames
 import Random
 
-include("cross_simulation_loglinear.jl")
+include("Simulation/cross_simulation_loglinear.jl")
 
 struct Generator
     name::String
@@ -213,11 +213,7 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
             # Expanding the state
             # This has to be modeled with setting the left-hand-side coefficients using set_normalized_coefficient, as otherwise two variables are multiplied, which leads to a non-convex problem.
             JuMP.@variable(subproblem, inflow_noise[k in 1:num_of_res]) # random variable
-            # JuMP.@variable(subproblem, inflow_aux_var[k in 1:num_of_res])
-            
             JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == inflow[k].in + inflow_noise[k])
-            # JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == inflow_aux_var[k] + inflow_noise[k])
-            # JuMP.@constraint(subproblem, inflow_aux[k in 1:num_of_res], - inflow_aux_var[k] + inflow[k].in == 0)
 
             # Parameterize inflow and demand
             realizations = ar_process.parameters[t].eta
@@ -228,13 +224,13 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
         SDDP.parameterize(subproblem, realizations) do ω
             
             if t == 1
-                if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
-                    print(f, t, "; ")
-                    for i in 1:4
-                        print(f, round(ar_process.history[i], digits = 2), ";")
-                    end
-                    println(f)
-                end
+                # if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                #     print(f, t, "; ")
+                #     for i in 1:4
+                #         print(f, round(ar_process.history[i], digits = 2), ";")
+                #     end
+                #     println(f)
+                # end
 
             # actual parameterize
             else
@@ -250,13 +246,13 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
                 JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process_stage.coefficients[3,1] * exp(ω[3]))
                 JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process_stage.coefficients[4,1] * exp(ω[4]))
 
-                if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
-                    print(f, t, "; ")
-                    for i in 1:4
-                        print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
-                    end
-                    println(f)
-                end
+                # if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                #     print(f, t, "; ")
+                #     for i in 1:4
+                #         print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                #     end
+                #     println(f)
+                # end
                 
             end
 
