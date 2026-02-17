@@ -33,8 +33,7 @@ function run_model(forward_pass_seed::Int, model_directory::String, model_direct
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_" * model_directory * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/" * file_identifier * "/"
-    #file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing Final Run (2h)/" * file_identifier * "/"
+    file_path = "C:/julia_logs/" * file_identifier * "/" # TODO: Should be changed
     ispath(file_path) || mkdir(file_path)
     log_file = file_path * "LinearizedSDDP.log"
     ###########################################################################################################

@@ -334,7 +334,7 @@ function starter()
     number_of_markov_nodes = 100
 
     file_identifier = "Run_" * string(model_approach) * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/MC-SDDP_" * file_identifier * "/"
+    file_path = "C:/julia_logs/" * file_identifier * "/" # TODO: Should be changed
     ispath(file_path) || mkdir(file_path)
     log_file = file_path * "MC-SDDP.log"
 

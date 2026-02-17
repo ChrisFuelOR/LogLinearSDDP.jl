@@ -31,7 +31,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     simulation_replications = 2000
     ###########################################################################################################
     file_identifier = "Run_MC-SDDP_" * forward_pass_model * "_" * string(forward_pass_seed)
-    file_path = "C:/Users/cg4102/Documents/julia_logs/Cut-sharing/" * file_identifier * "/"
+    file_path = "C:/julia_logs/" * file_identifier * "/" # TODO: Should be changed
     ispath(file_path) || mkdir(file_path)
     log_file = file_path * "MC-SDDP.log"
 
