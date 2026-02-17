@@ -116,7 +116,7 @@ function run_model(forward_pass_seed::Int, forward_pass_model::String, models_si
     all_sample_paths_hist = get_inflows_historical(model, number_of_stages)
     sampling_scheme_historical = SDDP.Historical(all_sample_paths_hist) 
     simulation_historical = LogLinearSDDP.Simulation(sampling_scheme = sampling_scheme_historical)
-    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, "markov", simulation_historical)
+    simulation_results = historical_simulate_for_linear(model, algo_params, problem_params, "historical", simulation_historical)
     extended_simulation_analysis_markov(simulation_results, file_path, problem_params, "markov", "historical")   
     return
 end
