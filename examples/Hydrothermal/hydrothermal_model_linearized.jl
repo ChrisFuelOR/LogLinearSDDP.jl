@@ -208,6 +208,7 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
         if t == 1
             # Fixed value for first stage
             JuMP.@constraint(subproblem, inflow_model[k in 1:num_of_res], inflow[k].out == ar_process.history[k])
+            realizations = [[0.0, 0.0, 0.0, 0.0]]
         else
             # Expanding the state
             # This has to be modeled with setting the left-hand-side coefficients using set_normalized_coefficient, as otherwise two variables are multiplied, which leads to a non-convex problem.
@@ -221,9 +222,24 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
             # Parameterize inflow and demand
             realizations = ar_process.parameters[t].eta
             subproblem.ext[:ar_process_stage] = ar_process.parameters[t]
+        end
 
-            SDDP.parameterize(subproblem, realizations) do ω
+        
+        SDDP.parameterize(subproblem, realizations) do ω
+            
+            if t == 1
+                if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                    print(f, t, "; ")
+                    for i in 1:4
+                        print(f, round(ar_process.history[i], digits = 2), ";")
+                    end
+                    println(f)
+                end
+
+            # actual parameterize
+            else
                 ar_process_stage = subproblem.ext[:ar_process_stage]
+
                 JuMP.fix(inflow_noise[1], ar_process_stage.coefficients[1,2] * exp(ω[1]))
                 JuMP.fix(inflow_noise[2], ar_process_stage.coefficients[2,2] * exp(ω[2]))
                 JuMP.fix(inflow_noise[3], ar_process_stage.coefficients[3,2] * exp(ω[3]))
@@ -234,12 +250,16 @@ function model_definition(ar_process::LinearAutoregressiveProcess, problem_param
                 JuMP.set_normalized_coefficient(inflow_model[3], inflow[3].in, -ar_process_stage.coefficients[3,1] * exp(ω[3]))
                 JuMP.set_normalized_coefficient(inflow_model[4], inflow[4].in, -ar_process_stage.coefficients[4,1] * exp(ω[4]))
 
-                print(f, t, "; ")
-                for i in 1:4
-                    print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                    print(f, t, "; ")
+                    for i in 1:4
+                        print(f, round(JuMP.fix_value(inflow[i].in) * ar_process_stage.coefficients[i,1] * exp(ω[i]) + ar_process_stage.coefficients[i,2] * exp(ω[i]), digits = 2), ";")
+                    end
+                    println(f)
                 end
-                println(f)
+                
             end
+
         end
 
         if algo_params.silent

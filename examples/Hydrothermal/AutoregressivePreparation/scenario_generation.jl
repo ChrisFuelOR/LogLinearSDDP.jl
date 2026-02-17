@@ -69,7 +69,7 @@ function history_generation(model_directory::String)
     all_months = [12,11,10,9,8,7,6,5,4,3,2,1]
 
     # Prepare output file
-    output_file_name = model_directory * "/" * "history_nonlinearssss.txt"
+    output_file_name = model_directory * "/" * "history_nonlinear.txt"
     f = open(output_file_name, "w")
     
     # Prepare storing AR history (in addition to output to file)

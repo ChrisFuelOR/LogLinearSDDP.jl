@@ -124,7 +124,7 @@ function get_inflows_for_simulation(model::SDDP.PolicyGraph, model_approach::Str
             row = (scenario_path_index - 1) * number_of_stages + stage
             @assert df[row, :Column1] == stage
 
-            realization = Dict("PLANT_1" => df[row, :Column2], "PLANT_2" => df[row, :Column3], "PLANT_3" => df[row, :Column4], "PLANT_4" => df[row, :Column5])
+            realization = Dict("PLANT_1" => round(df[row, :Column2], digits=2), "PLANT_2" => round(df[row, :Column3], digits=2), "PLANT_3" => round(df[row, :Column4], digits=2), "PLANT_4" => round(df[row, :Column5], digits=2))
             closest_node_index = closest_node(model.nodes, previous_node, realization)
 
             push!(sample_path, (closest_node_index, realization))
@@ -263,6 +263,7 @@ function extended_simulation_analysis_markov(simulation_results::Any, file_path:
     for i in eachindex(simulation_results)
         outgoing_values = map(simulation_results[i]) do node
             gen = node[:th_1] + node[:th_2] + node[:th_3] + node[:th_4]
+            # gen has been wrong in my experiments; gen = gen - deficit gives the correct value
             hydro_gen = node[:q_1] + node[:q_2] + node[:q_3] + node[:q_4]
             exchange = sum(node[exchange_var] for exchange_var in [:f_12, :f_13, :f_15, :f_21, :f_31, :f_35, :f_45, :f_51, :f_53, :f_54])
             spillage = node[:s_1] + node[:s_2] + node[:s_3] + node[:s_4]
@@ -358,7 +359,6 @@ function starter()
     all_sample_paths = get_inflows_for_forward_pass(model, model_approach, forward_pass_seed, number_of_replications, number_of_stages)
     sampling_scheme_fp = SDDP.Historical(all_sample_paths)
 
-    Infiltrator.@infiltrate
     # Train model
     SDDP.train(
         model,
