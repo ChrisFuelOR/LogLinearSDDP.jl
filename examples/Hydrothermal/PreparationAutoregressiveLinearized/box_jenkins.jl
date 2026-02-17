@@ -1,3 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
+################################################################################
+
 """ Prints the adjusted R^2 value as a measure of goodness of fit for a given fitted model."""
 function goodness_of_fit(fitted_model::Any)
     println("adjusted R²: ", GLM.adjr2(fitted_model))

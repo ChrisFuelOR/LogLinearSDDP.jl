@@ -1,3 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Copyright (c) 2026 Christian Fuellner <christian.fuellner@kit.edu>
+################################################################################
+
 """ From 79 years of total data, construct 70 sample paths of 10 years each, i.e. [1:10], [2:11], ..., [70:79].
 The data is stored in a txt file with 120 (10 years with 12 month) rows and 70 columns."""
 
