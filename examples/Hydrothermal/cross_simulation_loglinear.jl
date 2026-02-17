@@ -13,7 +13,6 @@ import LogLinearSDDP
 import SDDP
 
 
-include("set_up_ar_process.jl")
 include("simulation.jl")
 
 function solve_subproblem_cross(
@@ -33,9 +32,13 @@ function solve_subproblem_cross(
     # Use adapted parameterize function instead of the one stored in the node
     # to fix the inflows to the realization of the loglinear process.
     for ℓ in 1:4
-        JuMP.fix(node.subproblem[:inflow][ℓ].out, noise[ℓ], force=true)
-        if node.index > 1 && JuMP.is_fixed(node.subproblem[:inflow_noise][ℓ])
-            JuMP.unfix(node.subproblem[:inflow_noise][ℓ])
+        if node.index == 1
+            JuMP.set_normalized_rhs(node.subproblem[:inflow_model][ℓ], noise[ℓ])
+        else
+            JuMP.fix(node.subproblem[:inflow][ℓ].out, noise[ℓ], force=true)
+            if JuMP.is_fixed(node.subproblem[:inflow_noise][ℓ])
+                JuMP.unfix(node.subproblem[:inflow_noise][ℓ])
+            end
         end
     end
 
@@ -250,12 +253,13 @@ end
 function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return cross_simulate_loglinear(model, algo_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return cross_simulate_loglinear(model, algo_params, problem_params, loglin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
 end
 
@@ -263,6 +267,7 @@ end
 function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
@@ -275,6 +280,7 @@ end
 function cross_simulate_loglinear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     loglin_ar_process::LogLinearSDDP.AutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
@@ -302,6 +308,22 @@ function cross_simulate_loglinear(
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
     LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+
+    if problem_params.number_of_stages == 120
+        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
+        ############################################################################
+        objectives = map(simulations) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+
+        μ, ci = SDDP.confidence_interval(objectives)
+        # get last lower bound again
+        lower_bound = SDDP.calculate_bound(model)
+
+        # LOGGING OF SIMULATION RESULTS
+        ############################################################################
+        LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    end
 
     return simulations
 end

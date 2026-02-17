@@ -16,8 +16,6 @@ import DataFramesMeta
 import CSV
 import Random
 
-include("cross_simulation_linear.jl")
-
 struct Generator
     name::String
     cost::Float64 # in $/MWh
@@ -33,6 +31,8 @@ struct Reservoir
     max_level::Float64 # in MWmonth
     init_level::Float64 # in MWmonth
 end
+
+const GRB_ENV = Gurobi.Env()
 
 
 """ 
@@ -173,7 +173,8 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
     model = SDDP.LinearPolicyGraph(
         stages = problem_params.number_of_stages,
-        optimizer = Gurobi.Optimizer,
+        optimizer = () -> Gurobi.Optimizer(GRB_ENV),
+        direct_mode = true,
         sense = :Min,
         lower_bound = 0.0,
     )  do subproblem, t
@@ -215,7 +216,7 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
 
         # Store coupling constraint reference to access dual multipliers later
         if t != 1
-            coupling_refs = subproblem.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = subproblem.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             for i in eachindex(coupling_refs)
                 coupling_refs[i] = coupling_ref[i]
             end
@@ -227,11 +228,14 @@ function model_definition(ar_process::LogLinearSDDP.AutoregressiveProcess, probl
             JuMP.fix(inflow[3], ω[3])
             JuMP.fix(inflow[4], ω[4])
 
-            print(f, t, "; ")
-            for i in 1:4
-                print(f, round(ω[i], digits = 2), ";")
+
+            if SDDP.get_policy_graph(subproblem).ext[:phase] == :forward
+                print(f, t, "; ")
+                for i in 1:4
+                    print(f, round(ω[i], digits = 2), ";")
+                end
+                println(f)
             end
-            println(f)
         end
 
         if algo_params.silent

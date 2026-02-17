@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 struct ContinuousConicDuality <: SDDP.AbstractDualityHandler end
@@ -72,7 +72,7 @@ function get_dual_solution(node::SDDP.Node, ::ContinuousConicDuality)
 
     # Evaluate the "stochastic" part of the intercept for the current noise in the backward pass
     TimerOutputs.@timeit model.timer_output "cut_intercept_tight" begin
-        stochastic_intercept_tight = evaluate_cut_intercept_tight(node, α)
+        stochastic_intercept_tight = evaluate_stochastic_cut_intercept_tight(node, α)
     end
 
     return JuMP.objective_value(node.subproblem), λ, α, stochastic_intercept_tight
@@ -104,17 +104,30 @@ function get_existing_cuts_factors(cuts::Vector{LogLinearSDDP.Cut})
     return sum(cut_array)
 end
 
-function get_existing_cuts_factors2(cuts::Vector{LogLinearSDDP.Cut})
 
-    cut_array = Vector{Array{Float64,2}}(undef, length(cuts))
+"""
+More efficient method to extract the dual multipliers for the cuts. However, this is advanced as it requires to know the
+index of the first cut in the Gurobi model, which can be defined in problem_params by the user.
+"""
+function get_existing_cuts_factors_gurobi(cuts::Vector{LogLinearSDDP.Cut}, node::SDDP.Node, start_index::Int)
 
-    @batch minbatch=100 for cut_index in eachindex(cuts)
-        # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
-        cut_array[cut_index] = JuMP.dual(cuts[cut_index].constraint_ref) * cuts[cut_index].intercept_factors
+    dual_solution = zeros(length(cuts))
+    Gurobi.GRBgetdblattrarray(JuMP.backend(node.subproblem), "Pi", start_index, length(dual_solution), dual_solution)
+    non_zero_dual_indices = findall(>(0), dual_solution)
+    cut_array = Vector{Array{Float64,2}}()   
+    
+    if length(non_zero_dual_indices) > 0
+        for cut_index in non_zero_dual_indices
+            # Get optimal dual value of cut constraint and alpha value for given cut to update the factor
+            push!(cut_array, dual_solution[cut_index] * cuts[cut_index].intercept_factors)
+        end
+        return sum(cut_array)
+
+    else
+        return zeros(size(cuts[1].intercept_factors))
     end
-
-    return sum(cut_array)
 end
+
 
 function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Any, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64)
 
@@ -124,15 +137,57 @@ function compute_alpha_t!(α::Array{Float64,2}, ar_process_stage::LogLinearSDDP.
     end
 end
 
-function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Any, t::Int64, T::Int64, L_t::Int64)
+function compute_alpha_t_gurobi!(α::Array{Float64,2}, node::SDDP.Node, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, current_independent_noise_term::Vector{Float64}, coupling_constraints::Vector{JuMP.ConstraintRef}, L::Int64, start_index::Int64)
 
-    for τ in t+1:T 
-        L_τ = ar_parameters[τ].dimension
-        for ℓ in 1:L_τ
-            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * prod(exp(ar_process_stage.intercept[ν] * cut_exponents[τ,ℓ,ν,1]) * exp(current_independent_noise_term[ℓ] * cut_exponents[τ,ℓ,ν,1] * ar_process_stage.psi[ℓ]) for ν in 1:L_t)
-        end
+    indices = JuMP.index.(coupling_constraints)
+    dual_solution = zeros(length(indices))
+    Gurobi.GRBgetdblattrarray(JuMP.backend(node.subproblem), "Pi", start_index, length(dual_solution), dual_solution)
+
+    for ℓ in 1:L
+        α[1,ℓ] = dual_solution[ℓ] * exp(ar_process_stage.intercept[ℓ] + current_independent_noise_term[ℓ] * ar_process_stage.psi[ℓ])
     end
 end
+
+
+function compute_alpha_tau!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Any, ar_process_stage::LogLinearSDDP.AutoregressiveProcessStage, ar_parameters::Any, current_independent_noise_term::Vector{Float64}, t::Int64, T::Int64, L::Int64)
+
+    for τ in t+1:T 
+        for ℓ in 1:L
+            sum_val = 0.0
+            for ν in 1:L
+                sum_val += cut_exponents[τ,ℓ,ν,1] * (ar_process_stage.intercept[ν] + current_independent_noise_term[ν] * ar_process_stage.psi[ν])
+            end
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(sum_val)
+        end
+    end
+    return
+end
+
+function compute_alpha_tau_2!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Array{Float64,4}, intercept::Vector{Float64}, psi::Vector{Float64}, current_independent_noise_term::Vector{Float64}, t::Int64, T::Int64, L::Int64)
+
+    @turbo for ℓ in 1:L
+        for τ in t+1:T 
+            sum_val = 0.0
+            for ν in 1:L
+                sum_val += cut_exponents[τ,ℓ,ν,1] * (intercept[ν] + current_independent_noise_term[ν] * psi[ν])
+            end
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(sum_val)
+        end
+    end
+    return
+end
+
+
+function compute_alpha_tau_special!(α::Array{Float64,2}, cut_factors::Array{Float64,2}, cut_exponents::Array{Float64,4}, intercept::Vector{Float64}, psi::Vector{Float64}, current_independent_noise_term::Vector{Float64}, t::Int64, T::Int64, L::Int64)
+
+    @turbo for ℓ in 1:L
+        for τ in t+1:T 
+            α[τ-t+1,ℓ] = cut_factors[τ-t,ℓ] * exp(cut_exponents[τ,ℓ,ℓ,1] * (intercept[ℓ] + current_independent_noise_term[ℓ] * psi[ℓ]))
+        end
+    end
+    return
+end
+
 
 function get_alphas(node::SDDP.Node)
 
@@ -140,32 +195,45 @@ function get_alphas(node::SDDP.Node)
     # In order to identify the coupling constraints, we should specify them in the problem definition.
     # Moreover, we need the dual variables for all existing cut constraints.
     model = SDDP.get_policy_graph(node.subproblem)
+    problem_params = model.ext[:problem_params]
     t = node.index
-    T = model.ext[:problem_params].number_of_stages
+
     ar_process = model.ext[:ar_process]
     ar_process_stage = ar_process.parameters[t]    
-    L = get_max_dimension(ar_process)
-    L_t = ar_process_stage.dimension
+
+    T = problem_params.number_of_stages
+    L = ar_process.dimension
     α = Array{Float64,2}(undef, T-t+1, L)
 
     current_independent_noise_term = node.ext[:current_independent_noise_term]
 
     # Case τ = t 
     TimerOutputs.@timeit model.timer_output "alpha_t_new" begin
-        compute_alpha_t!(α, ar_process_stage, current_independent_noise_term, node.subproblem.ext[:coupling_constraints], L_t)
+        if !isnothing(problem_params.gurobi_coupling_index_start)
+            compute_alpha_t_gurobi!(α, node, ar_process_stage, collect(current_independent_noise_term), node.subproblem.ext[:coupling_constraints], L, problem_params.gurobi_coupling_index_start)
+        else    
+            compute_alpha_t!(α, ar_process_stage, collect(current_independent_noise_term), node.subproblem.ext[:coupling_constraints], L)          
+        end        
     end     
 
     # Get cut constraint duals and compute first factor
     if t < T
         TimerOutputs.@timeit model.timer_output "existing_cut_factor" begin
-            cut_factors = get_existing_cuts_factors2(node.bellman_function.global_theta.cuts)
+            if !isnothing(problem_params.gurobi_cut_index_start)
+                cut_factors = get_existing_cuts_factors_gurobi(node.bellman_function.global_theta.cuts, node, problem_params.gurobi_cut_index_start)
+            else    
+                cut_factors = get_existing_cuts_factors(node.bellman_function.global_theta.cuts)
+            end
         end
        
         # Case τ > t
         TimerOutputs.@timeit model.timer_output "alpha_tau_new" begin
-            compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, current_independent_noise_term, t, T, L_t)
+            if ar_process.simplified
+                compute_alpha_tau_special!(α, cut_factors, model.ext[:cut_exponents][t+1],  ar_process_stage.intercept, ar_process_stage.psi, collect(current_independent_noise_term), t, T, L)
+            else
+                compute_alpha_tau!(α, cut_factors, model.ext[:cut_exponents][t+1], ar_process_stage, ar_process.parameters, collect(current_independent_noise_term), t, T, L)
+            end 
         end
-       
     end
 
     return α

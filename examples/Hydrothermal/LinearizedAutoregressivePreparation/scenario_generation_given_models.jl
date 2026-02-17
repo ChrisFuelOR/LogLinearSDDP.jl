@@ -4,30 +4,9 @@ import Distributions
 import Random
 import Infiltrator
 include("LinearizedAutoregressivePreparation.jl")
+include("../read_and_write_files.jl")
 import .LinearizedAutoregressivePreparation
 
-
-""" Reads stored model data."""
-function read_model(file_name)
-    f = open(file_name)
-    df = CSV.read(file_name, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
-    close(f)
-    return df
-end
-
-""" Read data for covariance matrices of the residuals of the AR model """
-function read_sigma_data(
-    month::Int64,
-    model_directory::String,
-)
-
-    sigma_data = CSV.read(model_directory * "/sigma_" * string(month-1) * ".csv", DataFrames.DataFrame, header=true, delim=",")
-    DataFrames.rename!(sigma_data, ["row", "1", "2", "3", "4"])    
-    sigma = Matrix(DataFrames.select!(sigma_data, DataFrames.Not([:row])))
-
-    return sigma
-end
 
 """ Method that generates "scenarios" in the sense that it generates a given number
 of realizations and stages for the stagewise independent term (error term) in the PAR model.
@@ -87,10 +66,10 @@ function history_generation_given_models(model_directory::String)
     historic_data = [historic_data_SE, historic_data_S, historic_data_NE, historic_data_N]
 
     # Read AR model data for all four reservoir systems
-    model_SE = read_model(model_directory * "/" * "model_lin_SE.txt")
-    model_S = read_model(model_directory * "/" * "model_lin_S.txt")
-    model_NE = read_model(model_directory * "/" * "model_lin_NE.txt")
-    model_N = read_model(model_directory * "/" * "model_lin_N.txt")
+    model_SE = read_model_linear(model_directory * "/" * "model_lin_SE.txt")
+    model_S = read_model_linear(model_directory * "/" * "model_lin_S.txt")
+    model_NE = read_model_linear(model_directory * "/" * "model_lin_NE.txt")
+    model_N = read_model_linear(model_directory * "/" * "model_lin_N.txt")
     models = [model_SE, model_S, model_NE, model_N]
 
     # Prepare output file
@@ -119,14 +98,7 @@ function history_generation_given_models(model_directory::String)
         for ℓ in 1:4         
             if t == 1
                 # Get model data for current month and system
-                current_coefficients = models[ℓ][month, "Corr_coefficients"]
-
-                coefficients = zeros(2)
-                current_coefficients = strip(current_coefficients, ']')
-                current_coefficients = strip(current_coefficients, '[')
-                current_coefficients = split(current_coefficients, ",")
-                coefficients[1] = parse(Float64, current_coefficients[1])
-                coefficients[2] = parse(Float64, current_coefficients[2])
+                coefficients = parse_coefficients(models[ℓ][month, "Coefficients"])
 
                 # Get component of realization
                 realization = multivariate_realization[ℓ]

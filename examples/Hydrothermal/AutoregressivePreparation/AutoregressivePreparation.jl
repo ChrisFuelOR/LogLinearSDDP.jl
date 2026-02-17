@@ -3,10 +3,9 @@ module AutoregressivePreparation
 import CSV
 import Distributions
 import DataFrames
-import Distributions
 using GLM
 import HypothesisTests
-using Plots; gr()#; pgfplotsx() gr()
+using Plots; pgfplotsx()#; pgfplotsx() gr()
 import Statistics
 import StatsBase
 import StatsPlots
@@ -47,5 +46,6 @@ include("box_jenkins.jl")
 include("periodic_box_jenkins.jl")
 include("forecasting.jl")
 include("ar_model_generation.jl")
+include("validation_cross_models.jl")
 
 end

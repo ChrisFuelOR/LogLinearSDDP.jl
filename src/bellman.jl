@@ -2,11 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 function _add_cut(
@@ -22,16 +22,27 @@ function _add_cut(
     cut_selection::Bool = false,
 ) where {N,T}
 
+    model = SDDP.get_policy_graph(JuMP.owner_model(V.theta))
+    
     for (key, x) in xᵏ
         θᵏ -= πᵏ[key] * x
     end
     SDDP._dynamic_range_warning(θᵏ, πᵏ)
-    cut = LogLinearSDDP.Cut(πᵏ, αᵏ, uᵏ, θᵏ - uᵏ, xᵏ, nothing, nothing, obj_y, belief_y, 1, iteration)
-    _add_cut_constraint_to_model(V, cut)
-    push!(V.cuts, cut)
 
+    TimerOutputs.@timeit model.timer_output "construct_cut_object" begin
+       cut = LogLinearSDDP.Cut(πᵏ, θᵏ - uᵏ, uᵏ, αᵏ, xᵏ, nothing, nothing, 1, iteration)
+    end
+    model.ext[:total_cuts] += 1
+
+    TimerOutputs.@timeit model.timer_output "add_cut_to_model" begin
+        _add_cut_constraint_to_model(V, cut)
+    end
+    model.ext[:active_cuts] += 1
+    
     if cut_selection
         @error("Cut selection is not supported yet.")
+    else
+        push!(V.cuts, cut)
     end
     return
 end
@@ -141,7 +152,7 @@ function _add_average_cut(
     model = SDDP.get_policy_graph(node.subproblem)
     t = node.index+1
     T = model.ext[:problem_params].number_of_stages
-    L = model.ext[:ar_process].parameters[t].dimension
+    L = model.ext[:ar_process].dimension
     αᵏ = zeros(T-t+1, L)    
     
     # Calculate the expected intercept and dual variables with respect to the
@@ -157,13 +168,10 @@ function _add_average_cut(
         for (key, dual) in dual_variables[i]
             πᵏ[key] += p * dual
         end
+    end
 
-        for τ in t:T
-            L_τ = model.ext[:ar_process].parameters[τ].dimension
-            for ℓ in 1:L_τ
-                αᵏ[τ-t+1,ℓ] += p * intercept_factors[i][τ-t+1,ℓ]
-            end
-        end
+    TimerOutputs.@timeit model.timer_output "aggregate_cut_info" begin
+        aggregate_alpha!(αᵏ, intercept_factors, t, T, L, risk_adjusted_probability)
     end
 
     ####################################################################################
@@ -183,7 +191,8 @@ function _add_average_cut(
         uᵏ,
         model.ext[:iteration],
         obj_y,
-        belief_y,
+        belief_y;
+        model.ext[:algo_params].cut_selection,
     )
     return (
         theta = θᵏ,
@@ -193,4 +202,17 @@ function _add_average_cut(
         belief_y = belief_y,
         αᵏ = αᵏ,
     )
+end
+
+function aggregate_alpha!(
+    αᵏ::Array{Float64,2},
+    intercept_factors::Vector{Array{Float64,2}},
+    t::Int,
+    T::Int,
+    L::Int,
+    risk_adjusted_probability::Vector{Float64},
+    )
+    Tullio.@tullio αᵏ[τ-t+1,ℓ] = sum(risk_adjusted_probability[i] * intercept_factors[i][τ-t+1,ℓ] for i in eachindex(risk_adjusted_probability)) (τ in t:T, ℓ in 1:L)
+
+    return
 end

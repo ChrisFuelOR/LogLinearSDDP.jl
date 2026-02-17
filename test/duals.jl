@@ -106,7 +106,7 @@ function create_model_1D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref
             
             realizations = ar_process.parameters[t].eta
@@ -121,7 +121,7 @@ function create_model_1D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             coupling_ref = JuMP.@constraint(sp, y - x.out == ξ - x.in)
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref
             
             realizations = ar_process.parameters[t].eta
@@ -161,7 +161,7 @@ function create_model_2D(ar_process::LogLinearSDDP.AutoregressiveProcess)
             realizations = ar_process.parameters[t].eta
 
             # Store coupling constraint reference to access dual multipliers LATER
-            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.parameters[t].dimension)
+            coupling_refs = sp.ext[:coupling_constraints] = Vector{JuMP.ConstraintRef}(undef, ar_process.dimension)
             coupling_refs[1] = coupling_ref_1
         end
         
@@ -221,14 +221,7 @@ function test_get_dual_solution_1D()
     @test length(LogLinearSDDP.get_alphas(node)) == 1
     @test LogLinearSDDP.get_alphas(node)[1] == exp(1)
 
-    # NODE 2
-    ##################################################################################################
-
-
-    #@test get_existing_cuts_factor(node, ..., ..., ...) ==
-
-    #get_existing_cuts_factor(node, t+1, τ, ℓ)
-
+    # TODO: IMPROVE THIS!
 end
 
 

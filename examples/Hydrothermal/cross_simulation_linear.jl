@@ -2,17 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 
 # Note that this code reuses functions from SDDP.jl by Oscar Dowson,
 # which are licensed under the Mozilla Public License, Version 2.0 as well. 
-# Copyright (c) 2017-2023: Oscar Dowson and SDDP.jl contributors.
+# Copyright (c) 2017-2025: Oscar Dowson and SDDP.jl contributors.
 ################################################################################
 
 import LogLinearSDDP
 import SDDP
 
-include("set_up_ar_process.jl")
 include("simulation.jl")
 
 function cross_sample_scenario(
@@ -58,8 +57,10 @@ function cross_sample_scenario(
             for ℓ in eachindex(noise_term)
                 independent_term = independent_noise_terms[ℓ]
                 noise_term[ℓ] = process_state[t-1][ℓ] * ar_process_stage.coefficients[ℓ,1] * exp(independent_term) + ar_process_stage.coefficients[ℓ,2] * exp(independent_term)
-                if noise_term[ℓ] < 0
-                    noise_term[ℓ] = - noise_term[ℓ]
+                if noise_term[ℓ] < 0 
+                    # TODO
+                    # noise_term[ℓ] = - noise_term[ℓ]
+                    noise_term[ℓ] = 0
                 end
             end
         end
@@ -282,12 +283,13 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.Simulation
     )
 
-    return cross_simulate_linear(model, algo_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
+    return cross_simulate_linear(model, algo_params, problem_params, lin_ar_process, description, simulation_regime.number_of_replications, simulation_regime.sampling_scheme)
 
 end
 
@@ -295,6 +297,7 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     simulation_regime::LogLinearSDDP.NoSimulation,
@@ -307,6 +310,7 @@ end
 function cross_simulate_linear(
     model::SDDP.PolicyGraph,
     algo_params::LogLinearSDDP.AlgoParams,
+    problem_params::LogLinearSDDP.ProblemParams,
     lin_ar_process::LinearAutoregressiveProcess,
     description::String,
     number_of_replications::Int64,
@@ -334,6 +338,22 @@ function cross_simulate_linear(
     # LOGGING OF SIMULATION RESULTS
     ############################################################################
     LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+
+    if problem_params.number_of_stages == 120
+        # OBTAINING BOUNDS AND CONFIDENCE INTERVAL (ONLY 60 STAGES)
+        ############################################################################
+        objectives = map(simulations) do simulation
+            return sum(simulation[stage][:stage_objective] for stage in 1:60)
+        end
+
+        μ, ci = SDDP.confidence_interval(objectives)
+        # get last lower bound again
+        lower_bound = LogLinearSDDP.calculate_bound(model)
+
+        # LOGGING OF SIMULATION RESULTS
+        ############################################################################
+        LogLinearSDDP.log_simulation_results(algo_params, μ, ci, lower_bound, description)
+    end
 
     return simulations
 end

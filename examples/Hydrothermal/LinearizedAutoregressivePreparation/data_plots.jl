@@ -78,20 +78,21 @@ function plot_scenario_statistics(
     df::DataFrames.DataFrame
     )
 
-    bx_plot_mean = StatsPlots.@df all_means StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,80000))
+    bx_plot_mean = StatsPlots.@df all_means StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,20000))
     for col_name in names(df)
         Plots.scatter!([parse(Int, col_name)], [Statistics.mean(df[:,col_name])], color = "black", label = "", markersize = 5, markershape = :x)
     end
     Plots.display(bx_plot_mean)
     Plots.savefig(bx_plot_mean, "Box_plot_mean_" * string(system_number) * ".pdf")
 
-    bx_plot_std = StatsPlots.@df all_stds StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,30000))
+    bx_plot_std = StatsPlots.@df all_stds StatsPlots.boxplot(cols(), legend=false, xticks=1:12, yaxis=(formatter=y->Printf.@sprintf "%.1E" y), tickfont = (11, :black), ylimits=(0,10000))
     for col_name in names(df)
         Plots.scatter!([parse(Int, col_name)], [Statistics.std(df[:,col_name])], color = "black", label = "", markersize = 5, markershape = :x)
     end
     Plots.display(bx_plot_std)
     Plots.savefig(bx_plot_std, "Box_plot_std_" * string(system_number) * ".pdf")
 
+    Infiltrator.@infiltrate
     return
 end
 

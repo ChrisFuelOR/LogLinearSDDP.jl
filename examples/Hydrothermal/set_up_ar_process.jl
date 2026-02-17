@@ -1,17 +1,18 @@
+import LogLinearSDDP
+
+include("read_and_write_files.jl")
+
 struct LinearAutoregressiveProcessStage
-    dimension::Int64
     coefficients::Array{Float64,2}
     eta::Vector{Any}
     probabilities::Vector{Float64}
 
     function LinearAutoregressiveProcessStage(
-        dimension,
         coefficients,
         eta;
         probabilities = fill(1 / length(eta), length(eta)),
     )
         return new(
-            dimension,
             coefficients,
             eta,
             probabilities,
@@ -20,62 +21,11 @@ struct LinearAutoregressiveProcessStage
 end
 
 struct LinearAutoregressiveProcess
+    dimension::Int64
     lag_order::Int64
     parameters::Dict{Int64,LinearAutoregressiveProcessStage}
     history::Vector{Float64}
 end
-
-""" Reads stored model data."""
-function read_model(file_name)
-    f = open(file_name)
-    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Intercept", "Coefficients", "Psi", "Sigma"])    
-    close(f)
-    return df
-end
-
-""" Reads stored model data."""
-function read_model_linear(file_name)
-    f = open(file_name)
-    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Month", "Lag_order", "Coefficient", "Corr_coefficients", "Sigma"])    
-    close(f)
-    return df
-end
-
-""" Read stored realization data."""
-function read_realization_data(overall_directory::String, model_directory::String, file_name::String)
-    f = open(overall_directory * "/" * model_directory * "/" * file_name)
-    
-    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Stage", "Realization_number", "Probability", "Realization_SE", "Realization_S", "Realization_NE", "Realization_N"])    
-    close(f)
-    return df
-end
-
-""" Get the realization data for a specific stage and system."""
-
-function get_realization_data(eta_df::DataFrames.DataFrame, t::Int64, number_of_realizations::Int64)
-    realizations = Tuple{Float64, Float64, Float64, Float64}[]
-
-    for i in 1:number_of_realizations
-        row = DataFramesMeta.@rsubset(eta_df, :Stage == t, :Realization_number == i)
-        @assert DataFrames.nrow(row) == 1
-        push!(realizations, (row[1, "Realization_SE"], row[1, "Realization_S"], row[1, "Realization_NE"], row[1, "Realization_N"]))
-    end
-
-    return realizations
-end
-
-""" Read stored history data for the process."""
-function read_history_data(file_name::String)
-    f = open(file_name)
-    df = CSV.read(f, DataFrames.DataFrame, header=false, delim=";")
-    DataFrames.rename!(df, ["Stage", "History_SE", "History_S", "History_NE", "History_N"])    
-    close(f)
-    return df
-end
-
 
 function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizations::Int64, model_directory::String, history_dir_name::String)
 
@@ -85,10 +35,10 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
     overall_directory = "AutoregressivePreparation"
 
     # Read AR model data for all four reservoir systems
-    data_SE = read_model(overall_directory * "/" * model_directory * "/model_SE.txt")
-    data_S = read_model(overall_directory * "/" * model_directory * "/model_S.txt")
-    data_NE = read_model(overall_directory * "/" * model_directory * "/model_NE.txt")
-    data_N = read_model(overall_directory * "/" * model_directory * "/model_N.txt")
+    data_SE = read_model_log_linear(overall_directory * "/" * model_directory * "/model_SE.txt")
+    data_S = read_model_log_linear(overall_directory * "/" * model_directory * "/model_S.txt")
+    data_NE = read_model_log_linear(overall_directory * "/" * model_directory * "/model_NE.txt")
+    data_N = read_model_log_linear(overall_directory * "/" * model_directory * "/model_N.txt")
     data = [data_SE, data_S, data_NE, data_N]
     dim = 4 # number of hydro reservoirs
 
@@ -137,13 +87,9 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
             push!(intercept, df[month, "Intercept"])
 
             # Get coefficients
-            current_coefficients = df[month, "Coefficients"]
-            current_coefficients = strip(current_coefficients, ']')
-            current_coefficients = strip(current_coefficients, '[')
-            current_coefficients = split(current_coefficients, ",")
+            current_coefficients = parse_coefficients(df[month, "Coefficients"])
             for k in eachindex(current_coefficients)
-                coefficient = current_coefficients[k]
-                coefficients[ℓ, ℓ, k] = parse(Float64, coefficient)
+                coefficients[ℓ, ℓ, k] = current_coefficients[k]
             end
 
             # Get psi
@@ -152,13 +98,13 @@ function set_up_ar_process_loglinear(number_of_stages::Int64, number_of_realizat
             # Get eta data        
             eta = get_realization_data(eta_df, t, number_of_realizations)
 
-            ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(dim, intercept, coefficients, eta, psi = psi)
+            ar_parameters[t] = LogLinearSDDP.AutoregressiveProcessStage(intercept, coefficients, eta, psi = psi)
 
         end
     end
     
     # All stages
-    ar_process = LogLinearSDDP.AutoregressiveProcess(lag_order, ar_parameters, ar_history)
+    ar_process = LogLinearSDDP.AutoregressiveProcess(dim, lag_order, ar_parameters, ar_history, true)
 
     return ar_process
 end
@@ -204,23 +150,19 @@ function set_up_ar_process_linear(number_of_stages::Int64, number_of_realization
             df = data[ℓ]  
 
             # Get coefficients
-            current_coefficients = df[month, "Corr_coefficients"]
-            current_coefficients = strip(current_coefficients, ']')
-            current_coefficients = strip(current_coefficients, '[')
-            current_coefficients = split(current_coefficients, ",")
-
-            coefficients[ℓ, 1] = parse(Float64, current_coefficients[1])
-            coefficients[ℓ, 2] = parse(Float64, current_coefficients[2])
+            current_coefficients = parse_coefficients(df[month, "Corr_coefficients"])
+            for k in eachindex(current_coefficients)
+                coefficients[ℓ, k] = current_coefficients[k]
+            end
         end
 
         # Get eta data        
         eta = get_realization_data(eta_df, t, number_of_realizations)
-
-        ar_parameters[t] = LinearAutoregressiveProcessStage(dim, coefficients, eta)
+        ar_parameters[t] = LinearAutoregressiveProcessStage(coefficients, eta)
     end
    
      # All stages
-     ar_process = LinearAutoregressiveProcess(lag_order, ar_parameters, ar_history)
+     ar_process = LinearAutoregressiveProcess(dim, lag_order, ar_parameters, ar_history)
 
      return ar_process
 end

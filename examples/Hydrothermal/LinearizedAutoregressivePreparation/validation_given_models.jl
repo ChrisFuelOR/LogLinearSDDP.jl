@@ -2,20 +2,7 @@ import Distributions
 import DataFrames
 import Random
 
-
-""" Read data for coefficients of the AR model """
-function read_gamma_data(
-    system_number::Int64,
-    model_directory::String,
-)
-
-    gamma_data = CSV.read(model_directory * "/gamma.csv", DataFrames.DataFrame, header=true, delim=",")
-    DataFrames.rename!(gamma_data, ["row", "1", "2", "3", "4"])    
-    gamma = gamma_data[:, string(system_number)]
-
-    return gamma
-end
-
+include("../read_and_write_files.jl")
 
 """ Get the data for the given model. """
 function get_given_model(
@@ -44,20 +31,6 @@ function get_given_model(
 
     return all_monthly_models
 end
-
-""" Read data for covariance matrices of the residuals of the AR model """
-function read_sigma_data(
-    month::Int64,
-    model_directory::String,
-)
-
-    sigma_data = CSV.read(model_directory * "/sigma_" * string(month-1) * ".csv", DataFrames.DataFrame, header=true, delim=",")
-    DataFrames.rename!(sigma_data, ["row", "1", "2", "3", "4"])    
-    sigma = Matrix(select!(sigma_data, Not([:row])))
-
-    return sigma
-end
-
 
 """ Get the covariance matrix of the residuals for the given model. """
 function get_given_sigma(
@@ -291,10 +264,10 @@ function validate_ar_model()
     directory_name = "historical_data"
     file_names = ["hist1.csv", "hist2.csv", "hist3.csv", "hist4.csv"]
     system_names = ["SE", "S", "NE", "N"]
-    output_directory = "msppy_model/"
+    output_directory = "shapiro_model/"
 
     # ITERATE OVER POWER SYSTEMS AND PREPARE AUTOREGRESSIVE MODEL
-    for system_number in 1:4
+    for system_number in 4:4
 
         # We reset the seed for each system to make sure that the same multivariate Normal distribution is used for each
         Random.seed!(12345)
@@ -335,7 +308,7 @@ function validate_ar_model()
        
         # MODEL VALIDATION: SIMULATION
         #######################################################################################
-        generate_full_scenarios_given_model(system_number, df, all_monthly_models, [df[1,1]], sigma_matrices, 200, with_plots)
+        generate_full_scenarios_given_model(system_number, df, all_monthly_models, [df[1,1]], sigma_matrices, 1000, true)
 
         # COEFFICIENT REFORMULATION AND MODEL OUTPUT
         #######################################################################################

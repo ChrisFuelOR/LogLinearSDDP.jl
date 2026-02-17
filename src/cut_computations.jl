@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Copyright (c) 2023 Christian Fuellner <christian.fuellner@kit.edu>
+# Copyright (c) 2025 Christian Fuellner <christian.fuellner@kit.edu>
 ################################################################################
 
 """ 
@@ -17,7 +17,7 @@ function compute_cut_exponents(
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
     p = ar_process.lag_order
 
     cut_exponents = Vector{Array{Float64,4}}(undef, T)
@@ -26,19 +26,13 @@ function compute_cut_exponents(
     for t in T:-1:2
         cut_exponents_stage = zeros(T, L, L, p)
         ar_process_stage = ar_process.parameters[t]
-        L_t = ar_process_stage.dimension
 
         for τ in t:T
 
             if τ == t
-                for ℓ in 1:L_t
+                for ℓ in 1:L
                     for k in t-p:t-1
-                        if k <= 1
-                            L_k = get_max_dimension(ar_process)
-                        else
-                            L_k = ar_process.parameters[k].dimension
-                        end 
-                        for m in 1:L_k
+                        for m in 1:L
                             cut_exponents_stage[τ,ℓ,m,t-k] = ar_process_stage.coefficients[ℓ,m,t-k]
                             #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                         end
@@ -46,25 +40,19 @@ function compute_cut_exponents(
                 end
                 
             else
-                L_τ = ar_process.parameters[τ].dimension 
-                for ℓ in 1:L_τ
+                for ℓ in 1:L
                     for k in t-p:t-1
-                        if k <= 1
-                            L_k = get_max_dimension(ar_process)
-                        else
-                            L_k = ar_process.parameters[k].dimension
-                        end
-                        for m in 1:L_k
+                        for m in 1:L
                             if k == t-p
                                 value = 0.0
-                                for ν in 1:L_t
+                                for ν in 1:L
                                     value = value + ar_process_stage.coefficients[ν,m,p] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,p] = value
                                 #println("Θ(", t, ",", τ, ",", ℓ, ",", m, ",", k, ") = cut_exponents(", t, ",", τ, ",", ℓ, ",", m, ",", t-k, "): ", cut_exponents_stage[τ,ℓ,m,t-k])
                             else
                                 value = cut_exponents[t+1][τ,ℓ,m,t+1-k]  
-                                for ν in 1:L_t
+                                for ν in 1:L
                                     value = value + ar_process_stage.coefficients[ν,m,t-k] * cut_exponents[t+1][τ,ℓ,ν,(t+1)-t] 
                                 end
                                 cut_exponents_stage[τ,ℓ,m,t-k] = value
@@ -103,7 +91,7 @@ function evaluate_cut_intercepts(
     problem_params = model.ext[:problem_params]
     cut_exponents = model.ext[:cut_exponents]
     process_state = node.ext[:process_state]
-    autoregressive_data = model.ext[:ar_process]
+    ar_process = model.ext[:ar_process]
     t = node.index
 
     if !isempty(node.bellman_function.global_theta.cuts)
@@ -111,45 +99,114 @@ function evaluate_cut_intercepts(
         cut_exponents_stage = cut_exponents[t+1] #current stage + 1 (on stage t, a (t+1)-stage cut is evaluated)
 
         # Get process state for the considered cut
-        process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
+        TimerOutputs.@timeit model.timer_output "update_process_state" begin
+            process_state_after_realization = update_process_state(model, model.ext[:ar_process].lag_order, t+1, process_state, noise_term, false)
+        end
+
+        TimerOutputs.@timeit model.timer_output "process_state_to_array" begin
+            ps_array = Array{Float64,2}(undef, ar_process.dimension, ar_process.lag_order)
+            LogLinearSDDP.process_state_to_array!(ps_array, process_state_after_realization, t+1)
+        end
 
         # First compute scenario-specific factors
         TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-            scenario_factors = compute_scenario_factors(t+1, process_state_after_realization, problem_params, cut_exponents_stage, autoregressive_data)
+            compute_scenario_factors!(node.ext[:scenario_factors], ps_array, cut_exponents_stage, t+1, problem_params.number_of_stages, ar_process.lag_order, ar_process.dimension)
         end
 
         # Iterate over all cuts and adapt intercept
         TimerOutputs.@timeit model.timer_output "adapt_intercepts" begin  
-            set_intercepts(node.bellman_function.global_theta.cuts, t+1, scenario_factors, problem_params, autoregressive_data, model.timer_output)
+            if !isnothing(problem_params.gurobi_fix_start)
+                adapt_intercepts_gurobi(node, node.bellman_function.global_theta.cuts, t+1, node.ext[:scenario_factors], problem_params, ar_process, problem_params.gurobi_fix_start)
+            else
+                adapt_intercepts(node, node.bellman_function.global_theta.cuts, t+1, node.ext[:scenario_factors], problem_params, ar_process)
+            end
         end
+
     end
 
     return
 
 end
 
-function set_intercepts(
+function adapt_intercepts(
+    node::SDDP.Node,
     cuts::Vector{LogLinearSDDP.Cut},
     t::Int64,
     scenario_factors::Array{Float64,2},
     problem_params::LogLinearSDDP.ProblemParams,
     ar_process::LogLinearSDDP.AutoregressiveProcess,
-    timer_output::Any,
     )
 
+    model = SDDP.get_policy_graph(node.subproblem)
+
     for cut in cuts
-        TimerOutputs.@timeit timer_output "intercept_value" begin    
-            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params, ar_process)
+        TimerOutputs.@timeit model.timer_output "intercept_value" begin    
+            intercept_value = compute_intercept_value(t, cut, scenario_factors, problem_params.number_of_stages, ar_process.dimension)
         end
-        JuMP.fix(cut.cut_intercept_variable, intercept_value)
+
+        TimerOutputs.@timeit model.timer_output "fix_intercept" begin   
+            JuMP.fix(cut.cut_intercept_variable, intercept_value)
+        end
     end
 end
+
+function adapt_intercepts_gurobi(
+    node::SDDP.Node,
+    cuts::Vector{LogLinearSDDP.Cut},
+    t::Int64,
+    scenario_factors::Array{Float64,2},
+    problem_params::LogLinearSDDP.ProblemParams,
+    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    start_index::Int64,
+    )
+ 
+    model = SDDP.get_policy_graph(node.subproblem)
+
+    for cut_index in eachindex(cuts)
+        TimerOutputs.@timeit model.timer_output "intercept_value" begin    
+            intercept_value = compute_intercept_value(t, cuts[cut_index], scenario_factors, problem_params.number_of_stages, ar_process.dimension)
+        end
+
+        TimerOutputs.@timeit model.timer_output "fix_intercept" begin   
+            #x = Gurobi.c_column(JuMP.backend(node.subproblem), JuMP.index(cuts[cut_index].cut_intercept_variable))
+            x = Gurobi.c_column(JuMP.backend(node.subproblem), MOI.VariableIndex(start_index + cut_index))
+            Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "LB", x, intercept_value) 
+            Gurobi.GRBsetdblattrelement(JuMP.backend(node.subproblem), "UB", x, intercept_value) 
+        end
+
+    end
+end
+
 
 """ 
 Pre-computation of the scenario-dependent cut intercept factors (scenario factors) for a given problem and a scenario at hand.
 Note that this value is the same for all cuts of a given problem for a given scenario, so it should be just computed
 once instead of being included in the _evaluate_cut_intercept function call for each scenario.
 """
+
+function compute_scenario_factors!(
+    scenario_factors::Array{Float64,2},
+    ps_array::Array{Float64,2},
+    cut_exponents_stage::Array{Float64,4},
+    t::Int64,
+    T::Int64,
+    p::Int64,
+    L::Int64,
+)
+
+    fill!(scenario_factors, 1.0)
+
+    @turbo for k in t-p:t-1
+        for m in 1:4
+            for ℓ in 1:L
+                for τ in t:T
+                   scenario_factors[τ-t+1,ℓ] *= ps_array[m,t-k] ^ cut_exponents_stage[τ,ℓ,m,t-k] 
+                end
+            end
+        end
+    end
+    return
+end
 
 function compute_scenario_factors(
     t::Int64,
@@ -160,18 +217,12 @@ function compute_scenario_factors(
 )
 
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    L = ar_process.dimension
     p = ar_process.lag_order
     scenario_factors = ones(T-(t-1), L)
 
     for k in t-p:t-1
-        if k <= 1
-            L_k = get_max_dimension(ar_process)
-        else
-            L_k = ar_process.parameters[k].dimension
-        end
-
-        for m in 1:L_k
+        for m in 1:L
             scenario_factors = scenario_factors .* process_state[k][m] .^ cut_exponents_stage[t:T,1:L,m,t-k] 
         end
     end
@@ -189,50 +240,46 @@ function compute_intercept_value(
     t::Int64,
     cut::LogLinearSDDP.Cut,
     scenario_factors::Array{Float64,2},
-    problem_params::LogLinearSDDP.ProblemParams,
-    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    T::Int64,
+    L::Int64,
 )
-
-    T = problem_params.number_of_stages
 
     #Evaluate the intercept
     intercept_value = cut.deterministic_intercept
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            intercept_value = intercept_value + cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+    @turbo for ℓ in 1:L
+        for τ in t:T
+            intercept_value += cut.intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 
     return intercept_value
-
 end
 
-function compute_intercept_value_tight(
+
+function compute_stochastic_intercept_value_tight(
     t::Int64,
-    T::Int64,
-    scenario_factors::Array{Float64,2},
     intercept_factors::Array{Float64,2},
-    ar_process::LogLinearSDDP.AutoregressiveProcess,
+    scenario_factors::Array{Float64,2},
+    T::Int64,
+    L::Int64,
 )
 
+    #Evaluate the intercept (without its stochastic part)
     intercept_value = 0.0
-    for τ in t:T
-        L_τ = ar_process.parameters[τ].dimension
-        for ℓ in 1:L_τ
-            intercept_value = intercept_value + intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
+    @turbo for ℓ in 1:L
+        for τ in t:T
+            intercept_value += intercept_factors[τ-t+1,ℓ] * scenario_factors[τ-t+1,ℓ]
         end
     end
 
     return intercept_value
-
 end
 
 """ 
 Evaluation the cut intercept for the about to be created cut at the state of construction (point of tightness)
 """
 
-function evaluate_cut_intercept_tight(
+function evaluate_stochastic_cut_intercept_tight(
     node::SDDP.Node,
     intercept_factors::Array{Float64,2},
 )
@@ -245,8 +292,10 @@ function evaluate_cut_intercept_tight(
     process_state = node.ext[:process_state]
     ar_process = model.ext[:ar_process]
     t = node.index
+
     T = problem_params.number_of_stages
-    L = LogLinearSDDP.get_max_dimension(ar_process)
+    p = ar_process.lag_order
+    L = ar_process.dimension
 
     # Get exponents for the considered cut
     cut_exponents_stage = cut_exponents[t]
@@ -254,13 +303,18 @@ function evaluate_cut_intercept_tight(
     # Get process state for the considered cut
     process_state = node.ext[:process_state]
 
+    TimerOutputs.@timeit model.timer_output "process_state_to_array" begin
+        ps_array = Array{Float64,2}(undef, ar_process.dimension, ar_process.lag_order)
+        LogLinearSDDP.process_state_to_array!(ps_array, process_state, t)
+    end
+
     # First compute scenario-specific factors
     TimerOutputs.@timeit model.timer_output "scenario_factors" begin
-        scenario_factors = compute_scenario_factors(t, process_state, problem_params, cut_exponents_stage, ar_process)
+        compute_scenario_factors!(node.ext[:scenario_factors], ps_array, cut_exponents_stage, t, T, p, L)
     end
 
     #Evaluate the stochastic part of the intercept
-    intercept_value = compute_intercept_value_tight(t, T, scenario_factors, intercept_factors, ar_process)
+    intercept_value = compute_stochastic_intercept_value_tight(t, intercept_factors, node.ext[:scenario_factors], T, L)
 
     return intercept_value
 end
