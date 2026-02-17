@@ -12,7 +12,7 @@ import Statistics
 import StatsBase
 
 function read_model_std(file_name)
-    if startswith(file_name, "Linearized")
+    if startswith(file_name, "PreparationAutoregressiveLinearized")
         df = read_model_linear(file_name)
     else
         df = read_model_log_linear(file_name)
