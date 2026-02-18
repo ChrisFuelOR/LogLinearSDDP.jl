@@ -29,15 +29,15 @@ end
 
 # The fields of `AutoregressiveProcess` are defined as follows:
 
-# *	`dimension`:      
+# * `dimension`:      
 # Int64 which defines the dimension of the random process; denoted by $L$ in the paper
-# *	`lag_order`:      
+# * `lag_order`:      
 # Int64 which defines the lag order of the random process (same for each component and stage); denoted by $p$ in the paper
-# *	`parameters`:     
+# * `parameters`:     
 # Dict containing the stage-specific data of the process. The key is the stage and the value is the actual data struct of type `AutoregressiveProcessStage`; one-dimensional with component $t$
-# *	`history`:        
+# * `history`:        
 # Dict containing the historic values of the process (including stage 1). The key is the stage and the value is a vector of index $ℓ$ (alternatively, a tuple could be used).
-# *	`simplified`:     
+# * `simplified`:     
 # If true, there are no dependencies between different process components (i.e. spatial dependencies). This allows to simplify some computations in our code. Referring to the paper, the process formula becomes
 
 # ```math
@@ -53,7 +53,6 @@ end
 #     allow for indices to be dependent on each other. This is a very natural assumption in practice. For instance, in our hydrothermal scheduling example, we have the same number of reservoirs for each stage.
 #     3. We assume the first-stage data to be deterministic. Therefore, it should be included in `history` instead of `parameters`.
 
-
 # ## AutoregressiveProcessStage
 
 struct AutoregressiveProcessStage
@@ -68,17 +67,17 @@ end
 
 # The fields of `AutoregressiveProcess` are defined as follows:
 
-# *	`intercept`:      
+# * `intercept`:      
 # Vector containing the intercepts of the process; one-dimensional with component $\ell$; denoted by $\gamma$ in the paper
-# *	`coefficients`:   
+# * `coefficients`:   
 # Array containing the coefficients of the process; three-dimensional with components $\ell$, $m$ and lag $k$; denoted by $\phi$ in the paper
-# *	`psi`:            
+# * `psi`:            
 # Vector containing the pre-factor for eta in the process formula; one-dimensional with component $\ell$; denoted by $\psi$ in the paper               
-# *	`eta`:            
+# * `eta`:            
 # Vector containing the stagewise independent realizations of the error term; denoted by $\eta$ in the paper
 #     * Note that this information is merely stored in the struct for logging purposes and for setting up the optimization problem, but is not used in the actual algorithm.
 #     * Each element of the vector should be a vector, tuple or named tuple of size $\ell$ in order to store values for different process components. This requirement is standard for SDDP.jl as well.
-# *	`probabilities`:  
+# * `probabilities`:  
 # Probabilities related to $\eta$ (optional); note that this information is merely stored in the struct for logging purposes
 
 # We provide an example on how to set up a specific log-linear AR process for the hydrothermal scheduling problem from our paper on a different [page](example/setting_up_process.md).

@@ -4,4 +4,3 @@
 
 # The special version of SDDP, which we refer to as **loglinearSDDP**, is tailored to solve multistage stochastic linear problems with **log-linear autoregressive uncertainty** in the right-hand side.
 # By this we mean that the uncertain data in the right-hand side is stagewise dependent and described by an autoregressive process that is linear in the natural logarithm of its lagged variables.
-

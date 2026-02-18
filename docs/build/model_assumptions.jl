@@ -10,7 +10,7 @@
 # \begin{aligned}
 # \min_{x_t}& &&c_t^\top x_t + \mathcal{Q}_{t+1}(x_t, \xi_{[t]}) \\
 # \text{s.t.}& &&T_{t-1} x_{t-1} + W_t x_t = \xi_t \\
-# &&&x_t \geq 0,	
+# &&&x_t \geq 0,    
 # \end{aligned}
 # \end{cases}
 # \end{aligned}
@@ -19,15 +19,15 @@
 
 # Currently, the theory and the code are restricted to problems satisfying the following properties:
 
-# *	finitely many stages $T$
-# *	linear constraints and objective
-# *	continuous decision variables
-# *	log-linear autoregressive uncertainty in the RHS
-# *	finite support of the uncertainty
-# *	deterministic first stage
-# *	uncertainty is exogeneous (not decision-dependent)
-# *	expected value is considered in the objective (no other risk measures)
-# *	no usage of believe or objective states compared to SDDP.jl
+# * finitely many stages $T$
+# * linear constraints and objective
+# * continuous decision variables
+# * log-linear autoregressive uncertainty in the RHS
+# * finite support of the uncertainty
+# * deterministic first stage
+# * uncertainty is exogeneous (not decision-dependent)
+# * expected value is considered in the objective (no other risk measures)
+# * no usage of believe or objective states compared to SDDP.jl
 
 # Additionally, so far our code is restricted to using a single-cut approach (see parameter `SINGLE_CUT` in the code), where the expected value functions $\mathcal{Q}_t$ are approximated by one set of cuts per stage. A multi-cut approach (`MULTI_CUT`), where for each stage value functions $Q_t$ for different scenarios are approximated by separate sets of cuts, is not supported yet.
 
