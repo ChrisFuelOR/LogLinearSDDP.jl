@@ -9,27 +9,27 @@
 # We explain the main logging file `LogLinearSDDP.log` in more detail.
 # It consists of the following elements:
 
-# * A section borrowed from SDDP.jl logging some general information about the multistage problem
-# * A section printing the main model run parameters
-#     *	the file path, the optional run description, the date and time of the run
-#     *	the main parameters defined in the `ProblemParams` struct (problem size, number of realizations per stage)
-#     *	the main parameters defined in the `AlgoParams` struct (sampling seed, stopping rules)
-#     *	the main properties of the uncertainty model (the used model approach, the lag order, the dimension)
-# *	A section logging information from the SDDP iterations. Each row contains
-#     *	the iteration number
-#     * the deterministic lower bound
-#     *	the simulated upper bound and the gap (both are not relevant for our experiments)
-#     *	the total time and the time for the specific iteration
-#     *	the total number of cuts created and the active number of cuts (which differs if a cut selection scheme is used)
-# *	A section borrowed from SDDP.jl summarizing the SDDP results
-#     *	total time
-#     *	stopping status
-#     *	best deterministic lower bound
-#     *	simulated upper bound and confidence interval
-# *	A table summarizing timing and memory allocation information for different steps of the algorithm
-# *	A section containing the results of in-sample and out-of-sample simulations after SDDP has terminated. In each case the information contains
-#     *	the used uncertainty model
-#     *	the deterministic lower bound
-#     *	the simulated upper bound and a confidence interval
+#  * A section borrowed from SDDP.jl logging some general information about the multistage problem
+#  * A section printing the main model run parameters
+#      * the file path, the optional run description, the date and time of the run
+#      * the main parameters defined in the `ProblemParams` struct (problem size, number of realizations per stage)
+#      * the main parameters defined in the `AlgoParams` struct (sampling seed, stopping rules)
+#      * the main properties of the uncertainty model (the used model approach, the lag order, the dimension)
+#  * A section logging information from the SDDP iterations. Each row contains
+#      * the iteration number
+#      * the deterministic lower bound
+#      * the simulated upper bound and the gap (both are not relevant for our experiments)
+#      * the total time and the time for the specific iteration
+#      * the total number of cuts created and the active number of cuts (which differs if a cut selection scheme is used)
+#  * A section borrowed from SDDP.jl summarizing the SDDP results
+#      * total time
+#      * stopping status
+#      * best deterministic lower bound
+#      * simulated upper bound and confidence interval
+#  * A table summarizing timing and memory allocation information for different steps of the algorithm
+#  * A section containing the results of in-sample and out-of-sample simulations after SDDP has terminated. In each case the information contains
+#      * the used uncertainty model
+#      * the deterministic lower bound
+#      * the simulated upper bound and a confidence interval
 
 # Note that each simulation run accounts for two logs of simulation results, one including costs for all 120 stages and one including only costs for the first 60 stages (to remove the end-of-horizon effect). The latter are reported in the paper.

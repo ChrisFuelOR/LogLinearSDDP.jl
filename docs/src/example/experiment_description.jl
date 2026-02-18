@@ -11,9 +11,9 @@
 
 # In our paper we compare three different variants of SDDP and the policies that we obtain using these variants. 
 
-# *	**loglinearSDDP**: Our version of SDDP from this repository. It is suited for uncertainty modeled by log-linear AR processes.
-# *	**SDDP with linearized AR processes**: Uses standard SDDP from SDDP.jl. Requires to linearize the log-linear AR process beforehand.
-# *	**Markov-chain SDDP**: Uses the Markov-chain SDDP (MC-SDDP) variant included in SDDP.jl. It requires a Markov-chain approximation (scenario lattice) of the uncertain inflows. This lattice is provided in the [MSPLib](https://github.com/bonnkleiford/MSPLib-Library) as well.
+#  * **loglinearSDDP**: Our version of SDDP from this repository. It is suited for uncertainty modeled by log-linear AR processes.
+#  * **SDDP with linearized AR processes**: Uses standard SDDP from SDDP.jl. Requires to linearize the log-linear AR process beforehand.
+#  * **Markov-chain SDDP**: Uses the Markov-chain SDDP (MC-SDDP) variant included in SDDP.jl. It requires a Markov-chain approximation (scenario lattice) of the uncertain inflows. This lattice is provided in the [MSPLib](https://github.com/bonnkleiford/MSPLib-Library) as well.
 
 # Each of these three cases requires slightly different set-ups and function calls due to the differences in the SDDP algorithms as well as the handling of the uncertain data. For this reason there exist three variants of the same functionality several times in our code.
 
@@ -21,12 +21,12 @@
 
 # In addition to SDDP, we used different models for the uncertain data in the RHS: 
 
-# *	`custom_model` (LOG-1 in the paper): log-linear AR process with lag order 1
-# *	`bic_model` (LOG-BIC in the paper):	log-linear AR process with lag order estimated using the Bayesian Information Criterion
-# *	`fitted_model` (LIN-FIT in the paper): linearized AR process with lag order 1 fitted using our code
-# *	`shapiro_model` (LIN-SHA in the paper): linearized AR process with lag order 1 and parameters from the literature
-# * a scenario lattice `lattice` for MC-SDDP
-# *	historical data `historical`
+#  * `custom_model` (LOG-1 in the paper): log-linear AR process with lag order 1
+#  * `bic_model` (LOG-BIC in the paper): log-linear AR process with lag order estimated using the Bayesian Information Criterion
+#  * `fitted_model` (LIN-FIT in the paper): linearized AR process with lag order 1 fitted using our code
+#  * `shapiro_model` (LIN-SHA in the paper): linearized AR process with lag order 1 and parameters from the literature
+#  * a scenario lattice `lattice` for MC-SDDP
+#  * historical data `historical`
 
 # More details on how we fitted these models is provided in [model fitting](fitting_process.md).
 
@@ -34,6 +34,6 @@
 
 # After running SDDP, we evaluate all obtained policies by running simulations using out-of-sample data from all four stochastic processes as well as historical data. 
 
-# ![Overview of simulations](Simulations.png)
+# ![Overview of simulations](../assets/Simulations.PNG)
 
 # Note that the code for these simulations (e.g. setting up the uncertainty model and data, simulating new data etc.) has to be catered to the specific variant of the uncertainty, which is why our code contains various slightly different files and methods dealing with simulation. For more details on this, see [simulations](simulations.md).

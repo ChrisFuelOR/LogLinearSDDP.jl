@@ -60,15 +60,15 @@ end
 
 # Its fields are defined as follows:
 
-# *	`coefficients`: This is the cut gradient vector $\beta$. It can be computed using the values of certain dual variables.
-# *	`deterministic_intercept`: This value is used to account for the contribution of deterministic constraints to the intercept. Handling them as coupling constraints is unnecessary from a memory perspective, but not taking them into account leads to a wrong intercept overall.
-# *	`stochastic_intercept_tight`: This is the value of the full intercept at the incumbent, i.e. where the cut is constructed and tight. This is merely used for checks and to compute other values. It may also be used for cut selection purposes in the future.
-# *	`intercept_factors` is not a scalar intercept as in standard SDDP, but a matrix of intercept factors $\alpha_{\bar{r} t \ell}^{(\tau)}$ for each $\tau=t,\ldots,T$ and each component $\ell$ of the process (see (3)).
-# *	`trial state`; This is the incumbent where the cut is constructed.
-# *	`cut_constraint`: This refers to the cut constraint in the JuMP model.
-# *	`cut_intercept_variable`: This refers to an artificial variable in the JuMP model which is fixed to the cut intercept for a given, specific scenario.
-# *	`non_dominated_count` is required for cut selection purposes. Cut selection is not supported yet but might be considered in the future.
-# *	`iteration`: This value stores the iteration number in which the cut was constructed, which often coincides with index $\bar{r}$ above. This is used for logging and analyses.
+#  * `coefficients`: This is the cut gradient vector $\beta$. It can be computed using the values of certain dual variables.
+#  * `deterministic_intercept`: This value is used to account for the contribution of deterministic constraints to the intercept. Handling them as coupling constraints is unnecessary from a memory perspective, but not taking them into account leads to a wrong intercept overall.
+#  * `stochastic_intercept_tight`: This is the value of the full intercept at the incumbent, i.e. where the cut is constructed and tight. This is merely used for checks and to compute other values. It may also be used for cut selection purposes in the future.
+#  * `intercept_factors` is not a scalar intercept as in standard SDDP, but a matrix of intercept factors $\alpha_{\bar{r} t \ell}^{(\tau)}$ for each $\tau=t,\ldots,T$ and each component $\ell$ of the process (see (3)).
+#  * `trial state`; This is the incumbent where the cut is constructed.
+#  * `cut_constraint`: This refers to the cut constraint in the JuMP model.
+#  * `cut_intercept_variable`: This refers to an artificial variable in the JuMP model which is fixed to the cut intercept for a given, specific scenario.
+#  * `non_dominated_count` is required for cut selection purposes. Cut selection is not supported yet but might be considered in the future.
+#  * `iteration`: This value stores the iteration number in which the cut was constructed, which often coincides with index $\bar{r}$ above. This is used for logging and analyses.
 
 # !!! note "Remark"
 #     1. The exponents in (4) only have to computed once as they do not change between cuts, scenarios and iterations. 
