@@ -38,9 +38,9 @@ for filename_jl in list_of_sorted_files(INPUT_DIR, INPUT_DIR, ".jl")
         filename_jl,
         OUTPUT_DIR;
         documenter = true,
-        postprocess = content -> _link_example(content, filename),
+        # postprocess = content -> _link_example(content, filename),
         # Turn off the footer. We manually add a modified one.
-        credit = false,
+        # credit = false,
     )
 
     # Literate.notebook(jl_filename, dir; execute = false, credit = false)
