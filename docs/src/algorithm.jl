@@ -15,7 +15,7 @@
 #      * Includes a few adjustments for our case, e.g. making sure that the code works with our extended `Cut` structs and our specific cut formulas (see [cut representation](cuts.md)).
 #  * `cut_computations.jl`
 #      * Contains most of the computations that are related to our special version of SDDP
-#      * `compute_cut_exponents` computes the exponents $\Theta$ that are used in the cut formulas (see [cut representation](cuts.md)). They only have to be computed once in advance before the iteration loop in SDDP is started. Note that, compared to the paper, the indexing is a bit different. Precisely, $\theta(t,\tau,\ell,m,k)$ from the paper (with $k$ a stage) translates to `cut_exponents_stage[t][τ,ℓ,m,κ]` (with κ the lag and κ $= t-k$).
+#      * `compute_cut_exponents` computes the exponents $\Theta$ that are used in the cut formulas (see [cut representation](cuts.md)). They only have to be computed once in advance before the iteration loop in SDDP is started. Note that, compared to the paper, the indexing is a bit different. Precisely, $\theta(t,\tau,\ell,m,k)$ from the paper (with $k$ being a stage) translates to `cut_exponents_stage[t][τ,ℓ,m,κ]` (with κ being the lag and κ $= t-k$).
 #      * `evaluate_cut_intercepts` updates the existing cut intercepts to a given scenario.
 #      * `evaluate_stochastic_cut_intercept_tight` evaluates the cut intercept at the incumbent (including the current process state) where it is constructed.
 #      * `update_process_state` updates the state of the stochastic process for a specific realization that was sampled. The current process state is always stored in `node.ext[:process_state]`.

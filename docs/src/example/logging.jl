@@ -2,9 +2,9 @@
 
 # For each run in our experiments, several outputs are logged. In general, there are three types of output files:
 
-# *	A main logging file called `LogLinearSDDP.log` (or `LinearSDDP.log` or `MC-SDDP.log` depending on the chosen variant of SDDP).
-# *	Some files which log simulation outputs (e.g. inflows, volumes, costs for different reservoirs). They are named something like `bic_model_custom_model_volumes_N.txt`. This means that the policy obtained using the `bic_model` is simulated with out-of-sample data from the `custom_model` and that the file contains the volumes of reservoir N. These outputs are required for some analyses in the paper.
-# *	A file `inflows.txt` that logs inflows values. This was used for (a) checks if inflows were indeed consistent between out-of-sample simulations for different policies and (b) to generate the inflow data input files for `run_markov.jl`.
+#  * A main logging file called `LogLinearSDDP.log` (or `LinearSDDP.log` or `MC-SDDP.log` depending on the chosen variant of SDDP).
+#  * Some files which log simulation outputs (e.g. inflows, volumes, costs for different reservoirs). They are named something like `bic_model_custom_model_volumes_N.txt`. This means that the policy obtained using the `bic_model` is simulated with out-of-sample data from the `custom_model` and that the file contains the volumes of reservoir N. These outputs are required for some analyses in the paper.
+#  * A file `inflows.txt` that logs inflows values. This was used for (a) checks if inflows were indeed consistent between out-of-sample simulations for different policies and (b) to generate the inflow data input files for `run_markov.jl`.
 
 # We explain the main logging file `LogLinearSDDP.log` in more detail.
 # It consists of the following elements:
