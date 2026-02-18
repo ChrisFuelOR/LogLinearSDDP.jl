@@ -1,6 +1,6 @@
 # # Special remarks to MC-SDDP
 
-# When using MC-SDDP, the model does not have to be defined manually (as in `hydrothermal_model.jl`), but is read from  ` (12_0)_100.problem.json`. We have made sure that the model specified there exactly matches the model considered in `hydrothermal_model.jl` and `hydrothermal_model_linearized.jl`.
+# When using MC-SDDP, the model does not have to be defined manually (as in `hydrothermal_model.jl`), but is read from  `(12_0)_100.problem.json`. We have made sure that the model specified there exactly matches the model considered in `hydrothermal_model.jl` and `hydrothermal_model_linearized.jl`.
 
 # Additionally, also the lattice (Markov chain) data is read from `(12_0)_100.lattice.json`. Reading this data can take some time, which is not included in the overall run time, though, to allow a fair comparison with other variants of SDDP.
 

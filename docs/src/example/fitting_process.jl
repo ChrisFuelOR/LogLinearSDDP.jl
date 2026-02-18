@@ -4,32 +4,25 @@
 
 # For details on the methodology that is used, we refer to the electronic companion supplementing our paper. Here, we simply focus on explaining the structure of the code. We restrict to `PreparationAutoregressive`. For `PreparationAutoregressiveLinearized` the structure is very similar.
 
-# NOTE: If you simply want to reproduce the SDDP results given the pre-fitted AR models that we used, then you do not have to deal with these folders at all.
+# !!! note "Remarks"
+#     If you simply want to reproduce the SDDP results given the pre-fitted AR models that we used, then you do not have to deal with this section at all.
 
 # The `PreparationAutoregressive` contains the following files:
-# *	`run_file.jl`:
-# Using this file, we can run the preprocessing of the loglinear AR models.
-# *	`AutoregressivePreparation.jl`:
-# Contains the module definition; also defines a `MonthlyModelStorage` struct in which information is stored during the fitting process
-# *	`data_plots.jl`:
-# Contains various functions for creating plots, e.g. plotting the original or detrended inflow data, plotting (partial) autocorrelation functions, creating boxplots for model validation
-# *	`data_preparation.jl`:
-# Contains functionality to read the historical inflow data (which is stored in files `hist1.csv`, `hist2.csv`, `hist3.csv` and `hist4.csv` in folder `historical_data`), to detrend it and split it into training and validation sets.
-# *	`data_analysis.jl`:
-# Contains a function to compute the sample autocovariance for a given time series (in dataframe format) for all months and lags. This is required to compute periodical AFCs, for instance.
-# *	`box_jenkins.jl`:
-# Contains functionality to perform the Box-Jenkins method to fit an AR model to the time series data. The steps are
+
+# *	`run_file.jl`: Using this file, we can run the preprocessing of the loglinear AR models.
+# *	`AutoregressivePreparation.jl`: Contains the module definition; also defines a `MonthlyModelStorage` struct in which information is stored during the fitting process
+# *	`data_plots.jl`: Contains various functions for creating plots, e.g. plotting the original or detrended inflow data, plotting (partial) autocorrelation functions, creating boxplots for model validation
+# *	`data_preparation.jl`: Contains functionality to read the historical inflow data (which is stored in files `hist1.csv`, `hist2.csv`, `hist3.csv` and `hist4.csv` in folder `historical_data`), to detrend it and split it into training and validation sets.
+# *	`data_analysis.jl`: Contains a function to compute the sample autocovariance for a given time series (in dataframe format) for all months and lags. This is required to compute periodical AFCs, for instance.
+# *	`box_jenkins.jl`: Contains functionality to perform the Box-Jenkins method to fit an AR model to the time series data. The steps are
 #     *	Analyzing the (P)AFC to detect autocorrelation
 #     *	Perform an augmented Dickey-Fuller test to test for stationarity
 #     *	Fit an AR model to the time series
 #     *	Use the fitted model and the residuals for validations (analyzing the goodness of fit, performing significance tests, analyzing autocorrelation and heteroscedasticity in the residuals, testing for normal distribution of the residuals).
-# *	`periodic_box_jenkins.jl`:
-# Similar to box_jenkins.jl but more advanced as it allows us to fit periodic models were the coefficients differ between months. This is used to fit the models that we use within SDDP.
+# *	`periodic_box_jenkins.jl`: Similar to box_jenkins.jl but more advanced as it allows us to fit periodic models were the coefficients differ between months. This is used to fit the models that we use within SDDP.
 #     * 	The lag order can either be identified by using periodic AFCs or by fitting several models with different lag order (from 1 to 12) and choosing the lag order that yields the best AIC or BIC measure.
-# *	`forecasting.jl`:
-# Contains functionality to create point forecasts as well as full scenarios (over the whole time horizon) using the fitted models. This is done for further model validation
-# *	`ar_model_generation.jl`:
-# Main file for preparing the AR model data, as it uses functions from all the previous files. The procedure works as follows:
+# *	`forecasting.jl`: Contains functionality to create point forecasts as well as full scenarios (over the whole time horizon) using the fitted models. This is done for further model validation
+# *	`ar_model_generation.jl`: Main file for preparing the AR model data, as it uses functions from all the previous files. The procedure works as follows:
 #     *	Iterate over all 4 reservoirs
 #     *	Read the relevant data
 #     *	Analyze the data using plots

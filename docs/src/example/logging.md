@@ -13,8 +13,8 @@ For each run in our experiments, several outputs are logged. In general, there a
 We explain the main logging file `LogLinearSDDP.log` in more detail.
 It consists of the following elements:
 
-*	A section borrowed from SDDP.jl logging some general information about the multistage problem
-*	A section printing the main model run parameters
+* A section borrowed from SDDP.jl logging some general information about the multistage problem
+* A section printing the main model run parameters
     *	the file path, the optional run description, the date and time of the run
     *	the main parameters defined in the `ProblemParams` struct (problem size, number of realizations per stage)
     *	the main parameters defined in the `AlgoParams` struct (sampling seed, stopping rules)

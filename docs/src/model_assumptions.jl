@@ -33,4 +33,4 @@
 
 # Most of these assumptions are in line with what is known from using SDDP.jl. The major difference is that in our case the uncertainty has to be modeled differently to account for its autoregressive character. More details on this are provided in [Modeling log-linear AR processes](uncertainty.md)
 
-# Importantly, contrary to other approaches in the literature, loglinearSDDP does not require the user to model an explicit state expansion for the given problem to take the history of the AR process into account. Instead, tailored cut formulas are used to adapt the cut intercept to a scenario at hand. We explain on a different page how this is done for a [hydrothermal scheduling problem](example/setting_up_process.md).
+# Importantly, contrary to other approaches in the literature, loglinearSDDP does not require the user to model an explicit state expansion for the given problem to take the history of the AR process into account. Instead, tailored cut formulas are used to adapt the cut intercept to a scenario at hand.

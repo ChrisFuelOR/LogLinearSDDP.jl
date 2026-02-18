@@ -65,6 +65,7 @@ end
 ````
 
 Its fields are defined as follows:
+
 *	`coefficients`: This is the cut gradient vector $\beta$. It can be computed using the values of certain dual variables.
 *	`deterministic_intercept`: This value is used to account for the contribution of deterministic constraints to the intercept. Handling them as coupling constraints is unnecessary from a memory perspective, but not taking them into account leads to a wrong intercept overall.
 *	`stochastic_intercept_tight`: This is the value of the full intercept at the incumbent, i.e. where the cut is constructed and tight. This is merely used for checks and to compute other values. It may also be used for cut selection purposes in the future.
@@ -76,12 +77,9 @@ Its fields are defined as follows:
 *	`iteration`: This value stores the iteration number in which the cut was constructed, which often coincides with index $\bar{r}$ above. This is used for logging and analyses.
 
 !!! note "Remark"
-    1. The exponents in (4) only have to computed once as they do not change between cuts,
-    scenarios and iterations.
+    1. The exponents in (4) only have to computed once as they do not change between cuts, scenarios and iterations.
     2. Once the $\alpha$ factors in (2) and (3) are computed when a new cut is generated, they are fixed cut coefficients.
-    3. When cut intercepts are re-evaluated for a given scenario, then the scenario-specific factors
-    $\prod_{k=t-p}^{t-1} \prod_{m=1}^{L_k} \xi_{km}^{\Theta(t,\tau,\ell,m,k)}$ in (2) are
-    the same for all cuts, so they only have to be re-evaluated once for all cuts. Only the factors $\alpha_{\bar{r} t \ell}^{(\tau)}$ are specific to each cut.
+    3. When cut intercepts are re-evaluated for a given scenario, then the scenario-specific factors $\prod_{k=t-p}^{t-1} \prod_{m=1}^{L_k} \xi_{km}^{\Theta(t,\tau,\ell,m,k)}$ in (2) are the same for all cuts, so they only have to be re-evaluated once for all cuts. Only the factors $\alpha_{\bar{r} t \ell}^{(\tau)}$ are specific to each cut.
 
 ---
 

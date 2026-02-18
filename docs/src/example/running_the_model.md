@@ -16,10 +16,11 @@ The `run_model` function has the following general structure:
 *	Set up the log-linear AR process by calling function `set_up_ar_process_loglinear` from `set_up_ar_process.jl`.
 *	Call `model_definition` from `hydrothermal_model.jl` to construct the multistage optimization problem. This requires to pass the previously defined process as an argument.
 *	Call the `train_loglinear` function from `algorithm.jl` to start running SDDP.
-*	After running SDDP, perform several simulations. For details, see [TODO]].
+*	After running SDDP, perform several simulations. For details, see [simulations](simulations.md).
 *	The function `extended_simulation_analysis` is used to analyze and log parts of the simulation output.
 
-NOTE: For running different variants of SDDP, the procedure is very similar (see `run_model_linearized.jl` or `run_model_markov.jl`).
+!!! note "Remarks"
+    For running different variants of SDDP, the procedure is very similar (see `run_model_linearized.jl` or `run_model_markov.jl`).
 
 ---
 

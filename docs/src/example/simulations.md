@@ -7,6 +7,7 @@ EditURL = "simulations.jl"
 We run several simulations (in-sample and out-of-sample) after SDDP has terminated.
 
 Each simulation run consists of the following three ingredients:
+
 *	Create a sampling scheme from the ones available in SDDP.jl (`InSampleMonteCarlo`, `OutOfSampleMonteCarlo`, `Historical`)
     *	For `InSampleMonteCarlo`, we sample from the realizations passed in the model formulation.
     *	For `OutOfSampleMonteCarlo`, we pass a function to the sampling scheme which defines how we sample realizations later.
