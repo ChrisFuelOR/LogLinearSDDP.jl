@@ -1,0 +1,27 @@
+```@meta
+EditURL = "model.jl"
+```
+
+# Defining the multistage problem
+
+The hydrothermal scheduling model itself is known from the literature [CITE]. The specific model formulation and data is taken from the [MSPLib](https://github.com/bonnkleiford/MSPLib-Library). The deterministic demand data is stored in `demand.csv`.
+
+The model is defined using the JuMP.jl and SDDP.jl packages in file `hydrothermal_model.jl`.
+
+Compared to standard models solved with SDDP.jl the main difference is how the uncertain data in the model is parameterized.
+*	Recall that loglinearSDDP does not require the user to model an explicit state expansion for the given problem to take the history of the AR process into account.
+*	The realizations that are stored in `node.noise_terms` within SDDP and that we sample from in the forward pass are defined by the stagewise independent error term $\eta_t$ of the log-linear AR process only.
+*	However, with our adjustments in `algorithm.jl` and `sampling_schemes.jl` we make sure that in `parameterize`, the $\omega$ values that the inflow variables are actually fixed to are computed using the whole log-linear process formula given a particular realization of $\eta$.
+*	The first-stage data is considered deterministic, so there should be only one realization (for each dimension of the uncertainty). This can always be set to 0.
+*	Note that the `parameterize` statement contains some print commands. These are optional and can be removed. However, they can be helpful for comparing the actual inflows between different run configurations.
+
+Importantly, as a special requirement, we have to store the references to the coupling constraints in `subproblem.ext[:coupling_constraints]`, as this is required in the cut computation within `dual.jl`.
+
+As we deal with a minimization problem, as usual in SDDP.jl, we specify a valid lower bound in the `PolicyGraph` definition.
+
+NOTE: In a very similar way, the hydrothermal model for running SDDP.jl with data from a linearized AR process is defined in `hydrothermal_model_linearized.jl`. The main differences are (a) that the state space has to be expanded (note that `inflow` is now a state variable) and (b) that the `parameterize` statement has to be adjusted for the linearized process.
+
+---
+
+*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
+

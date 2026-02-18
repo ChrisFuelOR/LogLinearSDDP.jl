@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "../src/model_assumptions.jl"
+EditURL = "model_assumptions.jl"
 ```
 
 # Model assumptions

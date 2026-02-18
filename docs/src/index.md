@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "../src/introduction.jl"
+EditURL = "index.jl"
 ```
 
 # An introduction to LogLinearSDDP.jl
