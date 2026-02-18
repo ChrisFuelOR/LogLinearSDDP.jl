@@ -39,6 +39,7 @@ end
 # Dict containing the historic values of the process (including stage 1). The key is the stage and the value is a vector of index $ℓ$ (alternatively, a tuple could be used).
 # *	`simplified`:     
 # If true, there are no dependencies between different process components (i.e. spatial dependencies). This allows to simplify some computations in our code. Referring to the paper, the process formula becomes
+
 # ```math
 # \begin{equation}
 # \log(\xi_{t \ell}) = \gamma_{t \ell} + \sum_{k=1}^p \phi^{(k)}_{t \ell} \log(\xi_{t-k, \ell}) + \psi_{t \ell} \eta_{t \ell}.
@@ -46,17 +47,11 @@ end
 # ```
 
 # !!! note "Remarks"
-#     1. We assume that the lag order $p$ is the same for all stages and components. Otherwise the cut  
-#     formulas become way more sophisticated (see paper). In practice, different components and stages  #     may require different lag orders, for instance in SPAR models. If a stage-component combination 
-#     requires less lags than globally defined, we can set the `ar_coefficients` for excessive lags to 
-#     1, so that they do not have any effect.
-#     2. In contrast to the paper - for this code we also assume that the dimension $L$ of the process #     is the same for all stages. 
-#     This allows us to accelerate nested loops in the code with tools that do not  
-#     allow for indices to be dependent on each other. This is a very natural assumption in practice. 
-#     For instance, in our hydrothermal scheduling example, we have the same number of reservoirs 
-#     for each stage.
-#     3. We assume the first-stage data to be deterministic. Therefore, it should be included in  
-#     `history` instead of `parameters`.
+#     1. We assume that the lag order $p$ is the same for all stages and components. Otherwise the cut formulas become way more sophisticated (see paper). In practice, different components and stages may require different lag orders, for instance in SPAR models. If a stage-component combination 
+#     requires less lags than globally defined, we can set the `ar_coefficients` for excessive lags to 1, so that they do not have any effect.
+#     2. In contrast to the paper - for this code we also assume that the dimension $L$ of the process is the same for all stages. This allows us to accelerate nested loops in the code with tools that do not  
+#     allow for indices to be dependent on each other. This is a very natural assumption in practice. For instance, in our hydrothermal scheduling example, we have the same number of reservoirs for each stage.
+#     3. We assume the first-stage data to be deterministic. Therefore, it should be included in `history` instead of `parameters`.
 
 
 # ## AutoregressiveProcessStage
@@ -86,7 +81,7 @@ end
 # *	`probabilities`:  
 # Probabilities related to $\eta$ (optional); note that this information is merely stored in the struct for logging purposes
 
-# We provide an example on how to set up a specific log-linear AR process for the hydrothermal scheduling problem from our paper in [TODO].
+# We provide an example on how to set up a specific log-linear AR process for the hydrothermal scheduling problem from our paper on a different [page](example/setting_up_process.md).
 
 # !!! note "Remark" 
-#     Note that similar structs (`LinearAutoregressiveProcessStage` and `LinearAutoregressiveProcess`) #     are also defined in file `set_up_ar_process.jl` for our hydrothermal scheduling problem when  #     using linearized AR processes instead of log-linear AR processes.
+#     Note that similar structs (`LinearAutoregressiveProcessStage` and `LinearAutoregressiveProcess`) are also defined in file `set_up_ar_process.jl` for our hydrothermal scheduling problem when  #     using linearized AR processes instead of log-linear AR processes.
