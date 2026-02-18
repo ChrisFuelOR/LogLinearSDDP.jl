@@ -1,4 +1,4 @@
-# An introduction to LogLinearSDDP.jl
+# LogLinearSDDP.jl
 
 This code implements a special version of **stochastic dual dynamic programming (SDDP)** and is based on (an earlier version of) [SDDP.jl](https://github.com/odow/SDDP.jl) from Oscar Dowson.
 
